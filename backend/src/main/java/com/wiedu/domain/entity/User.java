@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "users")
+@Table(name = "USERS")
 @Comment("사용자 정보")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

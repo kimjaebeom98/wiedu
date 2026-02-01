@@ -12,7 +12,7 @@ import org.hibernate.annotations.Comment;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "study_members", uniqueConstraints = {
+@Table(name = "STUDY_MEMBERS", uniqueConstraints = {
     @UniqueConstraint(columnNames = {"study_id", "user_id"})
 })
 @Comment("스터디 멤버 정보")
