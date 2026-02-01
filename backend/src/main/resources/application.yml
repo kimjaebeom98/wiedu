@@ -1,0 +1,38 @@
+spring:
+  profiles:
+    active: h2  # 기본 프로필: H2 사용 (MySQL 사용 시 이 줄 삭제 또는 주석 처리)
+  application:
+    name: wiedu-backend
+
+  # Database (개발 환경)
+  datasource:
+    url: jdbc:mysql://localhost:3306/wiedu?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: wiedu
+    password: wiedu1234
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  # JPA
+  jpa:
+    hibernate:
+      ddl-auto: update  # 개발: update, 운영: validate
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
+
+  # Security (임시 비활성화 - 개발 편의)
+  security:
+    user:
+      name: admin
+      password: admin
+
+# Server
+server:
+  port: 8080
+
+# Logging
+logging:
+  level:
+    com.wiedu: DEBUG
+    org.hibernate.SQL: DEBUG
