@@ -1,0 +1,23 @@
+package com.wiedu.exception;
+
+import lombok.Getter;
+
+/**
+ * 비즈니스 로직 예외
+ * - Service 레이어에서 발생하는 예외
+ */
+@Getter
+public class BusinessException extends RuntimeException {
+
+    private final ErrorCode errorCode;
+
+    public BusinessException(ErrorCode errorCode) {
+        super(errorCode.getMessage());
+        this.errorCode = errorCode;
+    }
+
+    public BusinessException(ErrorCode errorCode, String message) {
+        super(message);
+        this.errorCode = errorCode;
+    }
+}
