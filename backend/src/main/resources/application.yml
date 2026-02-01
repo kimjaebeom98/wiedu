@@ -1,14 +1,14 @@
 spring:
-  profiles:
-    active: h2  # 기본 프로필: H2 사용 (MySQL 사용 시 이 줄 삭제 또는 주석 처리)
+  # profiles:
+  #   active: h2  # H2 사용 시 주석 해제
   application:
     name: wiedu-backend
 
   # Database (개발 환경)
   datasource:
-    url: jdbc:mysql://localhost:3306/wiedu?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: wiedu
-    password: wiedu1234
+    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE:wiedu}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${MYSQL_USER:wiedu}
+    password: ${MYSQL_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   # JPA
