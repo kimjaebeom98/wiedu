@@ -46,5 +46,6 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
 
     // 사용자가 리더인 스터디 목록 조회
     @Query("SELECT sm.study FROM StudyMember sm WHERE sm.user = :user AND sm.role = :role AND sm.status = :status")
-    List<Study> findStudiesByUserAndRole(@Param("user") User user, @Param("role") MemberRole role, @Param("status") MemberStatus status);
+    List<Study> findStudiesByUserAndRole(@Param("user") User user, @Param("role") MemberRole role,
+            @Param("status") MemberStatus status);
 }

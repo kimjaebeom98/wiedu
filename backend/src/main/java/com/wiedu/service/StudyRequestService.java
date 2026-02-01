@@ -9,6 +9,8 @@ import com.wiedu.domain.enums.MemberStatus;
 import com.wiedu.domain.enums.RequestStatus;
 import com.wiedu.dto.request.StudyJoinRequest;
 import com.wiedu.dto.response.StudyRequestResponse;
+import com.wiedu.exception.BusinessException;
+import com.wiedu.exception.ErrorCode;
 import com.wiedu.repository.StudyMemberRepository;
 import com.wiedu.repository.StudyRequestRepository;
 import lombok.RequiredArgsConstructor;
@@ -42,17 +44,17 @@ public class StudyRequestService {
 
         // 모집 중인지 확인
         if (!study.isRecruiting()) {
-            throw new IllegalArgumentException("모집 중인 스터디가 아닙니다.");
+            throw new BusinessException(ErrorCode.STUDY_NOT_RECRUITING);
         }
 
         // 이미 멤버인지 확인
         if (studyMemberRepository.existsByStudyAndUserAndStatus(study, user, MemberStatus.ACTIVE)) {
-            throw new IllegalArgumentException("이미 가입된 스터디입니다.");
+            throw new BusinessException(ErrorCode.ALREADY_MEMBER);
         }
 
         // 이미 신청했는지 확인 (대기 중인 신청)
         if (studyRequestRepository.existsByStudyAndUserAndStatus(study, user, RequestStatus.PENDING)) {
-            throw new IllegalArgumentException("이미 가입 신청한 스터디입니다.");
+            throw new BusinessException(ErrorCode.ALREADY_REQUESTED);
         }
 
         StudyRequest studyRequest = StudyRequest.builder()
@@ -75,17 +77,17 @@ public class StudyRequestService {
 
         // 리더 권한 확인
         if (!study.getLeader().getId().equals(leaderId)) {
-            throw new IllegalArgumentException("가입 신청 승인 권한이 없습니다.");
+            throw new BusinessException(ErrorCode.NOT_STUDY_LEADER);
         }
 
         // 이미 처리된 신청인지 확인
         if (!request.isPending()) {
-            throw new IllegalArgumentException("이미 처리된 신청입니다.");
+            throw new BusinessException(ErrorCode.REQUEST_ALREADY_PROCESSED);
         }
 
         // 정원 초과 확인
         if (study.isFull()) {
-            throw new IllegalArgumentException("스터디 정원이 가득 찼습니다.");
+            throw new BusinessException(ErrorCode.STUDY_FULL);
         }
 
         // 신청 승인
@@ -113,12 +115,12 @@ public class StudyRequestService {
 
         // 리더 권한 확인
         if (!study.getLeader().getId().equals(leaderId)) {
-            throw new IllegalArgumentException("가입 신청 거절 권한이 없습니다.");
+            throw new BusinessException(ErrorCode.NOT_STUDY_LEADER);
         }
 
         // 이미 처리된 신청인지 확인
         if (!request.isPending()) {
-            throw new IllegalArgumentException("이미 처리된 신청입니다.");
+            throw new BusinessException(ErrorCode.REQUEST_ALREADY_PROCESSED);
         }
 
         request.reject(rejectReason);
@@ -133,12 +135,12 @@ public class StudyRequestService {
 
         // 신청자 본인인지 확인
         if (!request.getUser().getId().equals(userId)) {
-            throw new IllegalArgumentException("본인의 신청만 취소할 수 있습니다.");
+            throw new BusinessException(ErrorCode.NOT_REQUEST_OWNER);
         }
 
         // 대기 중인 신청만 취소 가능
         if (!request.isPending()) {
-            throw new IllegalArgumentException("대기 중인 신청만 취소할 수 있습니다.");
+            throw new BusinessException(ErrorCode.REQUEST_ALREADY_PROCESSED);
         }
 
         studyRequestRepository.delete(request);
@@ -152,7 +154,7 @@ public class StudyRequestService {
 
         // 리더 권한 확인
         if (!study.getLeader().getId().equals(leaderId)) {
-            throw new IllegalArgumentException("신청 목록 조회 권한이 없습니다.");
+            throw new BusinessException(ErrorCode.NOT_STUDY_LEADER);
         }
 
         return studyRequestRepository.findByStudyAndStatus(study, RequestStatus.PENDING, pageable)
@@ -175,6 +177,6 @@ public class StudyRequestService {
      */
     private StudyRequest findRequestEntityById(Long requestId) {
         return studyRequestRepository.findById(requestId)
-                .orElseThrow(() -> new IllegalArgumentException("가입 신청을 찾을 수 없습니다: " + requestId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.REQUEST_NOT_FOUND));
     }
 }

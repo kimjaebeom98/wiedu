@@ -146,4 +146,8 @@ public class Study {
     public boolean isFull() {
         return this.currentMembers >= this.maxMembers;
     }
+
+    public void changeLeader(User newLeader) {
+        this.leader = newLeader;
+    }
 }

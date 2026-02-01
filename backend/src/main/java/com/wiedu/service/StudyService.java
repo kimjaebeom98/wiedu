@@ -10,6 +10,8 @@ import com.wiedu.dto.request.StudyCreateRequest;
 import com.wiedu.dto.request.StudyUpdateRequest;
 import com.wiedu.dto.response.StudyListResponse;
 import com.wiedu.dto.response.StudyResponse;
+import com.wiedu.exception.BusinessException;
+import com.wiedu.exception.ErrorCode;
 import com.wiedu.repository.StudyMemberRepository;
 import com.wiedu.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
@@ -65,50 +67,51 @@ public class StudyService {
     }
 
     /**
-     * 스터디 상세 조회
+     * 스터디 상세 조회 (N+1 방지)
      */
     public StudyResponse findById(Long studyId) {
-        Study study = findStudyEntityById(studyId);
+        Study study = studyRepository.findByIdWithLeader(studyId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
         return StudyResponse.from(study);
     }
 
     /**
-     * 스터디 목록 조회 (페이징)
+     * 스터디 목록 조회 (페이징, N+1 방지)
      */
     public Page<StudyListResponse> findAllStudies(Pageable pageable) {
-        return studyRepository.findAll(pageable)
+        return studyRepository.findAllWithLeader(pageable)
                 .map(StudyListResponse::from);
     }
 
     /**
-     * 상태별 스터디 목록 조회
+     * 상태별 스터디 목록 조회 (N+1 방지)
      */
     public Page<StudyListResponse> findByStatus(StudyStatus status, Pageable pageable) {
-        return studyRepository.findByStatus(status, pageable)
+        return studyRepository.findByStatusWithLeader(status, pageable)
                 .map(StudyListResponse::from);
     }
 
     /**
-     * 카테고리별 스터디 목록 조회
+     * 카테고리별 스터디 목록 조회 (N+1 방지)
      */
     public Page<StudyListResponse> findByCategory(StudyCategory category, Pageable pageable) {
-        return studyRepository.findByCategory(category, pageable)
+        return studyRepository.findByCategoryWithLeader(category, pageable)
                 .map(StudyListResponse::from);
     }
 
     /**
-     * 모집 중인 스터디 목록 조회
+     * 모집 중인 스터디 목록 조회 (N+1 방지)
      */
     public Page<StudyListResponse> findRecruitingStudies(Pageable pageable) {
-        return studyRepository.findByStatus(StudyStatus.RECRUITING, pageable)
+        return studyRepository.findByStatusWithLeader(StudyStatus.RECRUITING, pageable)
                 .map(StudyListResponse::from);
     }
 
     /**
-     * 키워드 검색
+     * 키워드 검색 (N+1 방지)
      */
     public Page<StudyListResponse> searchByKeyword(String keyword, Pageable pageable) {
-        return studyRepository.searchByKeyword(keyword, pageable)
+        return studyRepository.searchByKeywordWithLeader(keyword, pageable)
                 .map(StudyListResponse::from);
     }
 
@@ -120,9 +123,7 @@ public class StudyService {
         Study study = findStudyEntityById(studyId);
 
         // 리더 권한 확인
-        if (!study.getLeader().getId().equals(userId)) {
-            throw new IllegalArgumentException("스터디 수정 권한이 없습니다.");
-        }
+        validateLeaderPermission(study, userId);
 
         study.updateInfo(
                 request.title() != null ? request.title() : study.getTitle(),
@@ -139,11 +140,7 @@ public class StudyService {
     @Transactional
     public void closeStudy(Long studyId, Long userId) {
         Study study = findStudyEntityById(studyId);
-
-        if (!study.getLeader().getId().equals(userId)) {
-            throw new IllegalArgumentException("스터디 마감 권한이 없습니다.");
-        }
-
+        validateLeaderPermission(study, userId);
         study.close();
     }
 
@@ -153,11 +150,7 @@ public class StudyService {
     @Transactional
     public void completeStudy(Long studyId, Long userId) {
         Study study = findStudyEntityById(studyId);
-
-        if (!study.getLeader().getId().equals(userId)) {
-            throw new IllegalArgumentException("스터디 완료 처리 권한이 없습니다.");
-        }
-
+        validateLeaderPermission(study, userId);
         study.complete();
     }
 
@@ -166,6 +159,15 @@ public class StudyService {
      */
     public Study findStudyEntityById(Long studyId) {
         return studyRepository.findById(studyId)
-                .orElseThrow(() -> new IllegalArgumentException("스터디를 찾을 수 없습니다: " + studyId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
+    }
+
+    /**
+     * 리더 권한 검증
+     */
+    private void validateLeaderPermission(Study study, Long userId) {
+        if (!study.getLeader().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.NOT_STUDY_LEADER);
+        }
     }
 }

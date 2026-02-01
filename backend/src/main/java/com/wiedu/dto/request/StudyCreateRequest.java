@@ -1,6 +1,7 @@
 package com.wiedu.dto.request;
 
 import com.wiedu.domain.enums.StudyCategory;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -40,4 +41,11 @@ public record StudyCreateRequest(
 
         LocalDateTime endDate
 ) {
+    @AssertTrue(message = "종료일은 시작일 이후여야 합니다")
+    public boolean isValidDateRange() {
+        if (startDate == null || endDate == null) {
+            return true;
+        }
+        return !endDate.isBefore(startDate);
+    }
 }

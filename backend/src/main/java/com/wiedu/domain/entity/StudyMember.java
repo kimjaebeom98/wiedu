@@ -52,9 +52,18 @@ public class StudyMember {
     @Comment("탈퇴일시")
     private LocalDateTime withdrawnAt;
 
+    @Comment("수정일시")
+    private LocalDateTime updatedAt;
+
     @PrePersist
     protected void onCreate() {
         this.joinedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 
     @Builder
@@ -72,6 +81,10 @@ public class StudyMember {
 
     public void promoteToLeader() {
         this.role = MemberRole.LEADER;
+    }
+
+    public void demoteToMember() {
+        this.role = MemberRole.MEMBER;
     }
 
     public boolean isLeader() {

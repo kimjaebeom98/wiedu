@@ -4,6 +4,8 @@ import com.wiedu.domain.entity.User;
 import com.wiedu.dto.request.SignUpRequest;
 import com.wiedu.dto.request.UserUpdateRequest;
 import com.wiedu.dto.response.UserResponse;
+import com.wiedu.exception.BusinessException;
+import com.wiedu.exception.ErrorCode;
 import com.wiedu.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,12 +28,12 @@ public class UserService {
     public UserResponse signUp(SignUpRequest request) {
         // 이메일 중복 체크
         if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다: " + request.email());
+            throw new BusinessException(ErrorCode.EMAIL_DUPLICATED);
         }
 
         // 닉네임 중복 체크
         if (userRepository.existsByNickname(request.nickname())) {
-            throw new IllegalArgumentException("이미 사용 중인 닉네임입니다: " + request.nickname());
+            throw new BusinessException(ErrorCode.NICKNAME_DUPLICATED);
         }
 
         // TODO: 비밀번호 암호화 (BCryptPasswordEncoder 적용 예정)
@@ -50,8 +52,7 @@ public class UserService {
      * 사용자 조회 (ID)
      */
     public UserResponse findById(Long userId) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+        User user = findUserEntityById(userId);
         return UserResponse.from(user);
     }
 
@@ -60,7 +61,7 @@ public class UserService {
      */
     public UserResponse findByEmail(String email) {
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + email));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         return UserResponse.from(user);
     }
 
@@ -69,13 +70,12 @@ public class UserService {
      */
     @Transactional
     public UserResponse updateUser(Long userId, UserUpdateRequest request) {
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+        User user = findUserEntityById(userId);
 
         // 닉네임 변경 시 중복 체크
         if (request.nickname() != null && !request.nickname().equals(user.getNickname())) {
             if (userRepository.existsByNickname(request.nickname())) {
-                throw new IllegalArgumentException("이미 사용 중인 닉네임입니다: " + request.nickname());
+                throw new BusinessException(ErrorCode.NICKNAME_DUPLICATED);
             }
         }
 
@@ -106,6 +106,6 @@ public class UserService {
      */
     public User findUserEntityById(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다: " + userId));
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 }

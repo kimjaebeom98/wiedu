@@ -35,6 +35,8 @@ public enum ErrorCode {
     NOT_MEMBER(HttpStatus.BAD_REQUEST, "M002", "스터디 멤버가 아닙니다."),
     LEADER_CANNOT_WITHDRAW(HttpStatus.BAD_REQUEST, "M003", "리더는 탈퇴할 수 없습니다."),
     CANNOT_KICK_SELF(HttpStatus.BAD_REQUEST, "M004", "자기 자신은 강제 탈퇴할 수 없습니다."),
+    CANNOT_DELEGATE_TO_WITHDRAWN(HttpStatus.BAD_REQUEST, "M005", "탈퇴한 멤버에게 리더를 위임할 수 없습니다."),
+    NEW_LEADER_MUST_BE_MEMBER(HttpStatus.BAD_REQUEST, "M006", "새 리더는 스터디 멤버여야 합니다."),
 
     // StudyRequest
     REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "R001", "가입 신청을 찾을 수 없습니다."),

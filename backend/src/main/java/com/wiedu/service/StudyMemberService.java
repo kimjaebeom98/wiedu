@@ -5,6 +5,8 @@ import com.wiedu.domain.entity.StudyMember;
 import com.wiedu.domain.entity.User;
 import com.wiedu.domain.enums.MemberStatus;
 import com.wiedu.dto.response.StudyMemberResponse;
+import com.wiedu.exception.BusinessException;
+import com.wiedu.exception.ErrorCode;
 import com.wiedu.repository.StudyMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -64,11 +66,11 @@ public class StudyMemberService {
         User user = userService.findUserEntityById(userId);
 
         StudyMember member = studyMemberRepository.findByStudyAndUser(study, user)
-                .orElseThrow(() -> new IllegalArgumentException("스터디 멤버가 아닙니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_MEMBER));
 
         // 리더는 탈퇴 불가 (스터디 마감 또는 리더 위임 필요)
         if (member.isLeader()) {
-            throw new IllegalArgumentException("리더는 탈퇴할 수 없습니다. 스터디를 마감하거나 리더를 위임해주세요.");
+            throw new BusinessException(ErrorCode.LEADER_CANNOT_WITHDRAW);
         }
 
         member.withdraw();
@@ -84,17 +86,17 @@ public class StudyMemberService {
 
         // 리더 권한 확인
         if (!study.getLeader().getId().equals(leaderId)) {
-            throw new IllegalArgumentException("멤버 강제 탈퇴 권한이 없습니다.");
+            throw new BusinessException(ErrorCode.NOT_STUDY_LEADER);
         }
 
         // 자기 자신은 강제 탈퇴 불가
         if (leaderId.equals(targetUserId)) {
-            throw new IllegalArgumentException("자기 자신은 강제 탈퇴할 수 없습니다.");
+            throw new BusinessException(ErrorCode.CANNOT_KICK_SELF);
         }
 
         User targetUser = userService.findUserEntityById(targetUserId);
         StudyMember member = studyMemberRepository.findByStudyAndUser(study, targetUser)
-                .orElseThrow(() -> new IllegalArgumentException("해당 사용자는 스터디 멤버가 아닙니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_MEMBER));
 
         member.withdraw();
         study.decrementMember();
@@ -109,7 +111,7 @@ public class StudyMemberService {
 
         // 현재 리더 권한 확인
         if (!study.getLeader().getId().equals(currentLeaderId)) {
-            throw new IllegalArgumentException("리더 위임 권한이 없습니다.");
+            throw new BusinessException(ErrorCode.NOT_STUDY_LEADER);
         }
 
         User currentLeader = userService.findUserEntityById(currentLeaderId);
@@ -117,18 +119,21 @@ public class StudyMemberService {
 
         // 새 리더가 스터디 멤버인지 확인
         StudyMember newLeaderMember = studyMemberRepository.findByStudyAndUser(study, newLeader)
-                .orElseThrow(() -> new IllegalArgumentException("새 리더는 스터디 멤버여야 합니다."));
+                .orElseThrow(() -> new BusinessException(ErrorCode.NEW_LEADER_MUST_BE_MEMBER));
 
         if (!newLeaderMember.isActive()) {
-            throw new IllegalArgumentException("탈퇴한 멤버에게 리더를 위임할 수 없습니다.");
+            throw new BusinessException(ErrorCode.CANNOT_DELEGATE_TO_WITHDRAWN);
         }
 
-        // 현재 리더의 역할 변경
+        // 현재 리더의 멤버 정보 조회
         StudyMember currentLeaderMember = studyMemberRepository.findByStudyAndUser(study, currentLeader)
-                .orElseThrow();
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_MEMBER));
 
-        // 역할 교체 (Entity에 demoteToMember 메서드 추가 필요하지만 일단 직접 처리)
+        // 역할 교체
+        currentLeaderMember.demoteToMember();
         newLeaderMember.promoteToLeader();
-        // TODO: currentLeaderMember의 role을 MEMBER로 변경하는 메서드 필요
+
+        // Study의 leader 필드도 업데이트
+        study.changeLeader(newLeader);
     }
 }
