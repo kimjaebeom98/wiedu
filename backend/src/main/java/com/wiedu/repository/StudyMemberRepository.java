@@ -23,6 +23,10 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
     // 특정 스터디의 활성 멤버 목록
     List<StudyMember> findByStudyAndStatus(Study study, MemberStatus status);
 
+    // 특정 스터디의 활성 멤버 목록 (User 포함, N+1 방지)
+    @Query("SELECT sm FROM StudyMember sm JOIN FETCH sm.user WHERE sm.study = :study AND sm.status = :status")
+    List<StudyMember> findByStudyAndStatusWithUser(@Param("study") Study study, @Param("status") MemberStatus status);
+
     // 특정 사용자가 가입한 스터디 멤버십 목록
     List<StudyMember> findByUser(User user);
 

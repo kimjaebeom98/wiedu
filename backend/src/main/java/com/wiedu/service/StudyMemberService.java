@@ -27,11 +27,11 @@ public class StudyMemberService {
     private final UserService userService;
 
     /**
-     * 스터디 멤버 목록 조회
+     * 스터디 멤버 목록 조회 (N+1 방지)
      */
     public List<StudyMemberResponse> findMembersByStudyId(Long studyId) {
         Study study = studyService.findStudyEntityById(studyId);
-        return studyMemberRepository.findByStudyAndStatus(study, MemberStatus.ACTIVE)
+        return studyMemberRepository.findByStudyAndStatusWithUser(study, MemberStatus.ACTIVE)
                 .stream()
                 .map(StudyMemberResponse::from)
                 .toList();
