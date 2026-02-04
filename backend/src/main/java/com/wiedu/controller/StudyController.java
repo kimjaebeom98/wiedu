@@ -6,6 +6,7 @@ import com.wiedu.dto.request.StudyCreateRequest;
 import com.wiedu.dto.request.StudyUpdateRequest;
 import com.wiedu.dto.response.StudyListResponse;
 import com.wiedu.dto.response.StudyResponse;
+import com.wiedu.security.SecurityUtils;
 import com.wiedu.service.StudyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -33,8 +34,8 @@ public class StudyController {
      */
     @PostMapping
     public ResponseEntity<StudyResponse> createStudy(
-            @RequestHeader("X-User-Id") Long userId,  // TODO: JWT 인증으로 변경
             @Valid @RequestBody StudyCreateRequest request) {
+        Long userId = SecurityUtils.getCurrentUserId();
         StudyResponse response = studyService.createStudy(userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -114,8 +115,8 @@ public class StudyController {
     @PatchMapping("/{studyId}")
     public ResponseEntity<StudyResponse> updateStudy(
             @PathVariable Long studyId,
-            @RequestHeader("X-User-Id") Long userId,
             @Valid @RequestBody StudyUpdateRequest request) {
+        Long userId = SecurityUtils.getCurrentUserId();
         StudyResponse response = studyService.updateStudy(studyId, userId, request);
         return ResponseEntity.ok(response);
     }
@@ -125,9 +126,8 @@ public class StudyController {
      * POST /api/studies/{studyId}/close
      */
     @PostMapping("/{studyId}/close")
-    public ResponseEntity<Void> closeStudy(
-            @PathVariable Long studyId,
-            @RequestHeader("X-User-Id") Long userId) {
+    public ResponseEntity<Void> closeStudy(@PathVariable Long studyId) {
+        Long userId = SecurityUtils.getCurrentUserId();
         studyService.closeStudy(studyId, userId);
         return ResponseEntity.ok().build();
     }
@@ -137,9 +137,8 @@ public class StudyController {
      * POST /api/studies/{studyId}/complete
      */
     @PostMapping("/{studyId}/complete")
-    public ResponseEntity<Void> completeStudy(
-            @PathVariable Long studyId,
-            @RequestHeader("X-User-Id") Long userId) {
+    public ResponseEntity<Void> completeStudy(@PathVariable Long studyId) {
+        Long userId = SecurityUtils.getCurrentUserId();
         studyService.completeStudy(studyId, userId);
         return ResponseEntity.ok().build();
     }

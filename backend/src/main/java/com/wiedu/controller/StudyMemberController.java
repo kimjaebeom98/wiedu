@@ -1,6 +1,7 @@
 package com.wiedu.controller;
 
 import com.wiedu.dto.response.StudyMemberResponse;
+import com.wiedu.security.SecurityUtils;
 import com.wiedu.service.StudyMemberService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -33,9 +34,8 @@ public class StudyMemberController {
      * GET /api/studies/{studyId}/members/check
      */
     @GetMapping("/check")
-    public ResponseEntity<Boolean> checkMembership(
-            @PathVariable Long studyId,
-            @RequestHeader("X-User-Id") Long userId) {
+    public ResponseEntity<Boolean> checkMembership(@PathVariable Long studyId) {
+        Long userId = SecurityUtils.getCurrentUserId();
         boolean isMember = studyMemberService.isMemberOfStudy(studyId, userId);
         return ResponseEntity.ok(isMember);
     }
@@ -45,9 +45,8 @@ public class StudyMemberController {
      * DELETE /api/studies/{studyId}/members/me
      */
     @DeleteMapping("/me")
-    public ResponseEntity<Void> withdrawFromStudy(
-            @PathVariable Long studyId,
-            @RequestHeader("X-User-Id") Long userId) {
+    public ResponseEntity<Void> withdrawFromStudy(@PathVariable Long studyId) {
+        Long userId = SecurityUtils.getCurrentUserId();
         studyMemberService.withdrawFromStudy(studyId, userId);
         return ResponseEntity.ok().build();
     }
@@ -59,8 +58,8 @@ public class StudyMemberController {
     @DeleteMapping("/{targetUserId}")
     public ResponseEntity<Void> kickMember(
             @PathVariable Long studyId,
-            @PathVariable Long targetUserId,
-            @RequestHeader("X-User-Id") Long userId) {
+            @PathVariable Long targetUserId) {
+        Long userId = SecurityUtils.getCurrentUserId();
         studyMemberService.kickMember(studyId, userId, targetUserId);
         return ResponseEntity.ok().build();
     }
@@ -72,8 +71,8 @@ public class StudyMemberController {
     @PostMapping("/{newLeaderId}/promote")
     public ResponseEntity<Void> delegateLeader(
             @PathVariable Long studyId,
-            @PathVariable Long newLeaderId,
-            @RequestHeader("X-User-Id") Long userId) {
+            @PathVariable Long newLeaderId) {
+        Long userId = SecurityUtils.getCurrentUserId();
         studyMemberService.delegateLeader(studyId, userId, newLeaderId);
         return ResponseEntity.ok().build();
     }

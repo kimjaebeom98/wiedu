@@ -42,7 +42,15 @@ public enum ErrorCode {
     REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "R001", "가입 신청을 찾을 수 없습니다."),
     ALREADY_REQUESTED(HttpStatus.CONFLICT, "R002", "이미 가입 신청한 스터디입니다."),
     REQUEST_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "R003", "이미 처리된 신청입니다."),
-    NOT_REQUEST_OWNER(HttpStatus.FORBIDDEN, "R004", "본인의 신청만 취소할 수 있습니다.");
+    NOT_REQUEST_OWNER(HttpStatus.FORBIDDEN, "R004", "본인의 신청만 취소할 수 있습니다."),
+
+    // Authentication
+    AUTH_INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A001", "이메일 또는 비밀번호가 올바르지 않습니다."),
+    AUTH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "A002", "토큰이 만료되었습니다."),
+    AUTH_TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "A003", "유효하지 않은 토큰입니다."),
+    AUTH_TOKEN_MISSING(HttpStatus.UNAUTHORIZED, "A004", "인증 토큰이 필요합니다."),
+    AUTH_ACCESS_DENIED(HttpStatus.FORBIDDEN, "A005", "접근 권한이 없습니다."),
+    AUTH_USER_DISABLED(HttpStatus.UNAUTHORIZED, "A006", "비활성화된 계정입니다.");
 
     private final HttpStatus status;
     private final String code;

@@ -8,6 +8,7 @@ import com.wiedu.exception.BusinessException;
 import com.wiedu.exception.ErrorCode;
 import com.wiedu.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     /**
      * 회원가입
@@ -36,11 +38,10 @@ public class UserService {
             throw new BusinessException(ErrorCode.NICKNAME_DUPLICATED);
         }
 
-        // TODO: 비밀번호 암호화 (BCryptPasswordEncoder 적용 예정)
         User user = User.builder()
                 .email(request.email())
                 .nickname(request.nickname())
-                .password(request.password())  // 암호화 필요
+                .password(passwordEncoder.encode(request.password()))
                 .profileImage(request.profileImage())
                 .build();
 

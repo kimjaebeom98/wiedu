@@ -6,15 +6,15 @@ spring:
 
   # Database (개발 환경)
   datasource:
-    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE:wiedu}?useSSL=false&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE:wiedu}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
     username: ${MYSQL_USER:wiedu}
-    password: ${MYSQL_PASSWORD:}
+    password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   # JPA
   jpa:
     hibernate:
-      ddl-auto: update  # 개발: update, 운영: validate
+      ddl-auto: update # 개발: update, 운영: validate
     show-sql: true
     properties:
       hibernate:
@@ -30,6 +30,13 @@ spring:
 # Server
 server:
   port: 8080
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:wiedu-secret-key-for-jwt-token-generation-must-be-at-least-256-bits}
+  access-token-validity: 1800000
+  refresh-token-validity: 1209600000
+  issuer: wiedu
 
 # Logging
 logging:
