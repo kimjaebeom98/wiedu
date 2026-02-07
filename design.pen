@@ -257,7 +257,8 @@
                   "fill": "#71717A",
                   "content": "3초 가입으로 바로 시작해보세요",
                   "fontFamily": "Inter",
-                  "fontSize": 15
+                  "fontSize": 15,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -445,7 +446,8 @@
                   "fill": "#71717A",
                   "content": "로그인하시면 아래 내용에 동의하는 것으로 간주됩니다.",
                   "fontFamily": "Inter",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -501,7 +503,7 @@
     {
       "type": "frame",
       "id": "jEPxZ",
-      "x": 1800,
+      "x": 2240,
       "y": 0,
       "name": "Home Screen v2",
       "clip": true,
@@ -664,7 +666,8 @@
                       "fill": "#71717A",
                       "content": "어떤 스터디를 찾고 계세요?",
                       "fontFamily": "Inter",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -2357,7 +2360,7 @@
     {
       "type": "text",
       "id": "ju8gD",
-      "x": 1800,
+      "x": 2240,
       "y": -50,
       "name": "Section: Main",
       "fill": "#FFFFFF",
@@ -2369,9 +2372,9 @@
     {
       "type": "frame",
       "id": "O1DjB",
-      "x": 0,
+      "x": 1260,
       "y": 970,
-      "name": "Onboarding 1 - 경험수준",
+      "name": "Onboarding 4 - 경험수준",
       "clip": true,
       "width": 390,
       "height": 844,
@@ -2557,15 +2560,71 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "ol9fz",
+          "name": "ob1Bottom",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "eK7YF",
+              "name": "ob1NextBtn",
+              "width": "fill_container",
+              "height": 56,
+              "fill": "#8B5CF6",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "kttyp",
+                  "name": "ob1NextText",
+                  "fill": "#FFFFFF",
+                  "content": "다음",
+                  "fontFamily": "Inter",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TSCyg",
+              "name": "ob1SkipBtn",
+              "width": "fill_container",
+              "height": 44,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "vd41C",
+                  "name": "ob1SkipText",
+                  "fill": "#71717A",
+                  "content": "건너뛰기",
+                  "fontFamily": "Inter",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
     {
       "type": "frame",
       "id": "QEsTE",
-      "x": 420,
+      "x": 840,
       "y": 970,
-      "name": "Onboarding 2 - 관심분야",
+      "name": "Onboarding 3 - 관심분야",
       "clip": true,
       "width": 390,
       "height": 844,
@@ -2718,7 +2777,7 @@
                       "id": "05e8e",
                       "name": "chip2T",
                       "fill": "#FFFFFF",
-                      "content": "외국어",
+                      "content": "어학",
                       "fontFamily": "Inter",
                       "fontSize": 14,
                       "fontWeight": "500"
@@ -2819,12 +2878,123 @@
                       "id": "JPQJO",
                       "name": "chip6T",
                       "fill": "#FFFFFF",
-                      "content": "독서",
+                      "content": "운동/스포츠",
                       "fontFamily": "Inter",
                       "fontSize": 14,
                       "fontWeight": "500"
                     }
                   ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "hOe5R",
+              "name": "ob2Row3",
+              "width": "fill_container",
+              "gap": 10,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "ERpIr",
+                  "name": "chip7",
+                  "fill": "#27272A",
+                  "cornerRadius": 100,
+                  "padding": [
+                    12,
+                    20
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "xuBI5",
+                      "name": "chip7T",
+                      "fill": "#FFFFFF",
+                      "content": "음악/예술",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "d0f0r",
+                  "name": "chip8",
+                  "fill": "#27272A",
+                  "cornerRadius": 100,
+                  "padding": [
+                    12,
+                    20
+                  ],
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "ZFurA",
+                      "name": "chip8T",
+                      "fill": "#FFFFFF",
+                      "content": "기타",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "500"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "XijoG",
+          "name": "ob2Bottom",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "jEWZ0",
+              "name": "ob2NextBtn",
+              "width": "fill_container",
+              "height": 56,
+              "fill": "#8B5CF6",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "c61UA",
+                  "name": "ob2NextText",
+                  "fill": "#FFFFFF",
+                  "content": "다음",
+                  "fontFamily": "Inter",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "WVMxr",
+              "name": "ob2SkipBtn",
+              "width": "fill_container",
+              "height": 44,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Vg0Df",
+                  "name": "ob2SkipText",
+                  "fill": "#71717A",
+                  "content": "건너뛰기",
+                  "fontFamily": "Inter",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -2835,9 +3005,9 @@
     {
       "type": "frame",
       "id": "CoVOO",
-      "x": 840,
+      "x": 2100,
       "y": 970,
-      "name": "Onboarding 3 - 지역설정",
+      "name": "Onboarding 6 - 지역설정",
       "clip": true,
       "width": 390,
       "height": 844,
@@ -3056,15 +3226,71 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "h7d5V",
+          "name": "ob3Bottom",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "WhLZ8",
+              "name": "ob3NextBtn",
+              "width": "fill_container",
+              "height": 56,
+              "fill": "#8B5CF6",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "0uRpc",
+                  "name": "ob3NextText",
+                  "fill": "#FFFFFF",
+                  "content": "다음",
+                  "fontFamily": "Inter",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "TWcWu",
+              "name": "ob3SkipBtn",
+              "width": "fill_container",
+              "height": 44,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Xg673",
+                  "name": "ob3SkipText",
+                  "fill": "#71717A",
+                  "content": "건너뛰기",
+                  "fontFamily": "Inter",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
     {
       "type": "frame",
       "id": "MRj01",
-      "x": 1253,
+      "x": 2940,
       "y": 970,
-      "name": "Onboarding 4 - 완료",
+      "name": "Onboarding 8 - 완료",
       "clip": true,
       "width": 390,
       "height": 844,
@@ -3502,15 +3728,71 @@
               ]
             }
           ]
+        },
+        {
+          "type": "frame",
+          "id": "ruDys",
+          "name": "ob5Bottom",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "Z2yFc",
+              "name": "ob5NextBtn",
+              "width": "fill_container",
+              "height": 56,
+              "fill": "#8B5CF6",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "WoGX2",
+                  "name": "ob5NextText",
+                  "fill": "#FFFFFF",
+                  "content": "다음",
+                  "fontFamily": "Inter",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "slZ6I",
+              "name": "ob5SkipBtn",
+              "width": "fill_container",
+              "height": 44,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "MVmR8",
+                  "name": "ob5SkipText",
+                  "fill": "#71717A",
+                  "content": "건너뛰기",
+                  "fontFamily": "Inter",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
         }
       ]
     },
     {
       "type": "frame",
       "id": "b95G3",
-      "x": 2100,
+      "x": 420,
       "y": 970,
-      "name": "Onboarding 6 - 프로필설정",
+      "name": "Onboarding 2 - 프로필설정",
       "clip": true,
       "width": 390,
       "height": 844,
@@ -3665,7 +3947,7 @@
                   "id": "AsVwO",
                   "name": "ob6NickText",
                   "fill": "#A1A1AA",
-                  "content": "닉네임",
+                  "content": "닉네임 (필수)",
                   "fontFamily": "Inter",
                   "fontSize": 14,
                   "fontWeight": "600"
@@ -3695,6 +3977,40 @@
                       "fontWeight": "normal"
                     }
                   ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "i2ooa",
+          "name": "ob6Bottom",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "oVkXv",
+              "name": "ob6NextBtn",
+              "width": "fill_container",
+              "height": 56,
+              "fill": "#8B5CF6",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "s3EyZ",
+                  "name": "ob6NextText",
+                  "fill": "#FFFFFF",
+                  "content": "다음",
+                  "fontFamily": "Inter",
+                  "fontSize": 17,
+                  "fontWeight": "600"
                 }
               ]
             }
@@ -4007,6 +4323,1265 @@
                       "height": 24,
                       "fill": "#71717A",
                       "cornerRadius": 12
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "nHtEM",
+          "name": "ob8Bottom",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 12,
+          "children": [
+            {
+              "type": "frame",
+              "id": "D34mH",
+              "name": "ob8NextBtn",
+              "width": "fill_container",
+              "height": 56,
+              "fill": "#8B5CF6",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "8Qmic",
+                  "name": "ob8NextText",
+                  "fill": "#FFFFFF",
+                  "content": "시작하기",
+                  "fontFamily": "Inter",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "mI6fR",
+              "name": "ob8SkipBtn",
+              "width": "fill_container",
+              "height": 44,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "a0dSp",
+                  "name": "ob8SkipText",
+                  "fill": "#71717A",
+                  "content": "건너뛰기",
+                  "fontFamily": "Inter",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "1YHde",
+      "x": 1330,
+      "y": 0,
+      "name": "Signup Screen",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "#18181B",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "YFoqM",
+          "x": 0,
+          "y": 0,
+          "name": "signupContentWrap",
+          "width": 390,
+          "height": 844,
+          "fill": "#18181B",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            60,
+            28,
+            40,
+            28
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "f4gkQ",
+              "name": "signupHeader",
+              "width": "fill_container",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Q7oU9",
+                  "name": "signupBack",
+                  "width": 40,
+                  "height": 40,
+                  "fill": "#27272A",
+                  "cornerRadius": 100,
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "lUja6",
+                      "name": "signupBackIcon",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "arrow-left",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "OVjfO",
+              "name": "signupContent",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 8,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "dMomH",
+                  "name": "signupTitleRow",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "uulEy",
+                      "name": "wieText",
+                      "fill": "#FFFFFF",
+                      "content": "wie",
+                      "fontFamily": "Inter",
+                      "fontSize": 32,
+                      "fontWeight": "800"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "mw3qC",
+                      "name": "heartBg",
+                      "width": 32,
+                      "height": 32,
+                      "fill": "#8B5CF6",
+                      "cornerRadius": 100,
+                      "layout": "vertical",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "XS4Bo",
+                          "name": "heartIcon",
+                          "width": 18,
+                          "height": 18,
+                          "iconFontName": "heart",
+                          "iconFontFamily": "lucide",
+                          "fill": "#FFFFFF"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "VbLm8",
+                      "name": "uText",
+                      "fill": "#FFFFFF",
+                      "content": "u에",
+                      "fontFamily": "Inter",
+                      "fontSize": 32,
+                      "fontWeight": "800"
+                    }
+                  ]
+                },
+                {
+                  "type": "text",
+                  "id": "2qLon",
+                  "name": "signupTitle3",
+                  "fill": "#FFFFFF",
+                  "content": "가입하기",
+                  "fontFamily": "Inter",
+                  "fontSize": 32,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "text",
+                  "id": "ApZfQ",
+                  "name": "signupSubtitle",
+                  "fill": "#71717A",
+                  "content": "함께 성장하는 여정을 시작하세요",
+                  "fontFamily": "Inter",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Ioi14",
+              "name": "signupForm",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "xqWd1",
+                  "name": "emailField",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "UWFVX",
+                      "name": "emailLabel",
+                      "fill": "#A1A1AA",
+                      "content": "이메일",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "TdsVd",
+                      "name": "emailInput",
+                      "width": "fill_container",
+                      "height": 52,
+                      "fill": "#27272A",
+                      "cornerRadius": 12,
+                      "gap": 12,
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "KPBPc",
+                          "name": "emailIcon",
+                          "width": 20,
+                          "height": 20,
+                          "iconFontName": "mail",
+                          "iconFontFamily": "lucide",
+                          "fill": "#71717A"
+                        },
+                        {
+                          "type": "text",
+                          "id": "WLmgR",
+                          "name": "emailPlaceholder",
+                          "fill": "#71717A",
+                          "content": "이메일을 입력해주세요",
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "BjHD0",
+                  "name": "pwField",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "bDcow",
+                      "name": "pwLabel",
+                      "fill": "#A1A1AA",
+                      "content": "비밀번호",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "rn8Z3",
+                      "name": "pwInput",
+                      "width": "fill_container",
+                      "height": 52,
+                      "fill": "#27272A",
+                      "cornerRadius": 12,
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "0zb2V",
+                          "name": "pwLeft",
+                          "gap": 12,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "2x6Mo",
+                              "name": "pwLockIcon",
+                              "width": 20,
+                              "height": 20,
+                              "iconFontName": "lock",
+                              "iconFontFamily": "lucide",
+                              "fill": "#71717A"
+                            },
+                            {
+                              "type": "text",
+                              "id": "yYhIk",
+                              "name": "pwPlaceholder",
+                              "fill": "#71717A",
+                              "content": "비밀번호를 입력해주세요",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "Qxb9E",
+                          "name": "pwEyeIcon",
+                          "width": 20,
+                          "height": 20,
+                          "iconFontName": "eye-off",
+                          "iconFontFamily": "lucide",
+                          "fill": "#71717A"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "OGo40",
+                  "name": "pwConfirmField",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 8,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "b3QpT",
+                      "name": "pwConfirmLabel",
+                      "fill": "#A1A1AA",
+                      "content": "비밀번호 확인",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "frame",
+                      "id": "QdT1P",
+                      "name": "pwConfirmInput",
+                      "width": "fill_container",
+                      "height": 52,
+                      "fill": "#27272A",
+                      "cornerRadius": 12,
+                      "padding": [
+                        0,
+                        16
+                      ],
+                      "justifyContent": "space_between",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "TTSI3",
+                          "name": "pwConfirmLeft",
+                          "gap": 12,
+                          "alignItems": "center",
+                          "children": [
+                            {
+                              "type": "icon_font",
+                              "id": "AVekJ",
+                              "name": "pwConfirmLockIcon",
+                              "width": 20,
+                              "height": 20,
+                              "iconFontName": "lock",
+                              "iconFontFamily": "lucide",
+                              "fill": "#71717A"
+                            },
+                            {
+                              "type": "text",
+                              "id": "C2U6q",
+                              "name": "pwConfirmPlaceholder",
+                              "fill": "#71717A",
+                              "content": "비밀번호를 다시 입력해주세요",
+                              "fontFamily": "Inter",
+                              "fontSize": 15,
+                              "fontWeight": "normal"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "icon_font",
+                          "id": "Ms4KV",
+                          "name": "pwConfirmEyeIcon",
+                          "width": 20,
+                          "height": 20,
+                          "iconFontName": "eye-off",
+                          "iconFontFamily": "lucide",
+                          "fill": "#71717A"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "Ev5iH",
+              "name": "signupBtn",
+              "width": "fill_container",
+              "height": 56,
+              "fill": "#8B5CF6",
+              "cornerRadius": 12,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "aXNJO",
+                  "name": "signupBtnText",
+                  "fill": "#FFFFFF",
+                  "content": "다음",
+                  "fontFamily": "Inter",
+                  "fontSize": 17,
+                  "fontWeight": "600"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "cwPba",
+              "name": "loginLink",
+              "width": "fill_container",
+              "gap": 4,
+              "justifyContent": "center",
+              "children": [
+                {
+                  "type": "text",
+                  "id": "XKEZr",
+                  "name": "loginLinkText1",
+                  "fill": "#71717A",
+                  "content": "이미 계정이 있으신가요?",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "normal"
+                },
+                {
+                  "type": "text",
+                  "id": "xt42K",
+                  "name": "loginLinkText2",
+                  "fill": "#8B5CF6",
+                  "content": "로그인",
+                  "fontFamily": "Inter",
+                  "fontSize": 14,
+                  "fontWeight": "600"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "0DcGY",
+          "x": 0,
+          "y": 0,
+          "name": "bgLayer",
+          "width": 390,
+          "height": 844,
+          "fill": "transparent",
+          "layout": "none",
+          "children": [
+            {
+              "type": "ellipse",
+              "id": "0hGUF",
+              "x": -120,
+              "y": 50,
+              "name": "glow1",
+              "opacity": 0.06,
+              "fill": "#8B5CF6",
+              "width": 350,
+              "height": 350
+            },
+            {
+              "type": "ellipse",
+              "id": "gHxDQ",
+              "x": 220,
+              "y": 550,
+              "name": "glow2",
+              "opacity": 0.04,
+              "fill": "#8B5CF6",
+              "width": 280,
+              "height": 280
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "frame",
+      "id": "o4psJ",
+      "x": 0,
+      "y": 970,
+      "name": "Onboarding 1 - 약관동의",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "#18181B",
+      "layout": "vertical",
+      "gap": 32,
+      "padding": [
+        80,
+        28,
+        40,
+        28
+      ],
+      "children": [
+        {
+          "type": "frame",
+          "id": "syv01",
+          "name": "termsHeader",
+          "width": "fill_container",
+          "gap": 16,
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "frame",
+              "id": "Uv2xh",
+              "name": "termsBack",
+              "width": 40,
+              "height": 40,
+              "fill": "#27272A",
+              "cornerRadius": 100,
+              "layout": "vertical",
+              "justifyContent": "center",
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "icon_font",
+                  "id": "br86m",
+                  "name": "termsBackIcon",
+                  "width": 20,
+                  "height": 20,
+                  "iconFontName": "arrow-left",
+                  "iconFontFamily": "lucide",
+                  "fill": "#FFFFFF"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "1HtQT",
+              "name": "termsProgress",
+              "width": "fill_container",
+              "height": 4,
+              "fill": "#27272A",
+              "cornerRadius": 2,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "MkqOK",
+                  "name": "termsProgressFill",
+                  "width": 40,
+                  "height": 4,
+                  "fill": "#8B5CF6",
+                  "cornerRadius": 2
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "ea8cm",
+          "name": "termsMain",
+          "width": "fill_container",
+          "layout": "vertical",
+          "gap": 32,
+          "children": [
+            {
+              "type": "frame",
+              "id": "k3Z9o",
+              "name": "termsContent",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 12,
+              "children": [
+                {
+                  "type": "text",
+                  "id": "Qai4b",
+                  "name": "termsTitle",
+                  "fill": "#FFFFFF",
+                  "content": "서비스 이용약관에\n동의해주세요",
+                  "lineHeight": 1.3,
+                  "fontFamily": "Inter",
+                  "fontSize": 28,
+                  "fontWeight": "800"
+                },
+                {
+                  "type": "text",
+                  "id": "2f10e",
+                  "name": "termsDesc",
+                  "fill": "#71717A",
+                  "content": "wiedu 서비스 이용을 위해 필요해요",
+                  "fontFamily": "Inter",
+                  "fontSize": 15,
+                  "fontWeight": "normal"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "vAEDg",
+              "name": "termsList",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "5PbRp",
+                  "name": "termsAll",
+                  "width": "fill_container",
+                  "height": 56,
+                  "fill": "#27272A",
+                  "cornerRadius": 12,
+                  "gap": 12,
+                  "padding": [
+                    0,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "h9GFu",
+                      "name": "termsAllCheck",
+                      "width": 24,
+                      "height": 24,
+                      "fill": "#8B5CF6",
+                      "cornerRadius": 6,
+                      "layout": "vertical",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "icon_font",
+                          "id": "ZWvUK",
+                          "name": "termsAllIcon",
+                          "width": 16,
+                          "height": 16,
+                          "iconFontName": "check",
+                          "iconFontFamily": "lucide",
+                          "fill": "#FFFFFF"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "text",
+                      "id": "nOECs",
+                      "name": "termsAllText",
+                      "fill": "#FFFFFF",
+                      "content": "전체 동의하기",
+                      "fontFamily": "Inter",
+                      "fontSize": 16,
+                      "fontWeight": "600"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "wtkOD",
+                  "name": "term1",
+                  "width": "fill_container",
+                  "padding": [
+                    12,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "ciSJS",
+                      "name": "term1Left",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "oGYjG",
+                          "name": "term1Check",
+                          "width": 24,
+                          "height": 24,
+                          "fill": "transparent",
+                          "cornerRadius": 6,
+                          "layout": "vertical",
+                          "justifyContent": "center",
+                          "alignItems": "center"
+                        },
+                        {
+                          "type": "text",
+                          "id": "wMX9t",
+                          "name": "term1Text",
+                          "fill": "#A1A1AA",
+                          "content": "(필수) 이용약관 동의",
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "MFbgH",
+                      "name": "term1Arrow",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "chevron-right",
+                      "iconFontFamily": "lucide",
+                      "fill": "#71717A"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "RGtcK",
+                  "name": "term2",
+                  "width": "fill_container",
+                  "padding": [
+                    12,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "GuC9V",
+                      "name": "term2Left",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "0JYKC",
+                          "name": "term2Check",
+                          "width": 24,
+                          "height": 24,
+                          "fill": "transparent",
+                          "cornerRadius": 6,
+                          "layout": "vertical",
+                          "justifyContent": "center",
+                          "alignItems": "center"
+                        },
+                        {
+                          "type": "text",
+                          "id": "IpsS8",
+                          "name": "term2Text",
+                          "fill": "#A1A1AA",
+                          "content": "(필수) 개인정보처리방침 동의",
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "Gv3F4",
+                      "name": "term2Arrow",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "chevron-right",
+                      "iconFontFamily": "lucide",
+                      "fill": "#71717A"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "H6NNd",
+                  "name": "term3",
+                  "width": "fill_container",
+                  "padding": [
+                    12,
+                    16
+                  ],
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "WraVP",
+                      "name": "term3Left",
+                      "gap": 12,
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "frame",
+                          "id": "kY0gI",
+                          "name": "term3Check",
+                          "width": 24,
+                          "height": 24,
+                          "fill": "transparent",
+                          "cornerRadius": 6,
+                          "layout": "vertical",
+                          "justifyContent": "center",
+                          "alignItems": "center"
+                        },
+                        {
+                          "type": "text",
+                          "id": "6c3M0",
+                          "name": "term3Text",
+                          "fill": "#A1A1AA",
+                          "content": "(선택) 마케팅 정보 수신 동의",
+                          "fontFamily": "Inter",
+                          "fontSize": 15,
+                          "fontWeight": "normal"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "icon_font",
+                      "id": "cn636",
+                      "name": "term3Arrow",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "chevron-right",
+                      "iconFontFamily": "lucide",
+                      "fill": "#71717A"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "Ynh0k",
+          "name": "termsBtn",
+          "width": "fill_container",
+          "height": 56,
+          "fill": "#8B5CF6",
+          "cornerRadius": 12,
+          "layout": "vertical",
+          "justifyContent": "center",
+          "alignItems": "center",
+          "children": [
+            {
+              "type": "text",
+              "id": "1rjg8",
+              "name": "termsBtnText",
+              "fill": "#FFFFFF",
+              "content": "동의하고 계속하기",
+              "fontFamily": "Inter",
+              "fontSize": 17,
+              "fontWeight": "600"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "id": "P9eOp",
+      "x": 0,
+      "y": 1870,
+      "name": "flowNote",
+      "fill": "#71717A",
+      "content": "📱 온보딩 플로우:\n1.약관동의 → 2.프로필설정 → 3.관심분야 → 4.경험수준 → 5.스터디방식 → 6.지역설정 → 7.알림설정 → 8.완료\n\n* 이메일 인증은 회원가입 화면에서 처리",
+      "lineHeight": 1.5,
+      "fontFamily": "Inter",
+      "fontSize": 11,
+      "fontWeight": "normal"
+    },
+    {
+      "type": "frame",
+      "id": "bPN1Z",
+      "x": 1770,
+      "y": 0,
+      "name": "Signup - 이메일인증",
+      "clip": true,
+      "width": 390,
+      "height": 844,
+      "fill": "#18181B",
+      "layout": "none",
+      "children": [
+        {
+          "type": "frame",
+          "id": "5vSzu",
+          "x": 28,
+          "y": 60,
+          "name": "verifyBgLayer",
+          "width": 390,
+          "height": 844,
+          "layout": "none",
+          "children": [
+            {
+              "type": "ellipse",
+              "id": "6tNQB",
+              "x": -120,
+              "y": 50,
+              "name": "verifyGlow1",
+              "opacity": 0.06,
+              "fill": "#8B5CF6",
+              "width": 350,
+              "height": 350
+            },
+            {
+              "type": "ellipse",
+              "id": "x66em",
+              "x": 220,
+              "y": 550,
+              "name": "verifyGlow2",
+              "opacity": 0.04,
+              "fill": "#8B5CF6",
+              "width": 280,
+              "height": 280
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "id": "LddSY",
+          "x": 0,
+          "y": 0,
+          "name": "verifyContent",
+          "width": 390,
+          "height": 844,
+          "fill": "#18181B",
+          "layout": "vertical",
+          "gap": 32,
+          "padding": [
+            60,
+            28,
+            40,
+            28
+          ],
+          "children": [
+            {
+              "type": "frame",
+              "id": "ooFSt",
+              "name": "verifyHeader",
+              "width": "fill_container",
+              "gap": 16,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "BD9wI",
+                  "name": "verifyBack",
+                  "width": 40,
+                  "height": 40,
+                  "fill": "#27272A",
+                  "cornerRadius": 100,
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "icon_font",
+                      "id": "bWXAN",
+                      "name": "verifyBackIcon",
+                      "width": 20,
+                      "height": 20,
+                      "iconFontName": "arrow-left",
+                      "iconFontFamily": "lucide",
+                      "fill": "#FFFFFF"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "lD9jE",
+              "name": "verifyMain",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 32,
+              "alignItems": "center",
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "Qxetw",
+                  "name": "verifyTitleSection",
+                  "width": "fill_container",
+                  "layout": "vertical",
+                  "gap": 12,
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "YUkS5",
+                      "name": "verifyTitle",
+                      "fill": "#FFFFFF",
+                      "content": "이메일로 전송된\n인증코드를 입력해주세요",
+                      "lineHeight": 1.3,
+                      "fontFamily": "Inter",
+                      "fontSize": 28,
+                      "fontWeight": "800"
+                    },
+                    {
+                      "type": "text",
+                      "id": "jchsg",
+                      "name": "verifyDesc",
+                      "fill": "#71717A",
+                      "content": "example@email.com으로 전송했어요",
+                      "fontFamily": "Inter",
+                      "fontSize": 15,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "JodTN",
+                  "name": "codeRow",
+                  "gap": 8,
+                  "justifyContent": "center",
+                  "children": [
+                    {
+                      "type": "frame",
+                      "id": "4Snw3",
+                      "name": "code1",
+                      "width": 48,
+                      "height": 56,
+                      "fill": "#27272A",
+                      "cornerRadius": 12,
+                      "layout": "vertical",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "wStlx",
+                          "name": "code1T",
+                          "fill": "#FFFFFF",
+                          "content": "1",
+                          "fontFamily": "Inter",
+                          "fontSize": 24,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "ziAVU",
+                      "name": "code2",
+                      "width": 48,
+                      "height": 56,
+                      "fill": "#27272A",
+                      "cornerRadius": 12,
+                      "layout": "vertical",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "MqUDB",
+                          "name": "code2T",
+                          "fill": "#FFFFFF",
+                          "content": "2",
+                          "fontFamily": "Inter",
+                          "fontSize": 24,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "52Nwm",
+                      "name": "code3",
+                      "width": 48,
+                      "height": 56,
+                      "fill": "#27272A",
+                      "cornerRadius": 12,
+                      "layout": "vertical",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "Jqu3C",
+                          "name": "code3T",
+                          "fill": "#FFFFFF",
+                          "content": "3",
+                          "fontFamily": "Inter",
+                          "fontSize": 24,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "Ie50I",
+                      "name": "code4",
+                      "width": 48,
+                      "height": 56,
+                      "fill": "#27272A",
+                      "cornerRadius": 12,
+                      "layout": "vertical",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "pD5cq",
+                          "name": "code4T",
+                          "fill": "#FFFFFF",
+                          "content": "4",
+                          "fontFamily": "Inter",
+                          "fontSize": 24,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "lbTWt",
+                      "name": "code5",
+                      "width": 48,
+                      "height": 56,
+                      "fill": "#27272A",
+                      "cornerRadius": 12,
+                      "layout": "vertical",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "w8KE0",
+                          "name": "code5T",
+                          "fill": "#FFFFFF",
+                          "content": "5",
+                          "fontFamily": "Inter",
+                          "fontSize": 24,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    },
+                    {
+                      "type": "frame",
+                      "id": "YaIIZ",
+                      "name": "code6",
+                      "width": 48,
+                      "height": 56,
+                      "fill": "#27272A",
+                      "cornerRadius": 12,
+                      "layout": "vertical",
+                      "justifyContent": "center",
+                      "alignItems": "center",
+                      "children": [
+                        {
+                          "type": "text",
+                          "id": "IgLgo",
+                          "name": "code6T",
+                          "fill": "#FFFFFF",
+                          "content": "6",
+                          "fontFamily": "Inter",
+                          "fontSize": 24,
+                          "fontWeight": "700"
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "frame",
+                  "id": "mD8zG",
+                  "name": "timerRow",
+                  "gap": 8,
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "4YxQT",
+                      "name": "timerText",
+                      "fill": "#8B5CF6",
+                      "content": "04:32",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "600"
+                    },
+                    {
+                      "type": "text",
+                      "id": "Hwhu4",
+                      "name": "timerDivider",
+                      "fill": "#3F3F46",
+                      "content": "|",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    },
+                    {
+                      "type": "text",
+                      "id": "mpjqd",
+                      "name": "resendText",
+                      "fill": "#71717A",
+                      "content": "인증코드 재전송",
+                      "fontFamily": "Inter",
+                      "fontSize": 14,
+                      "fontWeight": "normal"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "id": "NrNZN",
+              "name": "verifyBottom",
+              "width": "fill_container",
+              "layout": "vertical",
+              "gap": 16,
+              "children": [
+                {
+                  "type": "frame",
+                  "id": "08kaZ",
+                  "name": "verifyBtn",
+                  "width": "fill_container",
+                  "height": 56,
+                  "fill": "#8B5CF6",
+                  "cornerRadius": 12,
+                  "layout": "vertical",
+                  "justifyContent": "center",
+                  "alignItems": "center",
+                  "children": [
+                    {
+                      "type": "text",
+                      "id": "JiPBd",
+                      "name": "verifyBtnText",
+                      "fill": "#FFFFFF",
+                      "content": "인증 확인",
+                      "fontFamily": "Inter",
+                      "fontSize": 17,
+                      "fontWeight": "600"
                     }
                   ]
                 }
