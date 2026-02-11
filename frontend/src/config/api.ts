@@ -1,6 +1,6 @@
 // API Configuration
 // ngrok URL for development (bypasses network restrictions)
-const NGROK_URL = 'https://fa8d-121-140-123-64.ngrok-free.app';
+const NGROK_URL = 'https://3662-121-140-123-64.ngrok-free.app';
 
 // Production URL
 const PRODUCTION_URL = 'https://api.wiedu.com';

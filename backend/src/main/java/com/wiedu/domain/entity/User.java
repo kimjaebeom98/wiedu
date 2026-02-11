@@ -39,6 +39,14 @@ public class User {
     @Comment("비밀번호 (암호화, 소셜 로그인 시 NULL)")
     private String password;
 
+    @Column(length = 20)
+    @Comment("OAuth 제공자: KAKAO, NAVER, GOOGLE")
+    private String oauthProvider;
+
+    @Column(length = 100)
+    @Comment("OAuth 제공자의 사용자 ID")
+    private String oauthProviderId;
+
     @Column(precision = 3, scale = 1)
     @Comment("매너 온도 (기본 36.5)")
     private BigDecimal temperature = BigDecimal.valueOf(36.5);
@@ -74,11 +82,26 @@ public class User {
     }
 
     @Builder
-    public User(String email, String nickname, String password, String profileImage) {
+    public User(String email, String nickname, String password, String profileImage,
+                String oauthProvider, String oauthProviderId) {
         this.email = email;
         this.nickname = nickname;
         this.password = password;
         this.profileImage = profileImage;
+        this.oauthProvider = oauthProvider;
+        this.oauthProviderId = oauthProviderId;
+    }
+
+    // OAuth 사용자 생성용 팩토리 메서드
+    public static User createOAuthUser(String email, String nickname, String profileImage,
+                                       String oauthProvider, String oauthProviderId) {
+        return User.builder()
+                .email(email)
+                .nickname(nickname)
+                .profileImage(profileImage)
+                .oauthProvider(oauthProvider)
+                .oauthProviderId(oauthProviderId)
+                .build();
     }
 
     // 비즈니스 메서드

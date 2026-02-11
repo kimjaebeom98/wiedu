@@ -3,6 +3,7 @@
     "name": "wiedu",
     "slug": "wiedu",
     "version": "1.0.0",
+    "scheme": "wiedu",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",

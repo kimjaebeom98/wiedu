@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,8 +6,12 @@ import {
   StyleSheet,
   Dimensions,
   StatusBar,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { startKakaoLogin } from '../services/kakaoAuth';
+import { saveTokens } from '../storage/token';
 
 const { height } = Dimensions.get('window');
 
@@ -16,18 +20,59 @@ interface LoginScreenProps {
 }
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
+  const [loading, setLoading] = useState(false);
+
   const handleEmailLogin = () => {
     navigation.navigate('EmailLogin');
   };
 
+  const handleKakaoLogin = async () => {
+    setLoading(true);
+
+    try {
+      console.log('[Login] Starting Kakao login...');
+      const result = await startKakaoLogin();
+      console.log('[Login] Kakao login result:', JSON.stringify(result, null, 2));
+
+      if (result.success && result.accessToken && result.refreshToken) {
+        // 토큰 저장
+        await saveTokens(result.accessToken, result.refreshToken);
+        console.log('[Login] Tokens saved, navigating to Home');
+
+        // 홈으로 이동
+        navigation.replace('Home');
+      } else if (result.cancelled) {
+        // 사용자가 취소함 - 아무것도 하지 않음
+        console.log('[Login] User cancelled');
+      } else {
+        // 에러 발생
+        console.error('[Login] Kakao login error:', result.error);
+        Alert.alert('로그인 실패', result.error || '카카오 로그인에 실패했습니다.');
+      }
+    } catch (error: any) {
+      console.error('[Login] Unexpected error:', error);
+      Alert.alert('로그인 실패', error.message || '카카오 로그인에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSocialLogin = (provider: string) => {
-    // TODO: Implement social login
-    console.log(`${provider} login pressed`);
+    // TODO: Implement other social logins
+    Alert.alert('준비 중', `${provider} 로그인은 준비 중입니다.`);
   };
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#18181B" />
+
+      {/* Loading Overlay */}
+      {loading && (
+        <View style={styles.loadingOverlay}>
+          <ActivityIndicator size="large" color="#8B5CF6" />
+          <Text style={styles.loadingText}>로그인 중...</Text>
+        </View>
+      )}
 
       {/* Background glows */}
       <View style={styles.glow1} />
@@ -56,6 +101,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
             style={styles.emailBtn}
             onPress={handleEmailLogin}
             activeOpacity={0.8}
+            disabled={loading}
           >
             <Feather name="mail" size={20} color="#FFFFFF" />
             <Text style={styles.emailText}>이메일로 시작하기</Text>
@@ -72,22 +118,25 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           <View style={styles.socialRow}>
             <TouchableOpacity
               style={styles.kakaoBtn}
-              onPress={() => handleSocialLogin('kakao')}
+              onPress={handleKakaoLogin}
               activeOpacity={0.8}
+              disabled={loading}
             >
               <Text style={styles.kakaoIcon}>K</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.naverBtn}
-              onPress={() => handleSocialLogin('naver')}
+              onPress={() => handleSocialLogin('네이버')}
               activeOpacity={0.8}
+              disabled={loading}
             >
               <Text style={styles.naverIcon}>N</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.googleBtn}
-              onPress={() => handleSocialLogin('google')}
+              onPress={() => handleSocialLogin('구글')}
               activeOpacity={0.8}
+              disabled={loading}
             >
               <Text style={styles.googleIcon}>G</Text>
             </TouchableOpacity>
@@ -110,6 +159,18 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#18181B',
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(24, 24, 27, 0.9)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 100,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#FFFFFF',
   },
   glow1: {
     position: 'absolute',
@@ -157,10 +218,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 2,
-  },
-  heartIcon: {
-    fontSize: 16,
-    color: '#FFFFFF',
   },
   tagline: {
     marginTop: 16,

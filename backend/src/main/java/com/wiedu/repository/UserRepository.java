@@ -25,4 +25,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // 상태별 사용자 조회
     java.util.List<User> findByStatus(UserStatus status);
+
+    // OAuth 제공자와 ID로 사용자 조회
+    Optional<User> findByOauthProviderAndOauthProviderId(String oauthProvider, String oauthProviderId);
 }

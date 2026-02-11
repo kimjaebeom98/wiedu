@@ -24,7 +24,8 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     /**
-     * 회원가입
+     * 회원가입 (이메일 인증 요청)
+     * 닉네임/프로필은 온보딩에서 별도 설정
      */
     @Transactional
     public UserResponse signUp(SignUpRequest request) {
@@ -33,16 +34,13 @@ public class UserService {
             throw new BusinessException(ErrorCode.EMAIL_DUPLICATED);
         }
 
-        // 닉네임 중복 체크
-        if (userRepository.existsByNickname(request.nickname())) {
-            throw new BusinessException(ErrorCode.NICKNAME_DUPLICATED);
-        }
+        // 임시 닉네임 생성 (온보딩에서 변경)
+        String tempNickname = "위듀" + java.util.UUID.randomUUID().toString().substring(0, 8);
 
         User user = User.builder()
                 .email(request.email())
-                .nickname(request.nickname())
+                .nickname(tempNickname)
                 .password(passwordEncoder.encode(request.password()))
-                .profileImage(request.profileImage())
                 .build();
 
         User savedUser = userRepository.save(user);

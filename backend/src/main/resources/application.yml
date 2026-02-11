@@ -39,6 +39,11 @@ jwt:
   refresh-token-validity: 1209600000
   issuer: wiedu
 
+# Kakao OAuth
+kakao:
+  client-id: ${KAKAO_CLIENT_ID:891cfab43de70f0ea8f731792876fa0b}
+  redirect-uri: ${KAKAO_REDIRECT_URI:https://3662-121-140-123-64.ngrok-free.app/api/auth/kakao/callback}
+
 # Logging
 logging:
   level:

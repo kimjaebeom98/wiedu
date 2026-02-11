@@ -50,7 +50,12 @@ public enum ErrorCode {
     AUTH_TOKEN_INVALID(HttpStatus.UNAUTHORIZED, "A003", "유효하지 않은 토큰입니다."),
     AUTH_TOKEN_MISSING(HttpStatus.UNAUTHORIZED, "A004", "인증 토큰이 필요합니다."),
     AUTH_ACCESS_DENIED(HttpStatus.FORBIDDEN, "A005", "접근 권한이 없습니다."),
-    AUTH_USER_DISABLED(HttpStatus.UNAUTHORIZED, "A006", "비활성화된 계정입니다.");
+    AUTH_USER_DISABLED(HttpStatus.UNAUTHORIZED, "A006", "비활성화된 계정입니다."),
+
+    // OAuth
+    OAUTH_TOKEN_FAILED(HttpStatus.UNAUTHORIZED, "O001", "OAuth 토큰 발급에 실패했습니다."),
+    OAUTH_USER_INFO_FAILED(HttpStatus.UNAUTHORIZED, "O002", "OAuth 사용자 정보 조회에 실패했습니다."),
+    OAUTH_INVALID_PROVIDER(HttpStatus.BAD_REQUEST, "O003", "지원하지 않는 OAuth 제공자입니다.");
 
     private final HttpStatus status;
     private final String code;

@@ -32,3 +32,6 @@ yarn-error.log*
 dist/
 build/
 out/
+
+# Troubleshooting docs (개발 환경 정보 포함)
+docs/troubleshooting.md
