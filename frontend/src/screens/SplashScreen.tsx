@@ -5,132 +5,289 @@ import {
   StyleSheet,
   Animated,
   Dimensions,
+  Easing,
 } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Defs, RadialGradient, Stop, Ellipse } from 'react-native-svg';
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 interface SplashScreenProps {
   onFinish: () => void;
 }
 
 export default function SplashScreen({ onFinish }: SplashScreenProps) {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  // Animation values
+  const animProgress = useRef(new Animated.Value(0)).current;
+  const logoOpacity = useRef(new Animated.Value(0)).current;
+  const taglineOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Fade in and scale up animation
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
+    Animated.sequence([
+      // Phase 1 & 2: Smooth entry and merge (0 -> 1 over 1.8s)
+      Animated.timing(animProgress, {
         toValue: 1,
-        duration: 800,
+        duration: 1800,
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1), // smooth ease-in-out
         useNativeDriver: true,
       }),
-      Animated.spring(scaleAnim, {
+
+      // Small pause at center
+      Animated.delay(300),
+
+      // Phase 3: Transform to wiedu logo
+      Animated.timing(logoOpacity, {
         toValue: 1,
-        tension: 50,
-        friction: 7,
+        duration: 500,
+        easing: Easing.out(Easing.ease),
         useNativeDriver: true,
       }),
-    ]).start();
 
-    // Navigate after 2.5 seconds
-    const timer = setTimeout(() => {
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 300,
+      // Phase 4: Tagline fade in
+      Animated.timing(taglineOpacity, {
+        toValue: 1,
+        duration: 400,
         useNativeDriver: true,
-      }).start(() => {
-        onFinish();
-      });
-    }, 2500);
+      }),
 
-    return () => clearTimeout(timer);
+      // Wait before transition
+      Animated.delay(700),
+    ]).start(() => {
+      onFinish();
+    });
   }, []);
 
-  return (
-    <View style={styles.container}>
-      {/* Background glows */}
-      <View style={styles.glow1} />
-      <View style={styles.glow2} />
+  // Interpolate positions for smooth continuous movement
+  // Start from off-screen, smoothly move to center
+  const leftGroupX = animProgress.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [-width * 0.5, -40, 0],
+  });
 
+  const rightGroupX = animProgress.interpolate({
+    inputRange: [0, 0.5, 1],
+    outputRange: [width * 0.5, 40, 0],
+  });
+
+  // Fade out animation elements when logo appears
+  const animOpacity = animProgress.interpolate({
+    inputRange: [0, 0.9, 1],
+    outputRange: [1, 1, 0],
+  });
+
+  // Logo fades in as animation elements fade out
+  const finalLogoOpacity = Animated.multiply(
+    logoOpacity,
+    animProgress.interpolate({
+      inputRange: [0, 0.95, 1],
+      outputRange: [0, 0, 1],
+    })
+  );
+
+  return (
+    <LinearGradient
+      colors={['#18181B', '#1f1f23', '#18181B']}
+      locations={[0, 0.5, 1]}
+      start={{ x: 0.5, y: 1 }}
+      end={{ x: 0.5, y: 0 }}
+      style={styles.container}
+    >
+      {/* Background glows - radial gradient effect (matching design.pen) */}
+      <View style={styles.glow1}>
+        <Svg width={350} height={350}>
+          <Defs>
+            <RadialGradient id="glow1Grad" cx="50%" cy="50%" r="50%">
+              <Stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.25" />
+              <Stop offset="70%" stopColor="#8B5CF6" stopOpacity="0.08" />
+              <Stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
+            </RadialGradient>
+          </Defs>
+          <Ellipse cx={175} cy={175} rx={175} ry={175} fill="url(#glow1Grad)" />
+        </Svg>
+      </View>
+      <View style={styles.glow2}>
+        <Svg width={280} height={280}>
+          <Defs>
+            <RadialGradient id="glow2Grad" cx="50%" cy="50%" r="50%">
+              <Stop offset="0%" stopColor="#A78BFA" stopOpacity="0.2" />
+              <Stop offset="70%" stopColor="#A78BFA" stopOpacity="0.06" />
+              <Stop offset="100%" stopColor="#A78BFA" stopOpacity="0" />
+            </RadialGradient>
+          </Defs>
+          <Ellipse cx={140} cy={140} rx={140} ry={140} fill="url(#glow2Grad)" />
+        </Svg>
+      </View>
+      <View style={styles.glow3}>
+        <Svg width={200} height={200}>
+          <Defs>
+            <RadialGradient id="glow3Grad" cx="50%" cy="50%" r="50%">
+              <Stop offset="0%" stopColor="#6366F1" stopOpacity="0.18" />
+              <Stop offset="70%" stopColor="#6366F1" stopOpacity="0.05" />
+              <Stop offset="100%" stopColor="#6366F1" stopOpacity="0" />
+            </RadialGradient>
+          </Defs>
+          <Ellipse cx={100} cy={100} rx={100} ry={100} fill="url(#glow3Grad)" />
+        </Svg>
+      </View>
+
+      {/* Animation: "with" + ● from left, ● + "you" from right */}
+      <Animated.View
+        style={[
+          styles.animationContainer,
+          { opacity: animOpacity },
+        ]}
+      >
+        {/* Left group: "with" + circle */}
+        <Animated.View
+          style={[
+            styles.leftGroup,
+            { transform: [{ translateX: leftGroupX }] },
+          ]}
+        >
+          <Text style={styles.animText}>with</Text>
+          <View style={styles.circle} />
+        </Animated.View>
+
+        {/* Right group: circle + "you" */}
+        <Animated.View
+          style={[
+            styles.rightGroup,
+            { transform: [{ translateX: rightGroupX }] },
+          ]}
+        >
+          <View style={styles.circle} />
+          <Text style={styles.animText}>you</Text>
+        </Animated.View>
+      </Animated.View>
+
+      {/* Final "wiedu" logo (matches design.pen) */}
       <Animated.View
         style={[
           styles.logoContainer,
-          {
-            opacity: fadeAnim,
-            transform: [{ scale: scaleAnim }],
-          },
+          { opacity: logoOpacity },
         ]}
       >
-        {/* Logo: wie❤️u */}
-        <View style={styles.logoRow}>
-          <Text style={styles.logoText}>wie</Text>
-          <View style={styles.heartCircle}>
-            <Feather name="heart" size={28} color="#FFFFFF" />
-          </View>
-          <Text style={styles.logoText}>u</Text>
+        {/* Overlapping circles logo mark */}
+        <View style={styles.circlesFrame}>
+          <View style={styles.circleYou} />
+          <View style={styles.circleUs} />
+        </View>
+
+        {/* Logo text */}
+        <View style={styles.logoTextFrame}>
+          <Text style={styles.logoWi}>wi</Text>
+          <Text style={styles.logoEdu}>edu</Text>
         </View>
 
         {/* Tagline */}
-        <Text style={styles.tagline}>함께 성장하는 스터디 플랫폼</Text>
+        <Animated.Text
+          style={[
+            styles.tagline,
+            { opacity: taglineOpacity },
+          ]}
+        >
+          함께 성장하는 스터디 플랫폼
+        </Animated.Text>
       </Animated.View>
-    </View>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#18181B',
     justifyContent: 'center',
     alignItems: 'center',
   },
+  // Glow effects (radial gradient - matching design.pen positions)
   glow1: {
     position: 'absolute',
-    left: -50,
-    top: 280,
-    width: 400,
-    height: 400,
-    borderRadius: 200,
-    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    left: 20,
+    top: 220,
+    width: 350,
+    height: 350,
   },
   glow2: {
     position: 'absolute',
-    left: 200,
-    top: 500,
-    width: 250,
-    height: 250,
-    borderRadius: 125,
-    backgroundColor: 'rgba(244, 114, 182, 0.09)',
+    left: 100,
+    top: 450,
+    width: 280,
+    height: 280,
   },
-  logoContainer: {
+  glow3: {
+    position: 'absolute',
+    left: -50,
+    top: 550,
+    width: 200,
+    height: 200,
+  },
+  // Animation container
+  animationContainer: {
+    position: 'absolute',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  logoRow: {
+  leftGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  rightGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  animText: {
+    fontSize: 36,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  circle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#8B5CF6',
+  },
+  // Final logo container (matches design.pen structure)
+  logoContainer: {
+    position: 'absolute',
+    alignItems: 'center',
+    gap: 16,
+  },
+  circlesFrame: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  logoText: {
-    fontSize: 64,
-    fontWeight: '800',
-    color: '#FFFFFF',
+  circleYou: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#A78BFA',
+    marginRight: -16, // overlap (gap: -16 in design.pen)
   },
-  heartCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+  circleUs: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     backgroundColor: '#8B5CF6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 4,
   },
-  heartIcon: {
-    fontSize: 28,
+  logoTextFrame: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  logoWi: {
+    fontSize: 44,
+    fontWeight: '700',
+    color: '#A78BFA',
+  },
+  logoEdu: {
+    fontSize: 44,
+    fontWeight: '700',
     color: '#FFFFFF',
   },
   tagline: {
-    marginTop: 16,
+    marginTop: 8,
     fontSize: 16,
     fontWeight: '500',
     color: '#71717A',
