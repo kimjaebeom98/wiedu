@@ -1,9 +1,9 @@
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
 import { getBaseURL } from '../config/api';
-
-// 카카오 OAuth 설정
-const KAKAO_CLIENT_ID = '891cfab43de70f0ea8f731792876fa0b';
+import { base64UrlEncode } from '../utils/base64';
+import { generateSessionId } from '../utils/uuid';
+import { KAKAO_CLIENT_ID } from '../constants/oauth';
 
 export interface KakaoLoginResult {
   success: boolean;
@@ -13,39 +13,6 @@ export interface KakaoLoginResult {
   error?: string;
   cancelled?: boolean;
 }
-
-/**
- * Base64 URL-safe 인코딩
- */
-const base64UrlEncode = (str: string): string => {
-  const base64Chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-  let result = '';
-  const bytes = new TextEncoder().encode(str);
-
-  for (let i = 0; i < bytes.length; i += 3) {
-    const b1 = bytes[i];
-    const b2 = bytes[i + 1] || 0;
-    const b3 = bytes[i + 2] || 0;
-
-    result += base64Chars[b1 >> 2];
-    result += base64Chars[((b1 & 3) << 4) | (b2 >> 4)];
-    result += i + 1 < bytes.length ? base64Chars[((b2 & 15) << 2) | (b3 >> 6)] : '=';
-    result += i + 2 < bytes.length ? base64Chars[b3 & 63] : '=';
-  }
-
-  return result.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-};
-
-/**
- * 랜덤 세션 ID 생성
- */
-const generateSessionId = (): string => {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-};
 
 /**
  * 백엔드 OAuth 콜백 URL 생성
