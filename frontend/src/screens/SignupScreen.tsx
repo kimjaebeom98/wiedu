@@ -111,11 +111,8 @@ export default function SignupScreen({ navigation }: SignupScreenProps) {
             {/* Title Section */}
             <View style={styles.titleSection}>
               <View style={styles.titleRow}>
-                <Text style={styles.title}>wie</Text>
-                <View style={styles.heartCircle}>
-                  <Feather name="heart" size={16} color="#FFFFFF" />
-                </View>
-                <Text style={styles.title}>u에</Text>
+                <Text style={styles.titleWi}>wi</Text>
+                <Text style={styles.title}>edu에</Text>
               </View>
               <Text style={styles.title}>가입하기</Text>
               <Text style={styles.subtitle}>함께 성장하는 여정을 시작하세요</Text>
@@ -293,14 +290,11 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     lineHeight: 42,
   },
-  heartCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#8B5CF6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 2,
+  titleWi: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#A78BFA',
+    lineHeight: 42,
   },
   subtitle: {
     fontSize: 15,

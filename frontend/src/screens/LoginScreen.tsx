@@ -84,11 +84,8 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
         <View style={styles.logoSection}>
           <Text style={styles.headline}>스터디 고민 끝,</Text>
           <View style={styles.headlineRow}>
-            <Text style={styles.headline}>wie</Text>
-            <View style={styles.heartCircle}>
-              <Feather name="heart" size={16} color="#FFFFFF" />
-            </View>
-            <Text style={styles.headline}>u에 오신 것을</Text>
+            <Text style={styles.headlineWi}>wi</Text>
+            <Text style={styles.headline}>edu에 오신 것을</Text>
           </View>
           <Text style={styles.headline}>환영합니다!</Text>
           <Text style={styles.tagline}>3초 가입으로 바로 시작해보세요</Text>
@@ -206,18 +203,14 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#FFFFFF',
   },
+  headlineWi: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#A78BFA',
+  },
   headlineRow: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  heartCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#8B5CF6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 2,
   },
   tagline: {
     marginTop: 16,

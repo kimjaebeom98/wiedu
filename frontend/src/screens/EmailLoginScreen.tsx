@@ -91,17 +91,6 @@ export default function EmailLoginScreen({ navigation }: EmailLoginScreenProps) 
 
             {/* Form Section */}
             <View style={styles.formSection}>
-              <View style={styles.formTitleContainer}>
-                <View style={styles.formTitleRow}>
-                  <Text style={styles.formTitle}>wie</Text>
-                  <View style={styles.heartCircle}>
-                    <Feather name="heart" size={14} color="#FFFFFF" />
-                  </View>
-                  <Text style={styles.formTitle}>u에</Text>
-                </View>
-                <Text style={styles.formTitle}>다시 오신 것을 환영해요!</Text>
-              </View>
-
               {/* Email Input */}
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>이메일</Text>
@@ -259,28 +248,6 @@ const styles = StyleSheet.create({
   formSection: {
     flex: 1,
     paddingTop: 40,
-  },
-  formTitleContainer: {
-    marginBottom: 40,
-  },
-  formTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  formTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    lineHeight: 38,
-  },
-  heartCircle: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#8B5CF6',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginHorizontal: 2,
   },
   inputContainer: {
     marginBottom: 16,
