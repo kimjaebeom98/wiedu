@@ -1,5 +1,6 @@
 package com.wiedu.domain.entity;
 
+import com.wiedu.domain.enums.ExperienceLevel;
 import com.wiedu.domain.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -70,6 +71,41 @@ public class User {
     @Comment("정보 수정일시")
     private LocalDateTime updatedAt;
 
+    // === 약관 동의 ===
+    @Comment("약관 동의 일시")
+    private LocalDateTime termsAgreedAt;
+
+    @Comment("마케팅 수신 동의 여부")
+    private boolean marketingAgreed = false;
+
+    // === 경험 수준 ===
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    @Comment("스터디 경험 수준: BEGINNER, INTERMEDIATE, EXPERIENCED")
+    private ExperienceLevel experienceLevel;
+
+    // === 지역 설정 ===
+    @Column(length = 50)
+    @Comment("활동 지역 (예: 강남구)")
+    private String region;
+
+    // === 알림 설정 ===
+    @Comment("푸시 알림 활성화")
+    private boolean pushNotificationEnabled = true;
+
+    @Comment("채팅 알림 활성화")
+    private boolean chatNotificationEnabled = true;
+
+    @Comment("스터디 알림 활성화")
+    private boolean studyNotificationEnabled = true;
+
+    // === 온보딩 상태 ===
+    @Comment("온보딩 완료 여부")
+    private boolean onboardingCompleted = false;
+
+    @Comment("온보딩 완료 일시")
+    private LocalDateTime onboardingCompletedAt;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
@@ -116,5 +152,29 @@ public class User {
 
     public void updateLastLogin() {
         this.lastLoginAt = LocalDateTime.now();
+    }
+
+    public void agreeToTerms(boolean marketingAgreed) {
+        this.termsAgreedAt = LocalDateTime.now();
+        this.marketingAgreed = marketingAgreed;
+    }
+
+    public void updateExperienceLevel(ExperienceLevel level) {
+        this.experienceLevel = level;
+    }
+
+    public void updateRegion(String region) {
+        this.region = region;
+    }
+
+    public void updateNotificationSettings(boolean push, boolean chat, boolean study) {
+        this.pushNotificationEnabled = push;
+        this.chatNotificationEnabled = chat;
+        this.studyNotificationEnabled = study;
+    }
+
+    public void completeOnboarding() {
+        this.onboardingCompleted = true;
+        this.onboardingCompletedAt = LocalDateTime.now();
     }
 }
