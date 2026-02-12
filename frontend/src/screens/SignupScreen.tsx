@@ -14,6 +14,8 @@ import {
   ScrollView,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { signup, login } from '../api/auth';
+import { saveTokens } from '../storage/token';
 
 interface SignupScreenProps {
   navigation: any;
@@ -72,12 +74,19 @@ export default function SignupScreen({ navigation }: SignupScreenProps) {
     setLoading(true);
 
     try {
-      // TODO: Call API to send verification email
-      // await sendVerificationEmail(email);
+      // 1. 회원가입 API 호출
+      await signup(email, password);
 
-      navigation.navigate('EmailVerify', { email, password });
+      // 2. 자동 로그인
+      const tokens = await login(email, password);
+
+      // 3. 토큰 저장
+      await saveTokens(tokens.accessToken, tokens.refreshToken);
+
+      // 4. 온보딩으로 이동
+      navigation.replace('Onboarding', { email });
     } catch (err: any) {
-      setError(err.message || '인증 메일 발송에 실패했습니다.');
+      setError(err.message || '회원가입에 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -224,9 +233,9 @@ export default function SignupScreen({ navigation }: SignupScreenProps) {
               ) : null}
             </View>
 
-            {/* Next Button */}
+            {/* Signup Button */}
             <TouchableOpacity
-              style={[styles.nextBtn, loading && styles.nextBtnDisabled]}
+              style={[styles.signupBtn, loading && styles.signupBtnDisabled]}
               onPress={handleNext}
               disabled={loading}
               activeOpacity={0.8}
@@ -234,7 +243,7 @@ export default function SignupScreen({ navigation }: SignupScreenProps) {
               {loading ? (
                 <ActivityIndicator color="#FFF" size="small" />
               ) : (
-                <Text style={styles.nextBtnText}>다음</Text>
+                <Text style={styles.signupBtnText}>회원가입</Text>
               )}
             </TouchableOpacity>
 
@@ -346,7 +355,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-  nextBtn: {
+  signupBtn: {
     height: 56,
     backgroundColor: '#8B5CF6',
     borderRadius: 12,
@@ -354,10 +363,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  nextBtnDisabled: {
+  signupBtnDisabled: {
     backgroundColor: 'rgba(139, 92, 246, 0.5)',
   },
-  nextBtnText: {
+  signupBtnText: {
     fontSize: 17,
     fontWeight: '600',
     color: '#FFFFFF',
