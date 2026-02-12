@@ -98,8 +98,8 @@ export default function EmailVerifyScreen({ navigation, route }: EmailVerifyScre
       // TODO: Call API to complete registration
       // await register(email, password);
 
-      // Skip onboarding for now, go directly to home
-      navigation.replace('Home', { email });
+      // Navigate to onboarding after signup
+      navigation.replace('Onboarding', { email });
     } catch (err: any) {
       setError(err.message || '인증에 실패했습니다.');
     } finally {
@@ -147,6 +147,9 @@ export default function EmailVerifyScreen({ navigation, route }: EmailVerifyScre
           <View style={styles.titleSection}>
             <Text style={styles.title}>이메일로 전송된{'\n'}인증코드를 입력해주세요</Text>
             <Text style={styles.subtitle}>{email}으로 전송했어요</Text>
+            <View style={styles.devNoticeBox}>
+              <Text style={styles.devNoticeText}>⚠️ 개발예정: 이메일 인증 기능은 준비 중입니다</Text>
+            </View>
           </View>
 
           {/* Code Input Section */}
@@ -209,6 +212,16 @@ export default function EmailVerifyScreen({ navigation, route }: EmailVerifyScre
               ) : (
                 <Text style={styles.verifyBtnText}>인증 확인</Text>
               )}
+            </TouchableOpacity>
+
+            {/* Skip Button (개발예정) */}
+            <TouchableOpacity
+              style={styles.skipBtn}
+              onPress={() => navigation.replace('Onboarding', { email })}
+              disabled={loading}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.skipBtnText}>건너뛰기 (개발 중)</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -348,5 +361,32 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  devNoticeBox: {
+    backgroundColor: 'rgba(234, 179, 8, 0.15)',
+    borderRadius: 8,
+    padding: 12,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(234, 179, 8, 0.3)',
+  },
+  devNoticeText: {
+    color: '#EAB308',
+    fontSize: 13,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  skipBtn: {
+    height: 48,
+    backgroundColor: '#27272A',
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  skipBtnText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#71717A',
   },
 });
