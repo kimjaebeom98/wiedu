@@ -15,6 +15,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { submitAllOnboardingData } from '../api/onboarding';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const TOTAL_STEPS = 7;
@@ -189,8 +190,8 @@ export default function OnboardingScreen({ navigation, route }: OnboardingScreen
   const handleComplete = async () => {
     setLoading(true);
     try {
-      // TODO: Call onboarding API with collected data
-      // await submitOnboarding(data);
+      // 모든 온보딩 데이터를 백엔드에 저장
+      await submitAllOnboardingData(data);
       navigation.replace('Home');
     } catch (err: any) {
       setError(err.message || '온보딩 저장에 실패했습니다.');
