@@ -10,6 +10,7 @@ import SignupScreen from './src/screens/SignupScreen';
 import EmailVerifyScreen from './src/screens/EmailVerifyScreen';
 import OnboardingScreen from './src/screens/OnboardingScreen';
 import HomeScreen from './src/screens/HomeScreen';
+import StudyCreateScreen from './src/screens/StudyCreateScreen';
 import { getAccessToken } from './src/storage/token';
 
 const Stack = createNativeStackNavigator();
@@ -76,6 +77,7 @@ export default function App() {
           <Stack.Screen name="EmailVerify" component={EmailVerifyScreen} />
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
           <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="StudyCreate" component={StudyCreateScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

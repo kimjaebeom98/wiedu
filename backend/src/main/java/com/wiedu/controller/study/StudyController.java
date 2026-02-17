@@ -1,6 +1,5 @@
 package com.wiedu.controller.study;
 
-import com.wiedu.domain.enums.StudyCategory;
 import com.wiedu.domain.enums.StudyStatus;
 import com.wiedu.dto.study.StudyCreateRequest;
 import com.wiedu.dto.study.StudyUpdateRequest;
@@ -86,13 +85,13 @@ public class StudyController {
 
     /**
      * 카테고리별 스터디 목록
-     * GET /api/studies/category/{category}
+     * GET /api/studies/category/{categoryId}
      */
-    @GetMapping("/category/{category}")
+    @GetMapping("/category/{categoryId}")
     public ResponseEntity<Page<StudyListResponse>> getStudiesByCategory(
-            @PathVariable StudyCategory category,
+            @PathVariable Long categoryId,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<StudyListResponse> response = studyService.findByCategory(category, pageable);
+        Page<StudyListResponse> response = studyService.findByCategory(categoryId, pageable);
         return ResponseEntity.ok(response);
     }
 

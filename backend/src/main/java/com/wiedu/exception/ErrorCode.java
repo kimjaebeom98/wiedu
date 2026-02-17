@@ -32,6 +32,11 @@ public enum ErrorCode {
     STUDY_FULL(HttpStatus.BAD_REQUEST, "S003", "스터디 정원이 가득 찼습니다."),
     NOT_STUDY_LEADER(HttpStatus.FORBIDDEN, "S004", "스터디 리더만 가능합니다."),
 
+    // Study Creation
+    CATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "S005", "카테고리를 찾을 수 없습니다."),
+    SUBCATEGORY_NOT_FOUND(HttpStatus.NOT_FOUND, "S006", "서브카테고리를 찾을 수 없습니다."),
+    SUBCATEGORY_NOT_IN_CATEGORY(HttpStatus.BAD_REQUEST, "S007", "선택한 서브카테고리가 해당 카테고리에 속하지 않습니다."),
+
     // StudyMember
     ALREADY_MEMBER(HttpStatus.CONFLICT, "M001", "이미 가입된 스터디입니다."),
     NOT_MEMBER(HttpStatus.BAD_REQUEST, "M002", "스터디 멤버가 아닙니다."),

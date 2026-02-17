@@ -6,4 +6,5 @@ export type RootStackParamList = {
   Signup: undefined;
   EmailVerify: { email: string; password: string };
   Home: { email?: string } | undefined;
+  StudyCreate: undefined;
 };

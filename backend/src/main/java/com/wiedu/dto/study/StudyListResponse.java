@@ -1,7 +1,7 @@
 package com.wiedu.dto.study;
 
 import com.wiedu.domain.entity.Study;
-import com.wiedu.domain.enums.StudyCategory;
+import com.wiedu.domain.enums.StudyMethod;
 import com.wiedu.domain.enums.StudyStatus;
 
 import java.time.LocalDateTime;
@@ -13,13 +13,12 @@ import java.time.LocalDateTime;
 public record StudyListResponse(
         Long id,
         String title,
-        StudyCategory category,
+        String categoryName,
         String leaderNickname,
         Integer maxMembers,
         Integer currentMembers,
         StudyStatus status,
-        String region,
-        boolean online,
+        String studyMethod,
         LocalDateTime createdAt
 ) {
     // Entity → DTO 변환
@@ -27,13 +26,12 @@ public record StudyListResponse(
         return new StudyListResponse(
                 study.getId(),
                 study.getTitle(),
-                study.getCategory(),
+                study.getCategory().getName(),
                 study.getLeader().getNickname(),
                 study.getMaxMembers(),
                 study.getCurrentMembers(),
                 study.getStatus(),
-                study.getRegion(),
-                study.isOnline(),
+                study.getStudyMethod() != null ? study.getStudyMethod().name() : null,
                 study.getCreatedAt()
         );
     }

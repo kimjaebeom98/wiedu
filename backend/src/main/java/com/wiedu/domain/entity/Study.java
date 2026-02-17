@@ -1,15 +1,19 @@
 package com.wiedu.domain.entity;
 
-import com.wiedu.domain.enums.StudyCategory;
+import com.wiedu.domain.enums.DurationType;
+import com.wiedu.domain.enums.StudyMethod;
 import com.wiedu.domain.enums.StudyStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Comment;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "STUDIES")
@@ -31,11 +35,58 @@ public class Study {
     @Comment("스터디 상세 설명")
     private String description;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 20)
-    @Comment("카테고리: PROGRAMMING, LANGUAGE, CERTIFICATION, INTERVIEW, HOBBY, READING, OTHER")
+    // Step 1: Category (changed from enum to entity FK)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    @Comment("카테고리 (대분류)")
     private StudyCategory category;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "subcategory_id")
+    @Comment("서브카테고리 (중분류)")
+    private StudySubcategory subcategory;
+
+    @Column(length = 500)
+    @Comment("커버 이미지 URL")
+    private String coverImageUrl;
+
+    @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
+    private List<StudyTag> tags = new ArrayList<>();
+
+    // Step 2: Detail Description
+    @Column(columnDefinition = "TEXT")
+    @Comment("대상 수강자 설명")
+    private String targetAudience;
+
+    @Column(columnDefinition = "TEXT")
+    @Comment("학습 목표")
+    private String goals;
+
+    // Step 3: Schedule & Method
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    @Comment("진행 방식: ONLINE, OFFLINE, HYBRID")
+    private StudyMethod studyMethod;
+
+    @Column(length = 100)
+    @Comment("진행 요일 (JSON array)")
+    private String daysOfWeek;
+
+    @Column(length = 50)
+    @Comment("진행 시간")
+    private String time;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    @Comment("기간 유형: FOUR_WEEKS, EIGHT_WEEKS, TWELVE_WEEKS, LONG_TERM")
+    private DurationType durationType;
+
+    @Column(length = 200)
+    @Comment("사용 플랫폼/장소")
+    private String platform;
+
+    // Step 4: Recruitment
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "leader_id", nullable = false)
     @Comment("스터디장 ID")
@@ -49,26 +100,32 @@ public class Study {
     @Comment("현재 인원")
     private Integer currentMembers = 1;
 
+    @Column
+    @Comment("참가비 (원)")
+    private Integer participationFee;
+
+    @Column
+    @Comment("보증금 (원)")
+    private Integer deposit;
+
+    @Column(columnDefinition = "TEXT")
+    @Comment("참여 조건/요구사항")
+    private String requirements;
+
+    // Step 5: Curriculum & Rules
+    @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
+    private List<StudyCurriculum> curriculums = new ArrayList<>();
+
+    @OneToMany(mappedBy = "study", cascade = CascadeType.ALL, orphanRemoval = true)
+    @BatchSize(size = 20)
+    private List<StudyRule> rules = new ArrayList<>();
+
+    // Status & Dates
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Comment("상태: RECRUITING, IN_PROGRESS, COMPLETED, CLOSED")
     private StudyStatus status = StudyStatus.RECRUITING;
-
-    @Column(length = 50)
-    @Comment("지역 (예: 서울 강남구)")
-    private String region;
-
-    @Column(length = 200)
-    @Comment("상세 장소")
-    private String detailedLocation;
-
-    @Column(nullable = false)
-    @Comment("온라인 여부")
-    private boolean online = false;
-
-    @Column(length = 100)
-    @Comment("진행 일정 (예: 매주 토요일 14:00)")
-    private String schedule;
 
     @Comment("스터디 시작 예정일")
     private LocalDateTime startDate;
@@ -95,27 +152,49 @@ public class Study {
     }
 
     @Builder
-    public Study(String title, String description, StudyCategory category, User leader,
-                 Integer maxMembers, String region, String detailedLocation, boolean online,
-                 String schedule, LocalDateTime startDate, LocalDateTime endDate) {
+    public Study(String title, String description, StudyCategory category, StudySubcategory subcategory,
+                 String coverImageUrl, String targetAudience, String goals,
+                 StudyMethod studyMethod, String daysOfWeek, String time, DurationType durationType, String platform,
+                 User leader, Integer maxMembers, Integer participationFee, Integer deposit, String requirements,
+                 LocalDateTime startDate, LocalDateTime endDate) {
         this.title = title;
         this.description = description;
         this.category = category;
+        this.subcategory = subcategory;
+        this.coverImageUrl = coverImageUrl;
+        this.targetAudience = targetAudience;
+        this.goals = goals;
+        this.studyMethod = studyMethod;
+        this.daysOfWeek = daysOfWeek;
+        this.time = time;
+        this.durationType = durationType;
+        this.platform = platform;
         this.leader = leader;
         this.maxMembers = maxMembers;
-        this.region = region;
-        this.detailedLocation = detailedLocation;
-        this.online = online;
-        this.schedule = schedule;
+        this.participationFee = participationFee;
+        this.deposit = deposit;
+        this.requirements = requirements;
         this.startDate = startDate;
         this.endDate = endDate;
     }
 
-    // 비즈니스 메서드
-    public void updateInfo(String title, String description, String schedule) {
+    // Helper methods for child entities
+    public void addTag(StudyTag tag) {
+        this.tags.add(tag);
+    }
+
+    public void addCurriculum(StudyCurriculum curriculum) {
+        this.curriculums.add(curriculum);
+    }
+
+    public void addRule(StudyRule rule) {
+        this.rules.add(rule);
+    }
+
+    // Business methods
+    public void updateInfo(String title, String description) {
         this.title = title;
         this.description = description;
-        this.schedule = schedule;
     }
 
     public void incrementMember() {
