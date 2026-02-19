@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,27 +6,32 @@ import {
   StyleSheet,
   ScrollView,
   StatusBar,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { clearTokens } from '../storage/token';
+import { RootStackParamList } from '../navigation/types';
+import { fetchStudies, fetchCategories } from '../api/study';
+import { StudyResponse, Category } from '../types/study';
 
-interface HomeScreenProps {
-  navigation: any;
-  route: any;
-}
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-// Category data
-const CATEGORIES = [
-  { id: 1, name: 'IT/개발', icon: '💻', color: '#8B5CF6' },
-  { id: 2, name: '외국어', icon: '🌏', color: '#EC4899' },
-  { id: 3, name: '자격증', icon: '📜', color: '#14B8A6' },
-  { id: 4, name: '재테크', icon: '📈', color: '#F59E0B' },
-  { id: 5, name: '운동', icon: '💪', color: '#EF4444' },
-  { id: 6, name: '취미', icon: '🎨', color: '#3B82F6' },
-  { id: 7, name: '독서', icon: '📚', color: '#22C55E' },
-  { id: 8, name: '더보기', icon: '•••', color: '#71717A' },
-];
+// Category icons mapping
+const CATEGORY_ICONS: Record<string, string> = {
+  LANGUAGE: 'globe',
+  CAREER: 'briefcase',
+  IT_DEV: 'code',
+  CERTIFICATION: 'award',
+  CIVIL_SERVICE: 'building',
+  FINANCE: 'trending-up',
+  DESIGN: 'pen-tool',
+  BUSINESS: 'bar-chart-2',
+};
 
-// Member data
+// Member data (mock for now - will be replaced with API)
 const MEMBERS = [
   { id: 1, name: '민수', badge: '🏆', badgeColor: '#F59E0B' },
   { id: 2, name: '지영', badge: '♥', badgeColor: '#EC4899' },
@@ -34,76 +39,122 @@ const MEMBERS = [
   { id: 4, name: '서연', badge: '⚡', badgeColor: '#22C55E' },
 ];
 
-// Study data
-const STUDIES = [
-  {
-    id: 1,
-    title: '주니어 개발자 코드리뷰 스터디',
-    category: 'IT/개발',
-    categoryColor: '#8B5CF6',
-    schedule: '매주 토요일 오후 2시 · 강남역',
-    members: '8/12명',
-    status: '활발한 활동',
-    statusColor: '#22C55E',
-  },
-  {
-    id: 2,
-    title: '영어 스피킹 프리토킹 모임',
-    category: '외국어',
-    categoryColor: '#22C55E',
-    schedule: '매주 일요일 오전 11시 · 홍대입구',
-    members: '5/8명',
-    status: '신규 모집',
-    statusColor: '#8B5CF6',
-  },
-];
+// Study method labels
+const STUDY_METHOD_LABELS: Record<string, string> = {
+  ONLINE: '온라인',
+  OFFLINE: '오프라인',
+  HYBRID: '온/오프라인',
+};
 
-export default function HomeScreen({ navigation }: HomeScreenProps) {
+export default function HomeScreen() {
+  const navigation = useNavigation<NavigationProp>();
+  const [studies, setStudies] = useState<StudyResponse[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const loadData = useCallback(async () => {
+    try {
+      const [studiesData, categoriesData] = await Promise.all([
+        fetchStudies(),
+        fetchCategories(),
+      ]);
+      setStudies(studiesData);
+      setCategories(categoriesData);
+    } catch (error) {
+      console.error('Failed to load data:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    loadData();
+  }, [loadData]);
+
   const handleLogout = async () => {
     await clearTokens();
     navigation.replace('Login');
   };
 
+  const getCategoryIcon = (code: string): string => {
+    return CATEGORY_ICONS[code] || 'folder';
+  };
+
+  // Limit categories to 8 for display
+  const displayCategories = categories.slice(0, 8);
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#18181B" />
 
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#8B5CF6"
+            colors={['#8B5CF6']}
+          />
+        }
+      >
         {/* Top Row - Location & Search */}
         <View style={styles.topRow}>
           <TouchableOpacity style={styles.locationBtn}>
             <Text style={styles.locationText}>강남구</Text>
-            <Text style={styles.locationIcon}>▼</Text>
+            <Feather name="chevron-down" size={20} color="#A1A1AA" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.searchBar}>
-            <Text style={styles.searchIcon}>🔍</Text>
+            <Feather name="search" size={20} color="#71717A" />
             <Text style={styles.searchText}>어떤 스터디를 찾고 계세요?</Text>
           </TouchableOpacity>
         </View>
 
         {/* Category Section */}
         <View style={styles.categorySection}>
-          <View style={styles.categoryRow}>
-            {CATEGORIES.slice(0, 4).map((cat) => (
-              <TouchableOpacity key={cat.id} style={styles.categoryItem}>
-                <View style={styles.categoryCircle}>
-                  <Text style={styles.categoryIcon}>{cat.icon}</Text>
-                </View>
-                <Text style={styles.categoryName}>{cat.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <View style={styles.categoryRow}>
-            {CATEGORIES.slice(4, 8).map((cat) => (
-              <TouchableOpacity key={cat.id} style={styles.categoryItem}>
-                <View style={styles.categoryCircle}>
-                  <Text style={styles.categoryIcon}>{cat.icon}</Text>
-                </View>
-                <Text style={styles.categoryName}>{cat.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          {loading ? (
+            <ActivityIndicator color="#8B5CF6" style={{ marginVertical: 20 }} />
+          ) : (
+            <>
+              <View style={styles.categoryRow}>
+                {displayCategories.slice(0, 4).map((cat) => (
+                  <TouchableOpacity key={cat.id} style={styles.categoryItem}>
+                    <View style={styles.categoryCircle}>
+                      <Feather name={getCategoryIcon(cat.code)} size={22} color="#E4E4E7" />
+                    </View>
+                    <Text style={styles.categoryName}>{cat.name}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <View style={styles.categoryRow}>
+                {displayCategories.slice(4, 8).map((cat) => (
+                  <TouchableOpacity key={cat.id} style={styles.categoryItem}>
+                    <View style={styles.categoryCircle}>
+                      <Feather name={getCategoryIcon(cat.code)} size={22} color="#E4E4E7" />
+                    </View>
+                    <Text style={styles.categoryName}>{cat.name}</Text>
+                  </TouchableOpacity>
+                ))}
+                {displayCategories.length < 8 && (
+                  <TouchableOpacity style={styles.categoryItem}>
+                    <View style={styles.categoryCircle}>
+                      <Feather name="more-horizontal" size={22} color="#E4E4E7" />
+                    </View>
+                    <Text style={styles.categoryName}>더보기</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            </>
+          )}
         </View>
 
         {/* Members Section */}
@@ -143,43 +194,79 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
             </TouchableOpacity>
           </View>
 
-          {STUDIES.map((study) => (
-            <TouchableOpacity key={study.id} style={styles.studyCard}>
-              <View style={styles.studyTop}>
-                <View style={styles.studyInfo}>
-                  <View
-                    style={[
-                      styles.studyTag,
-                      { backgroundColor: study.categoryColor },
-                    ]}
-                  >
-                    <Text style={styles.studyTagText}>{study.category}</Text>
+          {loading ? (
+            <ActivityIndicator color="#8B5CF6" style={{ marginVertical: 20 }} />
+          ) : studies.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Feather name="inbox" size={40} color="#52525B" />
+              <Text style={styles.emptyStateText}>아직 등록된 스터디가 없어요</Text>
+              <TouchableOpacity
+                style={styles.emptyStateBtn}
+                onPress={() => navigation.navigate('StudyCreate')}
+              >
+                <Text style={styles.emptyStateBtnText}>첫 스터디 만들기</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            studies.map((study) => (
+              <TouchableOpacity
+                key={study.id}
+                style={styles.studyCard}
+                onPress={() => {
+                  // TODO: Navigate to study detail
+                  console.log('Navigate to study:', study.id);
+                }}
+              >
+                <View style={styles.studyTop}>
+                  <View style={styles.studyInfo}>
+                    <View style={styles.studyTagRow}>
+                      <View style={styles.studyTag}>
+                        <Text style={styles.studyTagText}>{study.categoryName}</Text>
+                      </View>
+                      {study.studyMethod && (
+                        <View style={styles.studyMethodTag}>
+                          <Text style={styles.studyMethodText}>
+                            {STUDY_METHOD_LABELS[study.studyMethod] || study.studyMethod}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.studyTitle} numberOfLines={2}>{study.title}</Text>
+                    {study.subcategoryName && (
+                      <Text style={styles.studySubcategory}>{study.subcategoryName}</Text>
+                    )}
                   </View>
-                  <Text style={styles.studyTitle}>{study.title}</Text>
-                  <Text style={styles.studySchedule}>{study.schedule}</Text>
+                  <View style={styles.studyMembers}>
+                    <View style={styles.memberDot} />
+                    <View style={[styles.memberDot, { marginLeft: -8 }]} />
+                    <View style={[styles.memberDot, { marginLeft: -8 }]} />
+                  </View>
                 </View>
-                <View style={styles.studyMembers}>
-                  <View style={styles.memberDot} />
-                  <View style={[styles.memberDot, { marginLeft: -8 }]} />
-                  <View style={[styles.memberDot, { marginLeft: -8 }]} />
+                <View style={styles.studyBottom}>
+                  <View style={styles.studyMeta}>
+                    <Feather name="users" size={14} color="#71717A" />
+                    <Text style={styles.studyMetaText}>
+                      {study.currentMembers}/{study.maxMembers}명
+                    </Text>
+                  </View>
+                  <View style={styles.studyMeta}>
+                    <View style={[
+                      styles.statusDot,
+                      { backgroundColor: study.status === 'RECRUITING' ? '#22C55E' : '#71717A' }
+                    ]} />
+                    <Text style={[
+                      styles.studyMetaText,
+                      { color: study.status === 'RECRUITING' ? '#22C55E' : '#71717A' }
+                    ]}>
+                      {study.status === 'RECRUITING' ? '모집중' :
+                       study.status === 'IN_PROGRESS' ? '진행중' :
+                       study.status === 'COMPLETED' ? '완료' : '마감'}
+                    </Text>
+                  </View>
                 </View>
-              </View>
-              <View style={styles.studyBottom}>
-                <View style={styles.studyMeta}>
-                  <Text style={styles.studyMetaIcon}>👥</Text>
-                  <Text style={styles.studyMetaText}>{study.members}</Text>
-                </View>
-                <View style={styles.studyMeta}>
-                  <Text style={[styles.studyMetaIcon, { color: study.statusColor }]}>
-                    {study.status === '활발한 활동' ? '🔥' : '✨'}
-                  </Text>
-                  <Text style={[styles.studyMetaText, { color: study.statusColor }]}>
-                    {study.status}
-                  </Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          ))}
+              </TouchableOpacity>
+            ))
+          )}
 
           {/* Logout Button (temporary) */}
           <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
@@ -191,22 +278,25 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
         <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIconActive}>🏠</Text>
+          <Feather name="home" size={24} color="#8B5CF6" />
           <Text style={styles.navTextActive}>홈</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>🧭</Text>
+          <Feather name="compass" size={24} color="#71717A" />
           <Text style={styles.navText}>탐색</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navAddBtn}>
-          <Text style={styles.navAddIcon}>+</Text>
+        <TouchableOpacity
+          style={styles.navAddBtn}
+          onPress={() => navigation.navigate('StudyCreate')}
+        >
+          <Feather name="plus" size={24} color="#FFFFFF" />
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>💬</Text>
+          <Feather name="message-circle" size={24} color="#71717A" />
           <Text style={styles.navText}>채팅</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>👤</Text>
+          <Feather name="user" size={24} color="#71717A" />
           <Text style={styles.navText}>마이</Text>
         </TouchableOpacity>
       </View>
@@ -240,10 +330,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  locationIcon: {
-    fontSize: 12,
-    color: '#A1A1AA',
-  },
   searchBar: {
     flex: 1,
     height: 48,
@@ -253,9 +339,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
     gap: 10,
-  },
-  searchIcon: {
-    fontSize: 16,
   },
   searchText: {
     fontSize: 14,
@@ -268,6 +351,7 @@ const styles = StyleSheet.create({
   categoryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    gap: 8,
   },
   categoryItem: {
     flex: 1,
@@ -275,7 +359,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingVertical: 16,
     alignItems: 'center',
-    marginHorizontal: 4,
   },
   categoryCircle: {
     width: 44,
@@ -285,9 +368,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
-  },
-  categoryIcon: {
-    fontSize: 22,
   },
   categoryName: {
     fontSize: 12,
@@ -347,6 +427,27 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#A1A1AA',
   },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40,
+    gap: 12,
+  },
+  emptyStateText: {
+    fontSize: 14,
+    color: '#71717A',
+  },
+  emptyStateBtn: {
+    marginTop: 8,
+    backgroundColor: '#8B5CF6',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  emptyStateBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
   studyCard: {
     backgroundColor: '#27272A',
     borderRadius: 16,
@@ -361,16 +462,33 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 6,
   },
+  studyTagRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
   studyTag: {
     alignSelf: 'flex-start',
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 8,
+    backgroundColor: '#8B5CF6',
   },
   studyTagText: {
     fontSize: 12,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  studyMethodTag: {
+    alignSelf: 'flex-start',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: '#3F3F46',
+  },
+  studyMethodText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#A1A1AA',
   },
   studyTitle: {
     fontSize: 16,
@@ -378,7 +496,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     marginTop: 4,
   },
-  studySchedule: {
+  studySubcategory: {
     fontSize: 13,
     color: '#71717A',
   },
@@ -400,10 +518,12 @@ const styles = StyleSheet.create({
   studyMeta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 6,
   },
-  studyMetaIcon: {
-    fontSize: 14,
+  statusDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
   studyMetaText: {
     fontSize: 13,
@@ -442,12 +562,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
   },
-  navIcon: {
-    fontSize: 24,
-  },
-  navIconActive: {
-    fontSize: 24,
-  },
   navText: {
     fontSize: 11,
     fontWeight: '500',
@@ -466,10 +580,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: -10,
-  },
-  navAddIcon: {
-    fontSize: 24,
-    color: '#FFFFFF',
-    fontWeight: '300',
   },
 });
