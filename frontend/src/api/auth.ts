@@ -1,14 +1,8 @@
-import axios, { AxiosInstance } from 'axios';
+import axios from 'axios';
 import { LoginRequest, SignupRequest, TokenResponse, UserResponse } from '../types/auth';
-import { getBaseURL } from '../config/api';
+import { getPublicClient } from './client';
 
-const apiClient: AxiosInstance = axios.create({
-  baseURL: getBaseURL(),
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+const apiClient = getPublicClient();
 
 export const signup = async (
   email: string,

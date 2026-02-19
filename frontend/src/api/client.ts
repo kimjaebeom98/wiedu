@@ -110,3 +110,14 @@ export const getAuthClient = (): AxiosInstance => {
   }
   return authClientInstance;
 };
+
+// Public client for unauthenticated requests
+export const getPublicClient = (): AxiosInstance => {
+  return axios.create({
+    baseURL: getBaseURL(),
+    timeout: 15000,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+};

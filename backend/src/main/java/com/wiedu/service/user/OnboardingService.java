@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 public class OnboardingService {
 
     private final UserRepository userRepository;
+    private final UserService userService;
     private final UserInterestRepository userInterestRepository;
     private final UserStudyPreferenceRepository userStudyPreferenceRepository;
 
@@ -36,7 +37,7 @@ public class OnboardingService {
             throw new BusinessException(ErrorCode.TERMS_NOT_AGREED);
         }
 
-        User user = findUserById(userId);
+        User user = userService.findUserEntityById(userId);
         user.agreeToTerms(request.getMarketingAgreed() != null && request.getMarketingAgreed());
     }
 
@@ -45,11 +46,11 @@ public class OnboardingService {
      */
     @Transactional
     public void setupProfile(Long userId, ProfileSetupRequest request) {
-        User user = findUserById(userId);
+        User user = userService.findUserEntityById(userId);
 
         // 닉네임 중복 체크 (자신 제외)
         if (userRepository.existsByNicknameAndIdNot(request.getNickname(), userId)) {
-            throw new BusinessException(ErrorCode.NICKNAME_ALREADY_EXISTS);
+            throw new BusinessException(ErrorCode.NICKNAME_DUPLICATED);
         }
 
         user.updateProfile(request.getNickname(), request.getProfileImage());
@@ -60,7 +61,7 @@ public class OnboardingService {
      */
     @Transactional
     public void setInterests(Long userId, InterestsRequest request) {
-        User user = findUserById(userId);
+        User user = userService.findUserEntityById(userId);
 
         // 기존 관심분야 삭제
         userInterestRepository.deleteAllByUser(user);
@@ -79,7 +80,7 @@ public class OnboardingService {
      */
     @Transactional
     public void setExperienceLevel(Long userId, ExperienceLevelRequest request) {
-        User user = findUserById(userId);
+        User user = userService.findUserEntityById(userId);
         user.updateExperienceLevel(request.getExperienceLevel());
     }
 
@@ -88,7 +89,7 @@ public class OnboardingService {
      */
     @Transactional
     public void setStudyPreferences(Long userId, StudyPreferencesRequest request) {
-        User user = findUserById(userId);
+        User user = userService.findUserEntityById(userId);
 
         // 기존 선호 삭제
         userStudyPreferenceRepository.deleteAllByUser(user);
@@ -107,7 +108,7 @@ public class OnboardingService {
      */
     @Transactional
     public void setRegion(Long userId, RegionRequest request) {
-        User user = findUserById(userId);
+        User user = userService.findUserEntityById(userId);
         user.updateRegion(request.getRegion());
     }
 
@@ -116,7 +117,7 @@ public class OnboardingService {
      */
     @Transactional
     public void setNotificationSettings(Long userId, NotificationSettingsRequest request) {
-        User user = findUserById(userId);
+        User user = userService.findUserEntityById(userId);
         user.updateNotificationSettings(
                 request.getPushNotificationEnabled() != null && request.getPushNotificationEnabled(),
                 request.getChatNotificationEnabled() != null && request.getChatNotificationEnabled(),
@@ -129,7 +130,7 @@ public class OnboardingService {
      */
     @Transactional
     public void completeOnboarding(Long userId) {
-        User user = findUserById(userId);
+        User user = userService.findUserEntityById(userId);
         user.completeOnboarding();
     }
 
@@ -137,7 +138,7 @@ public class OnboardingService {
      * 온보딩 상태 조회
      */
     public OnboardingStatusResponse getOnboardingStatus(Long userId) {
-        User user = findUserById(userId);
+        User user = userService.findUserEntityById(userId);
 
         List<InterestType> interests = userInterestRepository.findByUserId(userId).stream()
                 .map(UserInterest::getInterestType)
@@ -173,10 +174,5 @@ public class OnboardingService {
         if (user.getNickname() != null && !user.getNickname().isEmpty()) return 3;
         if (user.getTermsAgreedAt() != null) return 2;
         return 1;
-    }
-
-    private User findUserById(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
     }
 }

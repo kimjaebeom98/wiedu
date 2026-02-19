@@ -8,9 +8,9 @@ import LoginScreen from './src/screens/LoginScreen';
 import EmailLoginScreen from './src/screens/EmailLoginScreen';
 import SignupScreen from './src/screens/SignupScreen';
 import EmailVerifyScreen from './src/screens/EmailVerifyScreen';
-import OnboardingScreen from './src/screens/OnboardingScreen';
+import OnboardingScreen from './src/screens/onboarding';
 import HomeScreen from './src/screens/HomeScreen';
-import StudyCreateScreen from './src/screens/StudyCreateScreen';
+import StudyCreateScreen from './src/screens/study-create';
 import { getAccessToken } from './src/storage/token';
 
 const Stack = createNativeStackNavigator();

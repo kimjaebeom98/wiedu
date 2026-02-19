@@ -1,19 +1,5 @@
 import axios from 'axios';
-import { getBaseURL } from '../config/api';
-import { getAccessToken } from '../storage/token';
-
-// Authenticated API client
-const createAuthClient = async () => {
-  const token = await getAccessToken();
-  return axios.create({
-    baseURL: getBaseURL(),
-    timeout: 10000,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    },
-  });
-};
+import { getAuthClient } from './client';
 
 // Types
 export interface OnboardingData {
@@ -33,7 +19,7 @@ export const agreeToTerms = async (
   privacyAgreed: boolean,
   marketingAgreed: boolean
 ): Promise<void> => {
-  const client = await createAuthClient();
+  const client = getAuthClient();
   await client.post('/api/onboarding/terms', {
     termsAgreed,
     privacyAgreed,
@@ -46,7 +32,7 @@ export const setupProfile = async (
   nickname: string,
   profileImage?: string
 ): Promise<void> => {
-  const client = await createAuthClient();
+  const client = getAuthClient();
   await client.post('/api/onboarding/profile', {
     nickname,
     profileImage,
@@ -55,7 +41,7 @@ export const setupProfile = async (
 
 // Step 3: 관심분야 설정
 export const setInterests = async (interests: string[]): Promise<void> => {
-  const client = await createAuthClient();
+  const client = getAuthClient();
   await client.post('/api/onboarding/interests', {
     interests,
   });
@@ -63,7 +49,7 @@ export const setInterests = async (interests: string[]): Promise<void> => {
 
 // Step 4: 경험 수준 설정
 export const setExperienceLevel = async (experienceLevel: string): Promise<void> => {
-  const client = await createAuthClient();
+  const client = getAuthClient();
   await client.post('/api/onboarding/experience', {
     experienceLevel,
   });
@@ -71,7 +57,7 @@ export const setExperienceLevel = async (experienceLevel: string): Promise<void>
 
 // Step 5: 스터디 방식 선호 설정
 export const setStudyPreferences = async (studyTypes: string[]): Promise<void> => {
-  const client = await createAuthClient();
+  const client = getAuthClient();
   await client.post('/api/onboarding/study-preferences', {
     studyTypes,
   });
@@ -79,7 +65,7 @@ export const setStudyPreferences = async (studyTypes: string[]): Promise<void> =
 
 // Step 6: 지역 설정
 export const setRegion = async (region: string): Promise<void> => {
-  const client = await createAuthClient();
+  const client = getAuthClient();
   await client.post('/api/onboarding/region', {
     region,
   });
@@ -91,7 +77,7 @@ export const setNotificationSettings = async (
   chatNotificationEnabled: boolean = false,
   studyNotificationEnabled: boolean = false
 ): Promise<void> => {
-  const client = await createAuthClient();
+  const client = getAuthClient();
   await client.post('/api/onboarding/notifications', {
     pushNotificationEnabled,
     chatNotificationEnabled,
@@ -101,7 +87,7 @@ export const setNotificationSettings = async (
 
 // Step 8: 온보딩 완료
 export const completeOnboarding = async (): Promise<void> => {
-  const client = await createAuthClient();
+  const client = getAuthClient();
   await client.post('/api/onboarding/complete');
 };
 
