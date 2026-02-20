@@ -245,7 +245,6 @@ export default function StudyCreateScreen() {
         durationType: data.durationType ?? undefined,
         platform: data.platform || undefined,
         maxMembers: data.maxMembers,
-        participationFee: data.participationFee || undefined,
         deposit: data.deposit || undefined,
         depositRefundPolicy: data.depositRefundPolicy.trim() || undefined,
         requirements: data.requirements.trim() || undefined,

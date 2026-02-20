@@ -345,23 +345,15 @@ export default function StudyDetailScreen() {
               </View>
             )}
 
-            {/* Deposit/Fee Section */}
-            {(study.deposit || study.participationFee) && (
+            {/* Deposit Section */}
+            {study.deposit && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>참가비 정보</Text>
+                <Text style={styles.sectionTitle}>보증금 정보</Text>
                 <View style={styles.feeCard}>
-                  {study.participationFee ? (
-                    <View style={styles.feeRow}>
-                      <Text style={styles.feeLabel}>참가비</Text>
-                      <Text style={styles.feeValue}>{study.participationFee.toLocaleString()}원</Text>
-                    </View>
-                  ) : null}
-                  {study.deposit ? (
-                    <View style={styles.feeRow}>
-                      <Text style={styles.feeLabel}>보증금</Text>
-                      <Text style={styles.feeValue}>{study.deposit.toLocaleString()}원</Text>
-                    </View>
-                  ) : null}
+                  <View style={styles.feeRow}>
+                    <Text style={styles.feeLabel}>보증금</Text>
+                    <Text style={styles.feeValue}>{study.deposit.toLocaleString()}원</Text>
+                  </View>
                 </View>
               </View>
             )}

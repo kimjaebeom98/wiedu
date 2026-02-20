@@ -27,27 +27,6 @@ export default function Step4Recruitment({ data, updateData }: Step4Props) {
         </View>
       </View>
 
-      {/* Participation Fee */}
-      <View style={styles.fieldGroup}>
-        <Text style={styles.fieldLabel}>참가비</Text>
-        <View style={styles.feeInputRow}>
-          <TextInput
-            style={[styles.textInput, styles.feeInput]}
-            placeholder="0"
-            placeholderTextColor="#52525B"
-            value={String(data.participationFee)}
-            onChangeText={v => {
-              const num = v.replace(/[^0-9]/g, '');
-              updateData('participationFee', num === '' ? 0 : Number(num));
-            }}
-            keyboardType="numeric"
-            returnKeyType="done"
-          />
-          <Text style={styles.feeUnit}>원</Text>
-        </View>
-        <Text style={styles.fieldHintText}>무료 스터디는 0원으로 설정하세요</Text>
-      </View>
-
       {/* Deposit */}
       <View style={styles.fieldGroup}>
         <Text style={styles.fieldLabel}>보증금</Text>

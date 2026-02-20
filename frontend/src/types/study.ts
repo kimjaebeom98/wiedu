@@ -61,7 +61,6 @@ export interface StudyCreateData {
   platform: string;
   // Step 4
   maxMembers: number;
-  participationFee: number;
   deposit: number;
   depositRefundPolicy: string;
   requirements: string;
@@ -86,7 +85,6 @@ export interface StudyCreateRequest {
   durationType?: DurationType;
   platform?: string;
   maxMembers: number;
-  participationFee?: number;
   deposit?: number;
   depositRefundPolicy?: string;
   requirements?: string;
@@ -128,7 +126,6 @@ export interface StudyDetailResponse {
   daysOfWeek?: string;
   time?: string;
   durationType?: DurationType;
-  participationFee?: number;
   deposit?: number;
   depositRefundPolicy?: string;
   requirements?: string;

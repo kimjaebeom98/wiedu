@@ -54,9 +54,6 @@ public record StudyCreateRequest(
     @Max(value = 50, message = "최대 50명까지 가능합니다")
     Integer maxMembers,
 
-    @Min(value = 0, message = "참가비는 0 이상이어야 합니다")
-    Integer participationFee,
-
     @Min(value = 0, message = "보증금은 0 이상이어야 합니다")
     Integer deposit,
 

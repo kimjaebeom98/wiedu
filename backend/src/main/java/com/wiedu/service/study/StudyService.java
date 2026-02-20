@@ -84,7 +84,6 @@ public class StudyService {
                 .platform(request.platform())
                 .leader(leader)
                 .maxMembers(request.maxMembers())
-                .participationFee(request.participationFee())
                 .deposit(request.deposit())
                 .depositRefundPolicy(request.depositRefundPolicy())
                 .requirements(request.requirements())

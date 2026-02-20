@@ -77,7 +77,6 @@ export default function Step6Preview({ data, categories }: Step6Props) {
         <PreviewInfoItem icon="calendar" label="요일" value={selectedDays || '-'} />
         <PreviewInfoItem icon="bar-chart-2" label="기간" value={durationLabel} />
         <PreviewInfoItem icon="users" label="최대 인원" value={`${data.maxMembers}명`} />
-        <PreviewInfoItem icon="credit-card" label="참가비" value={formatFee(data.participationFee)} />
         {data.deposit > 0 && (
           <PreviewInfoItem icon="shield" label="보증금" value={formatFee(data.deposit)} />
         )}

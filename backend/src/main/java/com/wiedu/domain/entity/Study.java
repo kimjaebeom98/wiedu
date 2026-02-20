@@ -101,10 +101,6 @@ public class Study {
     private Integer currentMembers = 1;
 
     @Column
-    @Comment("참가비 (원)")
-    private Integer participationFee;
-
-    @Column
     @Comment("보증금 (원)")
     private Integer deposit;
 
@@ -159,7 +155,7 @@ public class Study {
     public Study(String title, String description, StudyCategory category, StudySubcategory subcategory,
                  String coverImageUrl, String targetAudience, String goals,
                  StudyMethod studyMethod, String daysOfWeek, String time, DurationType durationType, String platform,
-                 User leader, Integer maxMembers, Integer participationFee, Integer deposit, String depositRefundPolicy, String requirements,
+                 User leader, Integer maxMembers, Integer deposit, String depositRefundPolicy, String requirements,
                  LocalDateTime startDate, LocalDateTime endDate) {
         this.title = title;
         this.description = description;
@@ -175,7 +171,6 @@ public class Study {
         this.platform = platform;
         this.leader = leader;
         this.maxMembers = maxMembers;
-        this.participationFee = participationFee;
         this.deposit = deposit;
         this.depositRefundPolicy = depositRefundPolicy;
         this.requirements = requirements;
