@@ -94,6 +94,48 @@ export interface StudyCreateRequest {
   endDate?: string;
 }
 
+export interface LeaderInfo {
+  id: number;
+  email: string;
+  nickname: string;
+  profileImage?: string;
+  temperature: number;
+  status: string;
+  emailVerified: boolean;
+  lastLoginAt: string;
+  createdAt: string;
+}
+
+// Full study detail response from GET /api/studies/:id
+export interface StudyDetailResponse {
+  id: number;
+  title: string;
+  description: string;
+  categoryName: string;
+  subcategoryName?: string;
+  coverImageUrl?: string;
+  tags: string[];
+  targetAudience?: string;
+  goals?: string;
+  leader: LeaderInfo;
+  maxMembers: number;
+  currentMembers: number;
+  status: StudyStatus;
+  studyMethod: StudyMethod;
+  platform?: string;
+  daysOfWeek?: string;
+  time?: string;
+  durationType?: DurationType;
+  participationFee?: number;
+  deposit?: number;
+  requirements?: string;
+  curriculums: CurriculumItem[];
+  rules: RuleItem[];
+  startDate?: string;
+  endDate?: string;
+  createdAt: string;
+}
+
 // Study response from API
 export interface StudyResponse {
   id: number;

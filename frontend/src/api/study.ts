@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { getAuthClient, getPublicClient } from './client';
-import { Category, StudyCreateRequest, StudyResponse } from '../types/study';
+import { Category, StudyCreateRequest, StudyResponse, StudyDetailResponse } from '../types/study';
 
 // GET /api/study-categories (no auth needed)
 export const fetchCategories = async (): Promise<Category[]> => {
@@ -25,7 +25,7 @@ export const fetchStudies = async (): Promise<StudyResponse[]> => {
 };
 
 // GET /api/studies/:id
-export const getStudyDetail = async (studyId: number): Promise<StudyResponse> => {
+export const getStudyDetail = async (studyId: number): Promise<StudyDetailResponse> => {
   const client = getPublicClient();
   const response = await client.get(`/api/studies/${studyId}`);
   return response.data;

@@ -212,10 +212,7 @@ export default function HomeScreen() {
               <TouchableOpacity
                 key={study.id}
                 style={styles.studyCard}
-                onPress={() => {
-                  // TODO: Navigate to study detail
-                  console.log('Navigate to study:', study.id);
-                }}
+                onPress={() => navigation.navigate('StudyDetail', { studyId: study.id })}
               >
                 <View style={styles.studyTop}>
                   <View style={styles.studyInfo}>
