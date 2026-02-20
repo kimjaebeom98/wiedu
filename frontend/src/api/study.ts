@@ -30,3 +30,42 @@ export const getStudyDetail = async (studyId: number): Promise<StudyDetailRespon
   const response = await client.get(`/api/studies/${studyId}`);
   return response.data;
 };
+
+// Study Request Types
+export interface StudyJoinRequestBody {
+  message: string;
+}
+
+export interface StudyRequestResponse {
+  id: number;
+  studyId: number;
+  studyTitle: string;
+  userId: number;
+  userNickname: string;
+  userProfileImage?: string;
+  message: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  rejectReason?: string;
+  createdAt: string;
+  processedAt?: string;
+}
+
+// POST /api/studies/:studyId/requests - Apply to study
+export const applyToStudy = async (studyId: number, message: string): Promise<StudyRequestResponse> => {
+  const client = getAuthClient();
+  const response = await client.post(`/api/studies/${studyId}/requests`, { message } as StudyJoinRequestBody);
+  return response.data;
+};
+
+// GET /api/users/me/study-requests - Get my study requests
+export const getMyStudyRequests = async (): Promise<StudyRequestResponse[]> => {
+  const client = getAuthClient();
+  const response = await client.get('/api/users/me/study-requests');
+  return response.data;
+};
+
+// DELETE /api/study-requests/:requestId - Cancel study request
+export const cancelStudyRequest = async (requestId: number): Promise<void> => {
+  const client = getAuthClient();
+  await client.delete(`/api/study-requests/${requestId}`);
+};

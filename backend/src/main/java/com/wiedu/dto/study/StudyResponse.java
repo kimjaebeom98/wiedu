@@ -34,6 +34,7 @@ public record StudyResponse(
         String durationType,
         Integer participationFee,
         Integer deposit,
+        String depositRefundPolicy,
         String requirements,
         List<CurriculumResponse> curriculums,
         List<RuleResponse> rules,
@@ -64,6 +65,7 @@ public record StudyResponse(
                 study.getDurationType() != null ? study.getDurationType().name() : null,
                 study.getParticipationFee(),
                 study.getDeposit(),
+                study.getDepositRefundPolicy(),
                 study.getRequirements(),
                 study.getCurriculums().stream()
                         .map(c -> new CurriculumResponse(c.getWeekNumber(), c.getTitle(), c.getContent()))

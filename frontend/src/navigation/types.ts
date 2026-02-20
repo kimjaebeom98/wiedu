@@ -8,4 +8,14 @@ export type RootStackParamList = {
   Home: { email?: string } | undefined;
   StudyCreate: undefined;
   StudyDetail: { studyId: number };
+  StudyApply: {
+    studyId: number;
+    studyTitle: string;
+    leaderName: string;
+    currentMembers: number;
+    maxMembers: number;
+    rules: Array<{ ruleOrder: number; content: string }>;
+    depositRefundPolicy?: string;
+  };
+  ApplyComplete: { studyId: number; studyTitle: string };
 };

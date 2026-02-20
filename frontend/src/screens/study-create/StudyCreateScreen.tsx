@@ -247,6 +247,7 @@ export default function StudyCreateScreen() {
         maxMembers: data.maxMembers,
         participationFee: data.participationFee || undefined,
         deposit: data.deposit || undefined,
+        depositRefundPolicy: data.depositRefundPolicy.trim() || undefined,
         requirements: data.requirements.trim() || undefined,
         curriculums: data.curriculums.filter(c => c.title.trim()).length > 0
           ? data.curriculums.filter(c => c.title.trim())

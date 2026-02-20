@@ -63,6 +63,7 @@ export interface StudyCreateData {
   maxMembers: number;
   participationFee: number;
   deposit: number;
+  depositRefundPolicy: string;
   requirements: string;
   // Step 5
   curriculums: CurriculumItem[];
@@ -87,6 +88,7 @@ export interface StudyCreateRequest {
   maxMembers: number;
   participationFee?: number;
   deposit?: number;
+  depositRefundPolicy?: string;
   requirements?: string;
   curriculums?: CurriculumItem[];
   rules?: RuleItem[];
@@ -128,6 +130,7 @@ export interface StudyDetailResponse {
   durationType?: DurationType;
   participationFee?: number;
   deposit?: number;
+  depositRefundPolicy?: string;
   requirements?: string;
   curriculums: CurriculumItem[];
   rules: RuleItem[];

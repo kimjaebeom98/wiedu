@@ -109,6 +109,10 @@ public class Study {
     private Integer deposit;
 
     @Column(columnDefinition = "TEXT")
+    @Comment("보증금 환불 정책")
+    private String depositRefundPolicy;
+
+    @Column(columnDefinition = "TEXT")
     @Comment("참여 조건/요구사항")
     private String requirements;
 
@@ -155,7 +159,7 @@ public class Study {
     public Study(String title, String description, StudyCategory category, StudySubcategory subcategory,
                  String coverImageUrl, String targetAudience, String goals,
                  StudyMethod studyMethod, String daysOfWeek, String time, DurationType durationType, String platform,
-                 User leader, Integer maxMembers, Integer participationFee, Integer deposit, String requirements,
+                 User leader, Integer maxMembers, Integer participationFee, Integer deposit, String depositRefundPolicy, String requirements,
                  LocalDateTime startDate, LocalDateTime endDate) {
         this.title = title;
         this.description = description;
@@ -173,6 +177,7 @@ public class Study {
         this.maxMembers = maxMembers;
         this.participationFee = participationFee;
         this.deposit = deposit;
+        this.depositRefundPolicy = depositRefundPolicy;
         this.requirements = requirements;
         this.startDate = startDate;
         this.endDate = endDate;

@@ -58,6 +58,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/studies/status/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/studies/category/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/studies/search").permitAll()
+                        // Study category public endpoints
+                        .requestMatchers(HttpMethod.GET, "/api/study-categories").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/study-categories/**").permitAll()
                         // All other requests require authentication
                         .anyRequest().authenticated()
                 )

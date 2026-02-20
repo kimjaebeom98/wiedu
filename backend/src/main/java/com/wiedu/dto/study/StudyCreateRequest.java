@@ -60,6 +60,8 @@ public record StudyCreateRequest(
     @Min(value = 0, message = "보증금은 0 이상이어야 합니다")
     Integer deposit,
 
+    String depositRefundPolicy,
+
     @Size(max = 1000, message = "요구사항은 1000자 이하여야 합니다")
     String requirements,
 

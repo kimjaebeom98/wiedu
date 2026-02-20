@@ -12,6 +12,8 @@ import OnboardingScreen from './src/screens/onboarding';
 import HomeScreen from './src/screens/HomeScreen';
 import StudyCreateScreen from './src/screens/study-create';
 import StudyDetailScreen from './src/screens/study-detail';
+import StudyApplyScreen from './src/screens/study-apply/StudyApplyScreen';
+import ApplyCompleteScreen from './src/screens/study-apply/ApplyCompleteScreen';
 import { getAccessToken } from './src/storage/token';
 
 const Stack = createNativeStackNavigator();
@@ -80,6 +82,8 @@ export default function App() {
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="StudyCreate" component={StudyCreateScreen} />
           <Stack.Screen name="StudyDetail" component={StudyDetailScreen} />
+          <Stack.Screen name="StudyApply" component={StudyApplyScreen} />
+          <Stack.Screen name="ApplyComplete" component={ApplyCompleteScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

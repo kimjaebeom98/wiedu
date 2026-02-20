@@ -69,6 +69,25 @@ export default function Step4Recruitment({ data, updateData }: Step4Props) {
         <Text style={styles.fieldHintText}>출석/과제 완수 시 환급되는 보증금이에요</Text>
       </View>
 
+      {/* Deposit Refund Policy - only show if deposit > 0 */}
+      {data.deposit > 0 && (
+        <View style={styles.fieldGroup}>
+          <Text style={styles.fieldLabel}>보증금 환불 정책 <Text style={styles.required}>*</Text></Text>
+          <TextInput
+            style={[styles.textInput, styles.textAreaSmall]}
+            placeholder="예: 80% 이상 출석 시 전액 환불, 50% 이상 출석 시 50% 환불"
+            placeholderTextColor="#52525B"
+            value={data.depositRefundPolicy}
+            onChangeText={v => updateData('depositRefundPolicy', v)}
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+            maxLength={500}
+          />
+          <Text style={styles.fieldHintText}>신청자가 동의해야 하는 환불 조건을 명시해주세요</Text>
+        </View>
+      )}
+
       {/* Requirements */}
       <View style={styles.fieldGroup}>
         <Text style={styles.fieldLabel}>지원 자격 요건</Text>

@@ -76,6 +76,7 @@ export const INITIAL_DATA: StudyCreateData = {
   maxMembers: 6,
   participationFee: 0,
   deposit: 0,
+  depositRefundPolicy: '',
   requirements: '',
   curriculums: [],
   rules: [],

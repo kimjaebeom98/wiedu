@@ -94,7 +94,15 @@ export default function StudyDetailScreen() {
   };
 
   const handleJoinStudy = () => {
-    Alert.alert('스터디 참여', '스터디 참여 신청 기능은 준비 중입니다.');
+    navigation.navigate('StudyApply', {
+      studyId: study!.id,
+      studyTitle: study!.title,
+      leaderName: study!.leader.nickname,
+      currentMembers: study!.currentMembers,
+      maxMembers: study!.maxMembers,
+      rules: study!.rules || [],
+      depositRefundPolicy: study!.depositRefundPolicy,
+    });
   };
 
   if (loading) {
