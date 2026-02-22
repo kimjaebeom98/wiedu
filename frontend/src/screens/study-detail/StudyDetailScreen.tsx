@@ -9,6 +9,8 @@ import {
   Image,
   Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,6 +19,7 @@ import { getStudyDetail } from '../../api/study';
 import { StudyDetailResponse } from '../../types/study';
 import { styles } from './styles';
 import { TabType } from './types';
+import BoardListView from '../study-board/BoardListView';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type StudyDetailRouteProp = RouteProp<RootStackParamList, 'StudyDetail'>;
@@ -64,14 +67,29 @@ export default function StudyDetailScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<StudyDetailRouteProp>();
   const { studyId } = route.params;
+  const insets = useSafeAreaInsets();
 
   const [study, setStudy] = useState<StudyDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('intro');
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   useEffect(() => {
     loadStudyDetail();
+    loadCurrentUser();
   }, [studyId]);
+
+  const loadCurrentUser = async () => {
+    try {
+      const userStr = await AsyncStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        setCurrentUserId(user.id);
+      }
+    } catch (error) {
+      console.error('Failed to load current user:', error);
+    }
+  };
 
   const loadStudyDetail = async () => {
     try {
@@ -131,7 +149,7 @@ export default function StudyDetailScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#18181B" />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { marginTop: insets.top }]}>
         <TouchableOpacity style={styles.headerBackBtn} onPress={() => navigation.goBack()}>
           <Feather name="arrow-left" size={20} color="#FFFFFF" />
         </TouchableOpacity>
@@ -165,6 +183,18 @@ export default function StudyDetailScreen() {
         })}
       </View>
 
+      {activeTab === 'board' ? (
+        <BoardListView
+          studyId={studyId}
+          onPostPress={(postId) => navigation.navigate('BoardPostDetail', { studyId, postId })}
+          onCreatePress={() => {
+              const leaderId = study?.leader?.id;
+              const isLeader = currentUserId !== null && leaderId !== undefined &&
+                Number(currentUserId) === Number(leaderId);
+              navigation.navigate('BoardPostCreate', { studyId, isLeader });
+            }}
+        />
+      ) : (
       <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {activeTab === 'intro' && (
           <>
@@ -363,13 +393,6 @@ export default function StudyDetailScreen() {
           </>
         )}
 
-        {activeTab === 'board' && (
-          <View style={styles.emptyTab}>
-            <Feather name="message-square" size={48} color="#3F3F46" />
-            <Text style={styles.emptyTabText}>게시판 기능은 준비 중입니다</Text>
-          </View>
-        )}
-
         {activeTab === 'gallery' && (
           <View style={styles.emptyTab}>
             <Feather name="image" size={48} color="#3F3F46" />
@@ -377,9 +400,10 @@ export default function StudyDetailScreen() {
           </View>
         )}
       </ScrollView>
+      )}
 
       {/* Bottom Bar */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(16, insets.bottom + 8) }]}>
         <TouchableOpacity style={styles.joinBtn} onPress={handleJoinStudy}>
           <Text style={styles.joinBtnText}>스터디 참여 신청하기</Text>
         </TouchableOpacity>

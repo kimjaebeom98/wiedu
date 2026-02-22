@@ -14,9 +14,12 @@ import StudyCreateScreen from './src/screens/study-create';
 import StudyDetailScreen from './src/screens/study-detail';
 import StudyApplyScreen from './src/screens/study-apply/StudyApplyScreen';
 import ApplyCompleteScreen from './src/screens/study-apply/ApplyCompleteScreen';
+import BoardPostDetailScreen from './src/screens/study-board/BoardPostDetailScreen';
+import BoardPostCreateScreen from './src/screens/study-board/BoardPostCreateScreen';
 import { getAccessToken } from './src/storage/token';
+import { RootStackParamList } from './src/navigation/types';
 
-const Stack = createNativeStackNavigator();
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -84,6 +87,8 @@ export default function App() {
           <Stack.Screen name="StudyDetail" component={StudyDetailScreen} />
           <Stack.Screen name="StudyApply" component={StudyApplyScreen} />
           <Stack.Screen name="ApplyComplete" component={ApplyCompleteScreen} />
+          <Stack.Screen name="BoardPostDetail" component={BoardPostDetailScreen} />
+          <Stack.Screen name="BoardPostCreate" component={BoardPostCreateScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>
