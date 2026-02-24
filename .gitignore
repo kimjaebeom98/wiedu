@@ -35,3 +35,11 @@ out/
 
 # Troubleshooting docs (개발 환경 정보 포함)
 docs/troubleshooting.md
+
+# Uploads (사용자 업로드 파일)
+backend/uploads/
+uploads/
+
+# Temporary Claude docs
+**/CLAUDE.md
+!/.claude/

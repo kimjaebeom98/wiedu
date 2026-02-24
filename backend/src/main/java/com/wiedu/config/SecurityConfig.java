@@ -61,6 +61,8 @@ public class SecurityConfig {
                         // Study category public endpoints
                         .requestMatchers(HttpMethod.GET, "/api/study-categories").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/study-categories/**").permitAll()
+                        // Static resources (uploads) - public access
+                        .requestMatchers("/uploads/**").permitAll()
                         // All other requests require authentication
                         .anyRequest().authenticated()
                 )

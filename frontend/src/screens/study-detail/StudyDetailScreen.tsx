@@ -20,6 +20,7 @@ import { StudyDetailResponse } from '../../types/study';
 import { styles } from './styles';
 import { TabType } from './types';
 import BoardListView from '../study-board/BoardListView';
+import GalleryListView from '../study-gallery/GalleryListView';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type StudyDetailRouteProp = RouteProp<RootStackParamList, 'StudyDetail'>;
@@ -194,6 +195,8 @@ export default function StudyDetailScreen() {
               navigation.navigate('BoardPostCreate', { studyId, isLeader });
             }}
         />
+      ) : activeTab === 'gallery' ? (
+        <GalleryListView studyId={studyId} />
       ) : (
       <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {activeTab === 'intro' && (
@@ -393,12 +396,6 @@ export default function StudyDetailScreen() {
           </>
         )}
 
-        {activeTab === 'gallery' && (
-          <View style={styles.emptyTab}>
-            <Feather name="image" size={48} color="#3F3F46" />
-            <Text style={styles.emptyTabText}>사진첩 기능은 준비 중입니다</Text>
-          </View>
-        )}
       </ScrollView>
       )}
 

@@ -61,7 +61,23 @@ public enum ErrorCode {
     // OAuth
     OAUTH_TOKEN_FAILED(HttpStatus.UNAUTHORIZED, "O001", "OAuth 토큰 발급에 실패했습니다."),
     OAUTH_USER_INFO_FAILED(HttpStatus.UNAUTHORIZED, "O002", "OAuth 사용자 정보 조회에 실패했습니다."),
-    OAUTH_INVALID_PROVIDER(HttpStatus.BAD_REQUEST, "O003", "지원하지 않는 OAuth 제공자입니다.");
+    OAUTH_INVALID_PROVIDER(HttpStatus.BAD_REQUEST, "O003", "지원하지 않는 OAuth 제공자입니다."),
+
+    // Board
+    BOARD_POST_NOT_FOUND(HttpStatus.NOT_FOUND, "B001", "게시글을 찾을 수 없습니다."),
+    BOARD_COMMENT_NOT_FOUND(HttpStatus.NOT_FOUND, "B002", "댓글을 찾을 수 없습니다."),
+    NOT_POST_AUTHOR(HttpStatus.FORBIDDEN, "B003", "게시글 작성자만 삭제할 수 있습니다."),
+    NOT_COMMENT_AUTHOR(HttpStatus.FORBIDDEN, "B004", "댓글 작성자만 삭제할 수 있습니다."),
+    NOTICE_LEADER_ONLY(HttpStatus.FORBIDDEN, "B005", "공지는 스터디 리더만 작성할 수 있습니다."),
+    NOT_STUDY_MEMBER(HttpStatus.FORBIDDEN, "B006", "스터디 멤버만 접근할 수 있습니다."),
+
+    // Gallery
+    GALLERY_PHOTO_NOT_FOUND(HttpStatus.NOT_FOUND, "G001", "사진을 찾을 수 없습니다."),
+    GALLERY_NOT_PHOTO_OWNER(HttpStatus.FORBIDDEN, "G002", "사진 업로더 또는 리더만 삭제할 수 있습니다."),
+    GALLERY_FILE_EMPTY(HttpStatus.BAD_REQUEST, "G003", "업로드할 파일이 없습니다."),
+    GALLERY_FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "G004", "파일 크기가 제한을 초과했습니다."),
+    GALLERY_INVALID_FILE_TYPE(HttpStatus.BAD_REQUEST, "G005", "지원하지 않는 파일 형식입니다."),
+    GALLERY_UPLOAD_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "G006", "파일 업로드에 실패했습니다.");
 
     private final HttpStatus status;
     private final String code;
