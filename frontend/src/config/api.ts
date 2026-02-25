@@ -1,14 +1,15 @@
 // API Configuration
-// ngrok URL for development (bypasses network restrictions)
+
+// Railway URL (배포 후 실제 URL로 변경)
+const RAILWAY_URL = 'https://wiedu-backend.up.railway.app'; // TODO: Railway 배포 후 실제 URL로 변경
+
+// ngrok URL for local development
 const NGROK_URL = 'https://3662-121-140-123-64.ngrok-free.app';
 
-// Production URL
-const PRODUCTION_URL = 'https://api.wiedu.com';
-
-// Use ngrok in development, production URL in production
+// Use Railway in production, ngrok in development
 export const getBaseURL = (): string => {
   if (__DEV__ === false) {
-    return PRODUCTION_URL;
+    return RAILWAY_URL;
   }
   return NGROK_URL;
 };
