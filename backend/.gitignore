@@ -38,3 +38,11 @@ out/
 
 ### Mac ###
 .DS_Store
+
+### Environment ###
+.env
+.env.local
+.env.*.local
+
+### Uploads ###
+uploads/
