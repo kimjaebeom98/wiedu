@@ -10,11 +10,11 @@ spring:
       max-file-size: 10MB
       max-request-size: 10MB
 
-  # Database (개발 환경)
+  # Database (개발 환경 - 환경변수 필수)
   datasource:
-    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE:wiedu}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
-    username: ${MYSQL_USER:wiedu}
-    password: ${MYSQL_PASSWORD:rmsifk77@@}
+    url: jdbc:mysql://localhost:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: ${MYSQL_USER}
+    password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   # JPA
@@ -38,24 +38,24 @@ server:
   port: 8080
   address: 0.0.0.0
 
-# JWT Configuration
+# JWT Configuration (환경변수 필수)
 jwt:
-  secret: ${JWT_SECRET:wiedu-secret-key-for-jwt-token-generation-must-be-at-least-256-bits}
+  secret: ${JWT_SECRET}
   access-token-validity: 86400000
   refresh-token-validity: 1209600000
   issuer: wiedu
 
-# Kakao OAuth
+# Kakao OAuth (환경변수 필수)
 kakao:
-  client-id: ${KAKAO_CLIENT_ID:891cfab43de70f0ea8f731792876fa0b}
-  redirect-uri: ${KAKAO_REDIRECT_URI:https://3662-121-140-123-64.ngrok-free.app/api/auth/kakao/callback}
+  client-id: ${KAKAO_CLIENT_ID}
+  redirect-uri: ${KAKAO_REDIRECT_URI}
 
 # File Upload Configuration
 file:
   upload-dir: ./uploads
   max-size: 10485760  # 10MB
   allowed-types: image/jpeg,image/png,image/webp
-  base-url: ${FILE_BASE_URL:https://3662-121-140-123-64.ngrok-free.app}
+  base-url: ${FILE_BASE_URL}
 
 # Logging
 logging:

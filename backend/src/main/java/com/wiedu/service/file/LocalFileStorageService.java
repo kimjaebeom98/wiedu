@@ -47,18 +47,32 @@ public class LocalFileStorageService implements FileStorageService {
         // 파일 검증
         validateFile(file);
 
+        // subdirectory 검증 (Path Traversal 방지)
+        String sanitizedSubdir = sanitizePath(subdirectory);
+
         // 업로드 디렉토리 생성
-        Path uploadPath = Paths.get(uploadDir, subdirectory);
+        Path baseUploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
+        Path uploadPath = baseUploadPath.resolve(sanitizedSubdir).normalize();
+
+        // 경로가 업로드 디렉토리 내부인지 확인
+        if (!uploadPath.startsWith(baseUploadPath)) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "잘못된 업로드 경로입니다");
+        }
         Files.createDirectories(uploadPath);
 
-        // UUID 기반 파일명 생성
+        // UUID 기반 파일명 생성 (원본 파일명 사용 안함 - 보안)
         String originalFilename = file.getOriginalFilename();
         String extension = getFileExtension(originalFilename);
         String uuid = UUID.randomUUID().toString();
         String storedFilename = uuid + extension;
 
         // 파일 저장
-        Path filePath = uploadPath.resolve(storedFilename);
+        Path filePath = uploadPath.resolve(storedFilename).normalize();
+
+        // 최종 경로 재검증
+        if (!filePath.startsWith(baseUploadPath)) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "잘못된 파일 경로입니다");
+        }
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
 
         // 이미지인 경우 썸네일 생성
@@ -99,6 +113,21 @@ public class LocalFileStorageService implements FileStorageService {
     }
 
     /**
+     * 경로 정규화 (Path Traversal 방지)
+     */
+    private String sanitizePath(String path) {
+        if (path == null) {
+            return "";
+        }
+        // .. 및 경로 구분자 정규화
+        return path.replace("\\", "/")
+                   .replaceAll("\\.\\.", "")
+                   .replaceAll("//+", "/")
+                   .replaceAll("^/+", "")
+                   .replaceAll("/+$", "");
+    }
+
+    /**
      * 파일 검증 (크기, MIME 타입)
      */
     private void validateFile(MultipartFile file) {
@@ -134,13 +163,31 @@ public class LocalFileStorageService implements FileStorageService {
     }
 
     /**
-     * 파일 확장자 추출
+     * 파일 확장자 추출 (Path Traversal 방지)
      */
     private String getFileExtension(String filename) {
         if (filename == null || !filename.contains(".")) {
             return "";
         }
-        return filename.substring(filename.lastIndexOf("."));
+        // Path Traversal 방지: 파일명에서 경로 구분자 제거
+        String sanitized = filename.replace("\\", "/");
+        if (sanitized.contains("/")) {
+            sanitized = sanitized.substring(sanitized.lastIndexOf("/") + 1);
+        }
+        // 허용된 확장자만 추출
+        String extension = sanitized.substring(sanitized.lastIndexOf(".")).toLowerCase();
+        if (!isAllowedExtension(extension)) {
+            return ".jpg"; // 기본값
+        }
+        return extension;
+    }
+
+    /**
+     * 허용된 확장자 확인
+     */
+    private boolean isAllowedExtension(String extension) {
+        return extension.equals(".jpg") || extension.equals(".jpeg")
+            || extension.equals(".png") || extension.equals(".webp");
     }
 
     /**
