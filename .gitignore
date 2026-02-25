@@ -33,8 +33,8 @@ dist/
 build/
 out/
 
-# Troubleshooting docs (개발 환경 정보 포함)
-docs/troubleshooting.md
+# Local docs (개발 환경 정보 포함)
+docs/
 
 # Uploads (사용자 업로드 파일)
 backend/uploads/
