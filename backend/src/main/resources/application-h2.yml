@@ -1,15 +1,15 @@
-# H2 인메모리 DB 프로필 (로컬 테스트용)
+# H2 파일 DB 프로필 (로컬 테스트용 - 데이터 유지됨)
 # 실행: ./gradlew bootRun --args='--spring.profiles.active=h2'
 spring:
   datasource:
-    url: jdbc:h2:mem:wiedu;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    url: jdbc:h2:file:./data/wiedu;DB_CLOSE_DELAY=-1;AUTO_SERVER=TRUE
     username: sa
     password:
     driver-class-name: org.h2.Driver
 
   jpa:
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update  # 데이터 유지
     properties:
       hibernate:
         dialect: org.hibernate.dialect.H2Dialect

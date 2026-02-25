@@ -46,3 +46,6 @@ out/
 
 ### Uploads ###
 uploads/
+
+### H2 Database ###
+data/
