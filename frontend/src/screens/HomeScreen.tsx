@@ -292,7 +292,10 @@ export default function HomeScreen() {
           <Feather name="message-circle" size={24} color="#71717A" />
           <Text style={styles.navText}>채팅</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => navigation.navigate('MyPage')}
+        >
           <Feather name="user" size={24} color="#71717A" />
           <Text style={styles.navText}>마이</Text>
         </TouchableOpacity>

@@ -20,4 +20,7 @@ export type RootStackParamList = {
   ApplyComplete: { studyId: number; studyTitle: string };
   BoardPostCreate: { studyId: number; isLeader?: boolean };
   BoardPostDetail: { studyId: number; postId: number };
+  MyPage: undefined;
+  ProfileEdit: undefined;
+  Settings: undefined;
 };
