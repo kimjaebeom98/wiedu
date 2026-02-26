@@ -54,7 +54,13 @@ export default function EmailLoginScreen({ navigation }: EmailLoginScreenProps) 
     try {
       const response = await login(email, password);
       await saveTokens(response.accessToken, response.refreshToken);
-      navigation.replace('Home', { email });
+
+      // 온보딩 완료 여부에 따라 분기
+      if (response.onboardingCompleted) {
+        navigation.replace('Home', { email });
+      } else {
+        navigation.replace('Onboarding', { email });
+      }
     } catch (err: any) {
       setError(err.message || '로그인에 실패했습니다.');
     } finally {

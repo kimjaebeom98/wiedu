@@ -10,6 +10,7 @@ export interface KakaoLoginResult {
   accessToken?: string;
   refreshToken?: string;
   expiresIn?: number;
+  onboardingCompleted?: boolean;
   error?: string;
   cancelled?: boolean;
 }
@@ -58,6 +59,7 @@ const pollForTokens = async (
           accessToken: data.accessToken,
           refreshToken: data.refreshToken,
           expiresIn: data.expiresIn,
+          onboardingCompleted: data.onboardingCompleted,
         };
       } else if (response.status === 202) {
         // Still pending, continue polling
@@ -124,6 +126,7 @@ export const startKakaoLogin = async (): Promise<KakaoLoginResult> => {
         const accessToken = url.searchParams.get('accessToken');
         const refreshToken = url.searchParams.get('refreshToken');
         const expiresIn = url.searchParams.get('expiresIn');
+        const onboardingCompletedStr = url.searchParams.get('onboardingCompleted');
         const error = url.searchParams.get('error');
 
         resolved = true;
@@ -143,6 +146,7 @@ export const startKakaoLogin = async (): Promise<KakaoLoginResult> => {
             accessToken,
             refreshToken,
             expiresIn: expiresIn ? parseInt(expiresIn, 10) : undefined,
+            onboardingCompleted: onboardingCompletedStr === 'true',
           });
         } else {
           console.error('[Kakao] Missing tokens in deep link');

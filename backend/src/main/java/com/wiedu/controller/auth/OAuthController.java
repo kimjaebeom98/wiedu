@@ -97,7 +97,8 @@ public class OAuthController {
             String redirectUrl = appRedirectUri +
                     "?accessToken=" + URLEncoder.encode(tokenResponse.accessToken(), "UTF-8") +
                     "&refreshToken=" + URLEncoder.encode(tokenResponse.refreshToken(), "UTF-8") +
-                    "&expiresIn=" + tokenResponse.expiresIn();
+                    "&expiresIn=" + tokenResponse.expiresIn() +
+                    "&onboardingCompleted=" + tokenResponse.onboardingCompleted();
 
             callbackRenderer.sendSuccessPageWithDeepLink(response, redirectUrl);
 

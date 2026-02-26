@@ -61,7 +61,7 @@ public class KakaoOAuthService {
 
         log.info("Kakao login successful: userId={}, email={}", user.getId(), user.getEmail());
 
-        return TokenResponse.of(accessToken, refreshToken, jwtProvider.getAccessTokenValidity());
+        return TokenResponse.of(accessToken, refreshToken, jwtProvider.getAccessTokenValidity(), user.isOnboardingCompleted());
     }
 
     /**

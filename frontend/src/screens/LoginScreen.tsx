@@ -37,10 +37,16 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       if (result.success && result.accessToken && result.refreshToken) {
         // 토큰 저장
         await saveTokens(result.accessToken, result.refreshToken);
-        console.log('[Login] Tokens saved, navigating to Home');
+        console.log('[Login] Tokens saved, onboardingCompleted:', result.onboardingCompleted);
 
-        // 홈으로 이동
-        navigation.replace('Home');
+        // 온보딩 완료 여부에 따라 분기
+        if (result.onboardingCompleted) {
+          console.log('[Login] Onboarding completed, navigating to Home');
+          navigation.replace('Home');
+        } else {
+          console.log('[Login] Onboarding not completed, navigating to Onboarding');
+          navigation.replace('Onboarding');
+        }
       } else if (result.cancelled) {
         // 사용자가 취소함 - 아무것도 하지 않음
         console.log('[Login] User cancelled');

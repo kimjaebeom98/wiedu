@@ -13,6 +13,7 @@ export interface TokenResponse {
   refreshToken: string;
   tokenType: string;
   expiresIn: number;
+  onboardingCompleted?: boolean;
 }
 
 export interface UserResponse {

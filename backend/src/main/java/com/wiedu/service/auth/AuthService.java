@@ -54,7 +54,7 @@ public class AuthService {
 
         log.info("User logged in: {}", user.getEmail());
 
-        return TokenResponse.of(accessToken, refreshToken, jwtProvider.getAccessTokenValidity());
+        return TokenResponse.of(accessToken, refreshToken, jwtProvider.getAccessTokenValidity(), user.isOnboardingCompleted());
     }
 
     @Transactional
