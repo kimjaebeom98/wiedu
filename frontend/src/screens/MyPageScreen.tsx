@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,84 +7,54 @@ import {
   ScrollView,
   StatusBar,
   ActivityIndicator,
-  RefreshControl,
-  Image,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { RootStackParamList } from '../navigation/types';
-import { fetchMyProfile, fetchMyStudies } from '../api/mypage';
-import { MyProfile, MyStudy } from '../types/mypage';
-import { clearTokens } from '../storage/token';
+import { useFocusEffect } from '@react-navigation/native';
+import { getMyProfile } from '../api/profile';
+import { MyProfile } from '../types/profile';
 
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
-
-const STUDY_STATUS_LABELS: Record<string, string> = {
-  RECRUITING: '모집중',
-  IN_PROGRESS: '진행중',
-  COMPLETED: '완료',
-  CANCELLED: '취소됨',
-};
-
-const ROLE_LABELS: Record<string, string> = {
-  LEADER: '스터디장',
-  MEMBER: '멤버',
-};
+const UNLOCK_THRESHOLD = 40;
 
 export default function MyPageScreen() {
-  const navigation = useNavigation<NavigationProp>();
   const [profile, setProfile] = useState<MyProfile | null>(null);
-  const [myStudies, setMyStudies] = useState<MyStudy[]>([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
+  const [error, setError] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
+  const loadProfile = useCallback(async () => {
     try {
-      const [profileData, studiesData] = await Promise.all([
-        fetchMyProfile(),
-        fetchMyStudies(),
-      ]);
-      setProfile(profileData);
-      setMyStudies(studiesData);
-    } catch (error) {
-      console.error('Failed to load profile:', error);
+      setError(null);
+      const data = await getMyProfile();
+      setProfile(data);
+    } catch (err) {
+      console.error('Failed to load profile:', err);
+      setError('프로필을 불러오지 못했어요.');
     } finally {
       setLoading(false);
-      setRefreshing(false);
     }
   }, []);
 
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      loadProfile();
+    }, [loadProfile])
+  );
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    loadData();
-  }, [loadData]);
+  const temperature = profile?.temperature ?? 0;
+  const progressPercent = Math.min((temperature / UNLOCK_THRESHOLD) * 100, 100);
+  const temperatureToUnlock = profile?.temperatureToUnlock ?? Math.max(UNLOCK_THRESHOLD - temperature, 0);
+  const isUnlocked = profile?.isStudyLeaderUnlocked ?? temperature >= UNLOCK_THRESHOLD;
 
-  const handleLogout = async () => {
-    await clearTokens();
-    navigation.replace('Login');
-  };
-
-  const handleBack = () => {
-    navigation.goBack();
-  };
-
-  const filteredStudies = myStudies.filter((study) => {
-    if (activeTab === 'active') {
-      return study.status === 'RECRUITING' || study.status === 'IN_PROGRESS';
-    }
-    return study.status === 'COMPLETED';
-  });
-
-  const getTemperatureColor = (temp: number): string => {
-    if (temp >= 40) return '#22C55E';
-    if (temp >= 36.5) return '#8B5CF6';
-    return '#71717A';
+  const getExperienceBadge = (level: string | null): string => {
+    if (!level) return '신입';
+    const labels: Record<string, string> = {
+      BEGINNER: '입문',
+      JUNIOR: '초급',
+      INTERMEDIATE: '중급',
+      SENIOR: '고급',
+      EXPERT: '전문가',
+    };
+    return labels[level] ?? level;
   };
 
   if (loading) {
@@ -96,277 +66,129 @@ export default function MyPageScreen() {
     );
   }
 
+  if (error || !profile) {
+    return (
+      <View style={styles.loadingContainer}>
+        <StatusBar barStyle="light-content" backgroundColor="#18181B" />
+        <Feather name="alert-circle" size={40} color="#71717A" />
+        <Text style={styles.errorText}>{error ?? '프로필을 불러오지 못했어요.'}</Text>
+        <TouchableOpacity style={styles.retryBtn} onPress={loadProfile}>
+          <Text style={styles.retryBtnText}>다시 시도</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#18181B" />
 
-      <ScrollView
-        style={styles.scrollView}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor="#8B5CF6"
-            colors={['#8B5CF6']}
-          />
-        }
-      >
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
-            <Feather name="arrow-left" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>마이페이지</Text>
-          <TouchableOpacity style={styles.settingsBtn}>
-            <Feather name="settings" size={20} color="#FFFFFF" />
+          <Text style={styles.headerTitle}>프로필</Text>
+          <TouchableOpacity style={styles.headerMoreBtn}>
+            <Feather name="more-horizontal" size={24} color="#A1A1AA" />
           </TouchableOpacity>
         </View>
 
-        {/* Profile Card */}
+        {/* Profile Section */}
         <View style={styles.profileCard}>
-          <View style={styles.profileTop}>
-            <View style={styles.avatarContainer}>
-              {profile?.profileImage ? (
-                <Image
-                  source={{ uri: profile.profileImage }}
-                  style={styles.avatar}
-                />
-              ) : (
-                <View style={styles.avatarPlaceholder}>
-                  <Feather name="user" size={32} color="#71717A" />
-                </View>
-              )}
-              {profile?.isStudyLeaderUnlocked && (
-                <View style={styles.verifiedBadge}>
-                  <Feather name="check" size={12} color="#FFFFFF" />
-                </View>
-              )}
+          {/* Avatar */}
+          <View style={styles.avatarContainer}>
+            <View style={styles.avatar}>
+              <Feather name="user" size={44} color="#71717A" />
             </View>
-
-            <View style={styles.profileInfo}>
-              <Text style={styles.nickname}>{profile?.nickname || '사용자'}</Text>
-              <Text style={styles.email}>{profile?.email}</Text>
-            </View>
-
-            <TouchableOpacity style={styles.editBtn}>
-              <Feather name="edit-2" size={16} color="#8B5CF6" />
-            </TouchableOpacity>
           </View>
+
+          {/* Name & Badge */}
+          <View style={styles.nameRow}>
+            <Text style={styles.nickname}>{profile.nickname}</Text>
+            <View style={styles.badge}>
+              <Text style={styles.badgeText}>{getExperienceBadge(profile.experienceLevel)}</Text>
+            </View>
+          </View>
+
+          {/* Region */}
+          {profile.region ? (
+            <View style={styles.regionRow}>
+              <Feather name="map-pin" size={13} color="#71717A" />
+              <Text style={styles.regionText}>{profile.region}</Text>
+            </View>
+          ) : null}
 
           {/* Temperature */}
-          <View style={styles.temperatureSection}>
-            <View style={styles.temperatureRow}>
-              <Text style={styles.temperatureLabel}>활동 온도</Text>
-              <Text
-                style={[
-                  styles.temperatureValue,
-                  { color: getTemperatureColor(profile?.temperature || 36.5) },
-                ]}
-              >
-                {profile?.temperature?.toFixed(1) || '36.5'}°C
+          <View style={styles.tempSection}>
+            <View style={styles.tempLabelRow}>
+              <Text style={styles.tempLabel}>
+                {profile.experienceLevel
+                  ? `${getExperienceBadge(profile.experienceLevel)} 분야 `
+                  : '개발 분야 '}
+                <Text style={styles.tempValue}>{temperature.toFixed(1)}°C</Text>
               </Text>
             </View>
-            <View style={styles.temperatureBar}>
-              <View
-                style={[
-                  styles.temperatureFill,
-                  {
-                    width: `${Math.min((profile?.temperature || 36.5) / 50 * 100, 100)}%`,
-                    backgroundColor: getTemperatureColor(profile?.temperature || 36.5),
-                  },
-                ]}
-              />
-            </View>
-            {!profile?.isStudyLeaderUnlocked && (
-              <Text style={styles.unlockHint}>
-                스터디장 해금까지 {profile?.temperatureToUnlock?.toFixed(1)}°C 남음
-              </Text>
-            )}
-          </View>
 
-          {/* Stats */}
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{profile?.stats?.activeStudyCount || 0}</Text>
-              <Text style={styles.statLabel}>참여중</Text>
+            <View style={styles.progressBarTrack}>
+              <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
             </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{profile?.stats?.completedStudyCount || 0}</Text>
-              <Text style={styles.statLabel}>완료</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{profile?.stats?.leadingStudyCount || 0}</Text>
-              <Text style={styles.statLabel}>운영중</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{profile?.stats?.attendanceRate || 0}%</Text>
-              <Text style={styles.statLabel}>출석률</Text>
-            </View>
+
+            {!isUnlocked ? (
+              <Text style={styles.tempHint}>40°C 달성 시 스터디장 페이지 해금!</Text>
+            ) : null}
           </View>
         </View>
 
-        {/* Study Leader Unlock Section */}
-        {!profile?.isStudyLeaderUnlocked && (
-          <View style={styles.unlockCard}>
-            <View style={styles.unlockIcon}>
-              <Feather name="lock" size={20} color="#8B5CF6" />
+        {/* Stats Section */}
+        <View style={styles.statsCard}>
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>
+              {profile.stats.activeStudyCount + profile.stats.completedStudyCount}
+            </Text>
+            <Text style={styles.statLabel}>참여 스터디</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{profile.stats.leadingStudyCount}</Text>
+            <Text style={styles.statLabel}>운영 스터디</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statNumber}>{profile.stats.attendanceRate}%</Text>
+            <Text style={styles.statLabel}>출석률</Text>
+          </View>
+        </View>
+
+        {/* Lock Section */}
+        {!isUnlocked ? (
+          <View style={styles.lockCard}>
+            <View style={styles.lockIconContainer}>
+              <Feather name="lock" size={28} color="#71717A" />
             </View>
-            <View style={styles.unlockContent}>
-              <Text style={styles.unlockTitle}>스터디장 기능 잠금</Text>
-              <Text style={styles.unlockDesc}>
-                활동 온도 40°C 이상 달성 시 스터디를 직접 만들 수 있어요
+            <Text style={styles.lockTitle}>스터디장 페이지 잠김</Text>
+            <Text style={styles.lockDescription}>
+              온도를 40°C까지 올리면{'\n'}스터디장 전용 기능이 해금돼요
+            </Text>
+            <View style={styles.lockProgressRow}>
+              <View style={styles.lockProgressBarTrack}>
+                <View style={[styles.lockProgressBarFill, { width: `${progressPercent}%` }]} />
+              </View>
+              <Text style={styles.lockProgressText}>
+                {temperatureToUnlock.toFixed(1)}°C 더 필요
               </Text>
             </View>
           </View>
+        ) : (
+          <TouchableOpacity style={styles.leaderCard}>
+            <View style={styles.leaderCardLeft}>
+              <Feather name="unlock" size={22} color="#8B5CF6" />
+              <View style={styles.leaderCardText}>
+                <Text style={styles.leaderCardTitle}>스터디장 페이지</Text>
+                <Text style={styles.leaderCardSubtitle}>스터디장 전용 기능을 이용하세요</Text>
+              </View>
+            </View>
+            <Feather name="chevron-right" size={20} color="#A1A1AA" />
+          </TouchableOpacity>
         )}
-
-        {/* My Studies Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>내 스터디</Text>
-
-          {/* Tabs */}
-          <View style={styles.tabRow}>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'active' && styles.tabActive]}
-              onPress={() => setActiveTab('active')}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === 'active' && styles.tabTextActive,
-                ]}
-              >
-                진행중
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.tab, activeTab === 'completed' && styles.tabActive]}
-              onPress={() => setActiveTab('completed')}
-            >
-              <Text
-                style={[
-                  styles.tabText,
-                  activeTab === 'completed' && styles.tabTextActive,
-                ]}
-              >
-                완료
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Study List */}
-          {filteredStudies.length === 0 ? (
-            <View style={styles.emptyState}>
-              <Feather name="inbox" size={40} color="#52525B" />
-              <Text style={styles.emptyStateText}>
-                {activeTab === 'active'
-                  ? '진행중인 스터디가 없어요'
-                  : '완료한 스터디가 없어요'}
-              </Text>
-            </View>
-          ) : (
-            filteredStudies.map((study) => (
-              <TouchableOpacity
-                key={study.studyId}
-                style={styles.studyCard}
-                onPress={() =>
-                  navigation.navigate('StudyDetail', { studyId: study.studyId })
-                }
-              >
-                <View style={styles.studyCardLeft}>
-                  {study.thumbnailImage ? (
-                    <Image
-                      source={{ uri: study.thumbnailImage }}
-                      style={styles.studyThumbnail}
-                    />
-                  ) : (
-                    <View style={styles.studyThumbnailPlaceholder}>
-                      <Feather name="book-open" size={20} color="#71717A" />
-                    </View>
-                  )}
-                </View>
-                <View style={styles.studyCardRight}>
-                  <View style={styles.studyTagRow}>
-                    {study.category && (
-                      <View style={styles.studyTag}>
-                        <Text style={styles.studyTagText}>{study.category}</Text>
-                      </View>
-                    )}
-                    <View
-                      style={[
-                        styles.roleTag,
-                        study.myRole === 'LEADER' && styles.leaderTag,
-                      ]}
-                    >
-                      <Text
-                        style={[
-                          styles.roleTagText,
-                          study.myRole === 'LEADER' && styles.leaderTagText,
-                        ]}
-                      >
-                        {ROLE_LABELS[study.myRole]}
-                      </Text>
-                    </View>
-                  </View>
-                  <Text style={styles.studyTitle} numberOfLines={1}>
-                    {study.title}
-                  </Text>
-                  <View style={styles.studyMeta}>
-                    <Feather name="users" size={12} color="#71717A" />
-                    <Text style={styles.studyMetaText}>
-                      {study.currentMembers}/{study.maxMembers}명
-                    </Text>
-                    <View
-                      style={[
-                        styles.statusDot,
-                        {
-                          backgroundColor:
-                            study.status === 'RECRUITING'
-                              ? '#22C55E'
-                              : study.status === 'IN_PROGRESS'
-                              ? '#3B82F6'
-                              : '#71717A',
-                        },
-                      ]}
-                    />
-                    <Text style={styles.studyMetaText}>
-                      {STUDY_STATUS_LABELS[study.status]}
-                    </Text>
-                  </View>
-                </View>
-                <Feather name="chevron-right" size={20} color="#52525B" />
-              </TouchableOpacity>
-            ))
-          )}
-        </View>
-
-        {/* Menu Items */}
-        <View style={styles.menuSection}>
-          <TouchableOpacity style={styles.menuItem}>
-            <Feather name="bell" size={20} color="#A1A1AA" />
-            <Text style={styles.menuText}>알림 설정</Text>
-            <Feather name="chevron-right" size={20} color="#52525B" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem}>
-            <Feather name="help-circle" size={20} color="#A1A1AA" />
-            <Text style={styles.menuText}>고객센터</Text>
-            <Feather name="chevron-right" size={20} color="#52525B" />
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.menuItem}>
-            <Feather name="file-text" size={20} color="#A1A1AA" />
-            <Text style={styles.menuText}>이용약관</Text>
-            <Feather name="chevron-right" size={20} color="#52525B" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Logout Button */}
-        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-          <Text style={styles.logoutText}>로그아웃</Text>
-        </TouchableOpacity>
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
@@ -384,354 +206,236 @@ const styles = StyleSheet.create({
     backgroundColor: '#18181B',
     justifyContent: 'center',
     alignItems: 'center',
+    gap: 16,
+  },
+  errorText: {
+    fontSize: 14,
+    color: '#71717A',
+    textAlign: 'center',
+  },
+  retryBtn: {
+    marginTop: 8,
+    backgroundColor: '#8B5CF6',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+  },
+  retryBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   scrollView: {
     flex: 1,
+    paddingHorizontal: 24,
   },
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 20,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#27272A',
-    borderRadius: 20,
-    justifyContent: 'center',
     alignItems: 'center',
+    paddingTop: 60,
+    paddingBottom: 16,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  settingsBtn: {
+  headerMoreBtn: {
     width: 40,
     height: 40,
-    backgroundColor: '#27272A',
-    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
   profileCard: {
-    marginHorizontal: 24,
     backgroundColor: '#27272A',
     borderRadius: 20,
-    padding: 20,
-  },
-  profileTop: {
-    flexDirection: 'row',
+    padding: 24,
     alignItems: 'center',
+    gap: 12,
   },
   avatarContainer: {
-    position: 'relative',
+    marginBottom: 4,
   },
   avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-  },
-  avatarPlaceholder: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 100,
+    height: 100,
     backgroundColor: '#3F3F46',
+    borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  verifiedBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#22C55E',
-    justifyContent: 'center',
+  nameRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#27272A',
-  },
-  profileInfo: {
-    flex: 1,
-    marginLeft: 16,
+    gap: 8,
   },
   nickname: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  email: {
+  badge: {
+    backgroundColor: '#8B5CF6',
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  regionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  regionText: {
     fontSize: 13,
     color: '#71717A',
+  },
+  tempSection: {
+    width: '100%',
+    gap: 8,
     marginTop: 4,
   },
-  editBtn: {
-    width: 36,
-    height: 36,
-    backgroundColor: '#3F3F46',
-    borderRadius: 18,
+  tempLabelRow: {
+    flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
   },
-  temperatureSection: {
-    marginTop: 20,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#3F3F46',
+  tempLabel: {
+    fontSize: 14,
+    color: '#A1A1AA',
+    fontWeight: '500',
   },
-  temperatureRow: {
+  tempValue: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#F97316',
+  },
+  progressBarTrack: {
+    height: 8,
+    backgroundColor: '#3F3F46',
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#F97316',
+    borderRadius: 4,
+  },
+  tempHint: {
+    fontSize: 12,
+    color: '#71717A',
+    textAlign: 'center',
+  },
+  statsCard: {
+    backgroundColor: '#27272A',
+    borderRadius: 20,
+    padding: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
-  },
-  temperatureLabel: {
-    fontSize: 14,
-    color: '#A1A1AA',
-  },
-  temperatureValue: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  temperatureBar: {
-    height: 6,
-    backgroundColor: '#3F3F46',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  temperatureFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  unlockHint: {
-    fontSize: 12,
-    color: '#71717A',
-    marginTop: 8,
-  },
-  statsRow: {
-    flexDirection: 'row',
-    marginTop: 20,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#3F3F46',
+    marginTop: 16,
   },
   statItem: {
     flex: 1,
     alignItems: 'center',
+    gap: 6,
   },
-  statValue: {
-    fontSize: 20,
+  statNumber: {
+    fontSize: 22,
     fontWeight: '700',
     color: '#FFFFFF',
   },
   statLabel: {
     fontSize: 12,
+    fontWeight: '500',
     color: '#71717A',
-    marginTop: 4,
   },
   statDivider: {
     width: 1,
-    height: 32,
+    height: 36,
     backgroundColor: '#3F3F46',
   },
-  unlockCard: {
-    flexDirection: 'row',
+  lockCard: {
+    backgroundColor: '#27272A',
+    borderRadius: 20,
+    padding: 24,
     alignItems: 'center',
-    marginHorizontal: 24,
+    gap: 10,
     marginTop: 16,
-    backgroundColor: 'rgba(139, 92, 246, 0.1)',
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(139, 92, 246, 0.3)',
   },
-  unlockIcon: {
-    width: 44,
-    height: 44,
-    backgroundColor: 'rgba(139, 92, 246, 0.2)',
-    borderRadius: 12,
+  lockIconContainer: {
+    width: 60,
+    height: 60,
+    backgroundColor: '#3F3F46',
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 4,
   },
-  unlockContent: {
-    flex: 1,
-    marginLeft: 12,
-  },
-  unlockTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#8B5CF6',
-  },
-  unlockDesc: {
-    fontSize: 12,
-    color: '#A1A1AA',
-    marginTop: 4,
-  },
-  section: {
-    marginTop: 24,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 18,
+  lockTitle: {
+    fontSize: 16,
     fontWeight: '700',
     color: '#FFFFFF',
-    marginBottom: 16,
   },
-  tabRow: {
-    flexDirection: 'row',
-    backgroundColor: '#27272A',
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 16,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  tabActive: {
-    backgroundColor: '#8B5CF6',
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
+  lockDescription: {
+    fontSize: 13,
     color: '#71717A',
+    textAlign: 'center',
+    lineHeight: 20,
   },
-  tabTextActive: {
-    color: '#FFFFFF',
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 40,
-    gap: 12,
-  },
-  emptyStateText: {
-    fontSize: 14,
-    color: '#71717A',
-  },
-  studyCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#27272A',
-    borderRadius: 16,
-    padding: 14,
-    marginBottom: 12,
-  },
-  studyCardLeft: {
-    marginRight: 14,
-  },
-  studyThumbnail: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-  },
-  studyThumbnailPlaceholder: {
-    width: 56,
-    height: 56,
-    borderRadius: 12,
-    backgroundColor: '#3F3F46',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  studyCardRight: {
-    flex: 1,
-  },
-  studyTagRow: {
-    flexDirection: 'row',
+  lockProgressRow: {
+    width: '100%',
     gap: 8,
-    marginBottom: 6,
+    marginTop: 4,
   },
-  studyTag: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+  lockProgressBarTrack: {
+    height: 8,
     backgroundColor: '#3F3F46',
-    borderRadius: 6,
+    borderRadius: 4,
+    overflow: 'hidden',
   },
-  studyTagText: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#A1A1AA',
+  lockProgressBarFill: {
+    height: '100%',
+    backgroundColor: '#F97316',
+    borderRadius: 4,
   },
-  roleTag: {
-    paddingVertical: 4,
-    paddingHorizontal: 8,
-    backgroundColor: '#3F3F46',
-    borderRadius: 6,
-  },
-  leaderTag: {
-    backgroundColor: 'rgba(139, 92, 246, 0.2)',
-  },
-  roleTagText: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#A1A1AA',
-  },
-  leaderTagText: {
-    color: '#8B5CF6',
-  },
-  studyTitle: {
-    fontSize: 15,
+  lockProgressText: {
+    fontSize: 12,
     fontWeight: '600',
-    color: '#FFFFFF',
-    marginBottom: 6,
+    color: '#F97316',
+    textAlign: 'center',
   },
-  studyMeta: {
+  leaderCard: {
+    backgroundColor: '#27272A',
+    borderRadius: 20,
+    padding: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  leaderCardLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 14,
   },
-  studyMetaText: {
+  leaderCardText: {
+    gap: 4,
+  },
+  leaderCardTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  leaderCardSubtitle: {
     fontSize: 12,
     color: '#71717A',
   },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    marginLeft: 8,
-  },
-  menuSection: {
-    marginTop: 24,
-    marginHorizontal: 24,
-    backgroundColor: '#27272A',
-    borderRadius: 16,
-    overflow: 'hidden',
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#3F3F46',
-  },
-  menuText: {
-    flex: 1,
-    fontSize: 15,
-    color: '#E4E4E7',
-    marginLeft: 12,
-  },
-  logoutBtn: {
-    marginTop: 24,
-    marginHorizontal: 24,
-    paddingVertical: 14,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#EF4444',
-    borderRadius: 12,
-  },
-  logoutText: {
-    fontSize: 14,
-    color: '#EF4444',
-    fontWeight: '600',
-  },
   bottomSpacer: {
-    height: 40,
+    height: 100,
   },
 });
