@@ -11,6 +11,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { submitAllOnboardingData } from '../../api/onboarding';
 import { OnboardingScreenProps, OnboardingData } from './types';
@@ -24,6 +25,7 @@ import Step5Region from './steps/Step5Region';
 import Step6Profile from './steps/Step6Profile';
 
 export default function OnboardingScreen({ navigation, route }: OnboardingScreenProps) {
+  const insets = useSafeAreaInsets();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -181,7 +183,7 @@ export default function OnboardingScreen({ navigation, route }: OnboardingScreen
             </ScrollView>
 
             {/* Bottom buttons */}
-            <View style={styles.buttons}>
+            <View style={[styles.buttons, { paddingBottom: Math.max(20, insets.bottom) }]}>
               <TouchableOpacity
                 style={[styles.nextBtn, !canProceed() && !isSkippable() && styles.nextBtnDisabled, loading && styles.nextBtnDisabled]}
                 onPress={handleNext}

@@ -15,7 +15,7 @@ export const styles = StyleSheet.create({
     flex: 1,
     paddingTop: 80,
     paddingHorizontal: 28,
-    paddingBottom: 40,
+    paddingBottom: 16,
   },
 
   // Header (design.pen 기준)
