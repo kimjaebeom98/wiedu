@@ -392,19 +392,21 @@ export default function StudyDetailScreen() {
             )}
 
             {/* Spacer for bottom bar */}
-            <View style={{ height: 120 }} />
+            <View style={{ height: 160 }} />
           </>
         )}
 
       </ScrollView>
       )}
 
-      {/* Bottom Bar */}
-      <View style={[styles.bottomBar, { paddingBottom: Math.max(16, insets.bottom + 8) }]}>
-        <TouchableOpacity style={styles.joinBtn} onPress={handleJoinStudy}>
-          <Text style={styles.joinBtnText}>스터디 참여 신청하기</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Bottom Bar - 스터디장이 아닐 때만 표시 */}
+      {currentUserId !== null && study.leader.id !== currentUserId && (
+        <View style={[styles.bottomBar, { paddingBottom: Math.max(20, insets.bottom + 12) }]}>
+          <TouchableOpacity style={styles.joinBtn} onPress={handleJoinStudy}>
+            <Text style={styles.joinBtnText}>스터디 참여 신청하기</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </View>
   );
 }
