@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -45,6 +46,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function MyPageScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const insets = useSafeAreaInsets();
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [myStudies, setMyStudies] = useState<MyStudy[]>([]);
   const [loading, setLoading] = useState(true);
@@ -119,7 +121,7 @@ export default function MyPageScreen() {
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
           <Text style={styles.headerTitle}>프로필</Text>
           <TouchableOpacity
             style={styles.headerMoreBtn}
@@ -319,7 +321,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 60,
     paddingBottom: 16,
   },
   headerTitle: {

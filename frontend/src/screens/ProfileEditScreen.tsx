@@ -13,6 +13,7 @@ import {
   Platform,
   Image,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import * as ImagePicker from 'expo-image-picker';
@@ -32,6 +33,7 @@ const INTEREST_OPTIONS = [
 
 export default function ProfileEditScreen() {
   const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -165,7 +167,7 @@ export default function ProfileEditScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#18181B" />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Feather name="chevron-left" size={24} color="#FFFFFF" />
         </TouchableOpacity>
@@ -314,7 +316,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 50,
     paddingBottom: 12,
     paddingHorizontal: 16,
   },

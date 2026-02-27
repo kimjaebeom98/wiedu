@@ -10,6 +10,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -25,6 +26,7 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function SettingsScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const insets = useSafeAreaInsets();
 
   const [pushEnabled, setPushEnabled] = useState(true);
   const [chatEnabled, setChatEnabled] = useState(true);
@@ -108,7 +110,7 @@ export default function SettingsScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#18181B" />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Feather name="chevron-left" size={24} color="#FFFFFF" />
         </TouchableOpacity>
@@ -194,6 +196,12 @@ export default function SettingsScreen() {
             </View>
           </View>
 
+          {/* 로그아웃 */}
+          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.7}>
+            <Feather name="log-out" size={18} color="#FFFFFF" />
+            <Text style={styles.logoutText}>로그아웃</Text>
+          </TouchableOpacity>
+
           {/* 회원 탈퇴 */}
           <TouchableOpacity style={styles.withdrawBtn} onPress={handleWithdraw} activeOpacity={0.7}>
             <Text style={styles.withdrawText}>회원 탈퇴</Text>
@@ -215,7 +223,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 50,
     paddingBottom: 12,
     paddingHorizontal: 16,
   },
@@ -277,6 +284,21 @@ const styles = StyleSheet.create({
   versionText: {
     fontSize: 14,
     color: '#71717A',
+  },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginTop: 32,
+    backgroundColor: '#27272A',
+    paddingVertical: 16,
+    borderRadius: 12,
+  },
+  logoutText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   withdrawBtn: {
     marginTop: 32,

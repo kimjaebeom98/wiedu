@@ -134,12 +134,9 @@ export const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    height: 100,
     backgroundColor: '#18181B',
     paddingTop: 16,
-    paddingBottom: 32,
     paddingHorizontal: 24,
-    justifyContent: 'center',
   },
   submitBtn: {
     flexDirection: 'row',

@@ -12,6 +12,7 @@ import {
   Platform,
   Modal,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -25,6 +26,7 @@ type StudyApplyRouteProp = RouteProp<RootStackParamList, 'StudyApply'>;
 export default function StudyApplyScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<StudyApplyRouteProp>();
+  const insets = useSafeAreaInsets();
   const { studyId, studyTitle, leaderName, currentMembers, maxMembers, rules, depositRefundPolicy } = route.params;
 
   const [introduction, setIntroduction] = useState('');
@@ -68,7 +70,7 @@ export default function StudyApplyScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#18181B" />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity style={styles.headerBackBtn} onPress={() => navigation.goBack()}>
           <Feather name="arrow-left" size={20} color="#FFFFFF" />
         </TouchableOpacity>
@@ -198,7 +200,7 @@ export default function StudyApplyScreen() {
       </ScrollView>
 
       {/* Bottom Bar */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, { paddingBottom: Math.max(20, insets.bottom) }]}>
         <TouchableOpacity
           style={[styles.submitBtn, !canSubmit && styles.submitBtnDisabled]}
           onPress={handleSubmit}

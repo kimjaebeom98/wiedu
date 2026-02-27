@@ -9,10 +9,10 @@ import {
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { clearTokens } from '../storage/token';
 import { RootStackParamList } from '../navigation/types';
 import { fetchStudies, fetchCategories } from '../api/study';
 import { StudyResponse, Category } from '../types/study';
@@ -48,6 +48,7 @@ const STUDY_METHOD_LABELS: Record<string, string> = {
 
 export default function HomeScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const insets = useSafeAreaInsets();
   const [studies, setStudies] = useState<StudyResponse[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,11 +79,6 @@ export default function HomeScreen() {
     loadData();
   }, [loadData]);
 
-  const handleLogout = async () => {
-    await clearTokens();
-    navigation.replace('Login');
-  };
-
   const getCategoryIcon = (code: string): string => {
     return CATEGORY_ICONS[code] || 'folder';
   };
@@ -107,7 +103,7 @@ export default function HomeScreen() {
         }
       >
         {/* Top Row - Location & Search */}
-        <View style={styles.topRow}>
+        <View style={[styles.topRow, { paddingTop: insets.top + 20 }]}>
           <TouchableOpacity style={styles.locationBtn}>
             <Text style={styles.locationText}>강남구</Text>
             <Feather name="chevron-down" size={20} color="#A1A1AA" />
@@ -265,15 +261,13 @@ export default function HomeScreen() {
             ))
           )}
 
-          {/* Logout Button (temporary) */}
-          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-            <Text style={styles.logoutText}>로그아웃</Text>
-          </TouchableOpacity>
+          {/* Bottom spacer for navigation */}
+          <View style={{ height: 100 }} />
         </View>
       </ScrollView>
 
       {/* Bottom Navigation */}
-      <View style={styles.bottomNav}>
+      <View style={[styles.bottomNav, { paddingBottom: Math.max(12, insets.bottom) }]}>
         <TouchableOpacity style={styles.navItem}>
           <Feather name="home" size={24} color="#8B5CF6" />
           <Text style={styles.navTextActive}>홈</Text>
@@ -317,7 +311,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 16,
-    paddingTop: 60,
     paddingBottom: 8,
   },
   locationBtn: {
@@ -529,26 +522,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#71717A',
   },
-  logoutBtn: {
-    marginTop: 20,
-    marginBottom: 100,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#EF4444',
-    borderRadius: 12,
-  },
-  logoutText: {
-    fontSize: 14,
-    color: '#EF4444',
-    fontWeight: '600',
-  },
   bottomNav: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    height: 80,
     backgroundColor: '#18181B',
     flexDirection: 'row',
     justifyContent: 'space-around',

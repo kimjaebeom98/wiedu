@@ -9,7 +9,11 @@ import {
   ActivityIndicator,
   Keyboard,
   TouchableWithoutFeedback,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 
 interface EmailVerifyScreenProps {
@@ -18,6 +22,7 @@ interface EmailVerifyScreenProps {
 }
 
 export default function EmailVerifyScreen({ navigation, route }: EmailVerifyScreenProps) {
+  const insets = useSafeAreaInsets();
   const { email, password } = route.params || {};
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [loading, setLoading] = useState(false);
@@ -135,7 +140,18 @@ export default function EmailVerifyScreen({ navigation, route }: EmailVerifyScre
         <View style={styles.glow1} />
         <View style={styles.glow2} />
 
-        <View style={styles.content}>
+        <KeyboardAvoidingView
+          style={styles.keyboardView}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        >
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          bounces={false}
+        >
+        <View style={[styles.content, { paddingTop: insets.top + 20, paddingBottom: Math.max(40, insets.bottom) }]}>
           {/* Header with back button */}
           <View style={styles.header}>
             <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
@@ -225,6 +241,8 @@ export default function EmailVerifyScreen({ navigation, route }: EmailVerifyScre
             </TouchableOpacity>
           </View>
         </View>
+        </ScrollView>
+        </KeyboardAvoidingView>
       </View>
     </TouchableWithoutFeedback>
   );
@@ -234,6 +252,15 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#18181B',
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
   },
   glow1: {
     position: 'absolute',
@@ -256,8 +283,6 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 28,
-    paddingTop: 60,
-    paddingBottom: 40,
   },
   header: {
     marginBottom: 32,

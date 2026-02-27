@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -36,6 +37,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 export default function StudyLeaderScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const insets = useSafeAreaInsets();
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [reviewsData, setReviewsData] = useState<StudyLeaderReviewsResponse | null>(null);
   const [categoryTemps, setCategoryTemps] = useState<CategoryTemperature[]>([]);
@@ -138,7 +140,7 @@ export default function StudyLeaderScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#18181B" />
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Feather name="chevron-left" size={24} color="#FFFFFF" />
         </TouchableOpacity>
@@ -369,7 +371,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingTop: 50,
     paddingBottom: 12,
     paddingHorizontal: 16,
   },
