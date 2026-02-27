@@ -7,24 +7,58 @@ import {
   ScrollView,
   StatusBar,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
-import { getMyProfile } from '../api/profile';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
+import { getMyProfile, getMyStudies } from '../api/profile';
 import { MyProfile } from '../types/profile';
+import { MyStudy } from '../types/mypage';
+
+const CATEGORY_COLORS: Record<string, string> = {
+  IT_DEV: '#8B5CF6',
+  LANGUAGE: '#3B82F6',
+  CERTIFICATION: '#22C55E',
+  CAREER: '#F97316',
+  BUSINESS: '#EF4444',
+  FINANCE: '#FBBF24',
+  DESIGN: '#EC4899',
+  CIVIL_SERVICE: '#6366F1',
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  IT_DEV: '개발',
+  LANGUAGE: '어학',
+  CERTIFICATION: '자격증',
+  CAREER: '취업',
+  BUSINESS: '창업',
+  FINANCE: '재테크',
+  DESIGN: '디자인',
+  CIVIL_SERVICE: '공무원',
+};
 
 const UNLOCK_THRESHOLD = 40;
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 export default function MyPageScreen() {
+  const navigation = useNavigation<NavigationProp>();
   const [profile, setProfile] = useState<MyProfile | null>(null);
+  const [myStudies, setMyStudies] = useState<MyStudy[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadProfile = useCallback(async () => {
     try {
       setError(null);
-      const data = await getMyProfile();
-      setProfile(data);
+      const [profileData, studiesData] = await Promise.all([
+        getMyProfile(),
+        getMyStudies().catch(() => []),
+      ]);
+      setProfile(profileData);
+      setMyStudies(studiesData);
     } catch (err) {
       console.error('Failed to load profile:', err);
       setError('프로필을 불러오지 못했어요.');
@@ -87,8 +121,11 @@ export default function MyPageScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>프로필</Text>
-          <TouchableOpacity style={styles.headerMoreBtn}>
-            <Feather name="more-horizontal" size={24} color="#A1A1AA" />
+          <TouchableOpacity
+            style={styles.headerMoreBtn}
+            onPress={() => navigation.navigate('Settings')}
+          >
+            <Feather name="settings" size={24} color="#A1A1AA" />
           </TouchableOpacity>
         </View>
 
@@ -96,9 +133,13 @@ export default function MyPageScreen() {
         <View style={styles.profileCard}>
           {/* Avatar */}
           <View style={styles.avatarContainer}>
-            <View style={styles.avatar}>
-              <Feather name="user" size={44} color="#71717A" />
-            </View>
+            {profile.profileImage ? (
+              <Image source={{ uri: profile.profileImage }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatar}>
+                <Feather name="user" size={44} color="#71717A" />
+              </View>
+            )}
           </View>
 
           {/* Name & Badge */}
@@ -178,7 +219,10 @@ export default function MyPageScreen() {
             </View>
           </View>
         ) : (
-          <TouchableOpacity style={styles.leaderCard}>
+          <TouchableOpacity
+            style={styles.leaderCard}
+            onPress={() => navigation.navigate('StudyLeader')}
+          >
             <View style={styles.leaderCardLeft}>
               <Feather name="unlock" size={22} color="#8B5CF6" />
               <View style={styles.leaderCardText}>
@@ -188,6 +232,48 @@ export default function MyPageScreen() {
             </View>
             <Feather name="chevron-right" size={20} color="#A1A1AA" />
           </TouchableOpacity>
+        )}
+
+        {/* Participating Studies Section */}
+        {myStudies.length > 0 && (
+          <View style={styles.myStudySection}>
+            <View style={styles.myStudyHeader}>
+              <Text style={styles.myStudyTitle}>참여중인 스터디</Text>
+              <TouchableOpacity>
+                <Text style={styles.myStudyMore}>전체보기</Text>
+              </TouchableOpacity>
+            </View>
+            {myStudies.slice(0, 3).map((study) => (
+              <TouchableOpacity
+                key={study.studyId}
+                style={styles.studyCard}
+                onPress={() => navigation.navigate('StudyDetail', { studyId: study.studyId })}
+              >
+                {study.thumbnailImage ? (
+                  <Image source={{ uri: study.thumbnailImage }} style={styles.studyThumb} />
+                ) : (
+                  <View style={styles.studyThumbPlaceholder}>
+                    <Feather name="book-open" size={24} color="#71717A" />
+                  </View>
+                )}
+                <View style={styles.studyInfo}>
+                  <Text style={styles.studyName} numberOfLines={1}>{study.title}</Text>
+                  <View style={styles.studyMeta}>
+                    {study.category && (
+                      <Text style={[
+                        styles.studyTag,
+                        { color: CATEGORY_COLORS[study.category] || '#8B5CF6' }
+                      ]}>
+                        {CATEGORY_LABELS[study.category] || study.category}
+                      </Text>
+                    )}
+                    <Text style={styles.studyMembers}>멤버 {study.currentMembers}명</Text>
+                  </View>
+                </View>
+                <Feather name="chevron-right" size={20} color="#71717A" />
+              </TouchableOpacity>
+            ))}
+          </View>
         )}
 
         <View style={styles.bottomSpacer} />
@@ -264,6 +350,11 @@ const styles = StyleSheet.create({
     borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  avatarImage: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
   },
   nameRow: {
     flexDirection: 'row',
@@ -437,5 +528,67 @@ const styles = StyleSheet.create({
   },
   bottomSpacer: {
     height: 100,
+  },
+  myStudySection: {
+    marginTop: 16,
+    gap: 16,
+  },
+  myStudyHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  myStudyTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  myStudyMore: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#8B5CF6',
+  },
+  studyCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#27272A',
+    borderRadius: 12,
+    padding: 16,
+    gap: 12,
+  },
+  studyThumb: {
+    width: 56,
+    height: 56,
+    borderRadius: 8,
+  },
+  studyThumbPlaceholder: {
+    width: 56,
+    height: 56,
+    borderRadius: 8,
+    backgroundColor: '#3F3F46',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  studyInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  studyName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  studyMeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  studyTag: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  studyMembers: {
+    fontSize: 12,
+    color: '#71717A',
   },
 });

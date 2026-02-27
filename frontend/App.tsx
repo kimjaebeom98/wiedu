@@ -17,6 +17,9 @@ import ApplyCompleteScreen from './src/screens/study-apply/ApplyCompleteScreen';
 import BoardPostDetailScreen from './src/screens/study-board/BoardPostDetailScreen';
 import BoardPostCreateScreen from './src/screens/study-board/BoardPostCreateScreen';
 import MyPageScreen from './src/screens/MyPageScreen';
+import StudyLeaderScreen from './src/screens/StudyLeaderScreen';
+import ProfileEditScreen from './src/screens/ProfileEditScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
 import { getAccessToken } from './src/storage/token';
 import { RootStackParamList } from './src/navigation/types';
 
@@ -91,6 +94,9 @@ export default function App() {
           <Stack.Screen name="BoardPostDetail" component={BoardPostDetailScreen} />
           <Stack.Screen name="BoardPostCreate" component={BoardPostCreateScreen} />
           <Stack.Screen name="MyPage" component={MyPageScreen} />
+          <Stack.Screen name="StudyLeader" component={StudyLeaderScreen} />
+          <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
+          <Stack.Screen name="Settings" component={SettingsScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

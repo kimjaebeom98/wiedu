@@ -12,6 +12,7 @@ import {
   Modal,
   ScrollView,
   KeyboardAvoidingView,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -382,9 +383,13 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
 
           {/* Author Info */}
           <View style={styles.authorRow}>
-            <View style={styles.avatar}>
-              <Feather name="user" size={16} color="#71717A" />
-            </View>
+            {post.authorProfileImage ? (
+              <Image source={{ uri: post.authorProfileImage }} style={styles.avatarImage} />
+            ) : (
+              <View style={styles.avatar}>
+                <Feather name="user" size={16} color="#71717A" />
+              </View>
+            )}
             <Text style={styles.authorName}>{post.authorNickname}</Text>
             <Text style={styles.dot}>·</Text>
             <Text style={styles.date}>{formatDate(post.createdAt)}</Text>
@@ -462,9 +467,13 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
                 <>
                   <View style={styles.commentHeader}>
                     <View style={styles.commentAuthorRow}>
-                      <View style={styles.commentAvatar}>
-                        <Feather name="user" size={14} color="#71717A" />
-                      </View>
+                      {comment.authorProfileImage ? (
+                        <Image source={{ uri: comment.authorProfileImage }} style={styles.commentAvatarImage} />
+                      ) : (
+                        <View style={styles.commentAvatar}>
+                          <Feather name="user" size={14} color="#71717A" />
+                        </View>
+                      )}
                       <Text style={styles.commentAuthor}>{comment.authorNickname}</Text>
                       <Text style={styles.dot}>·</Text>
                       <Text style={styles.commentDate}>{formatDate(comment.createdAt)}</Text>
@@ -664,6 +673,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 8,
   },
+  avatarImage: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    marginRight: 8,
+  },
   authorName: {
     fontSize: 13,
     color: '#71717A',
@@ -761,6 +776,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#3F3F46',
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 6,
+  },
+  commentAvatarImage: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     marginRight: 6,
   },
   commentAuthor: {

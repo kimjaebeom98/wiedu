@@ -36,6 +36,10 @@ public class User {
     @Comment("프로필 이미지 URL")
     private String profileImage;
 
+    @Column(length = 200)
+    @Comment("한줄 소개")
+    private String bio;
+
     @Column(length = 255)
     @Comment("비밀번호 (암호화, 소셜 로그인 시 NULL)")
     private String password;
@@ -167,6 +171,18 @@ public class User {
         this.region = region;
     }
 
+    public void updateNickname(String nickname) {
+        this.nickname = nickname;
+    }
+
+    public void updateBio(String bio) {
+        this.bio = bio;
+    }
+
+    public void updateProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
+
     public void updateNotificationSettings(boolean push, boolean chat, boolean study) {
         this.pushNotificationEnabled = push;
         this.chatNotificationEnabled = chat;
@@ -176,5 +192,9 @@ public class User {
     public void completeOnboarding() {
         this.onboardingCompleted = true;
         this.onboardingCompletedAt = LocalDateTime.now();
+    }
+
+    public void withdraw() {
+        this.status = UserStatus.WITHDRAWN;
     }
 }
