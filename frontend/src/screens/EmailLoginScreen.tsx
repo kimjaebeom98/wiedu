@@ -12,6 +12,7 @@ import {
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { login } from '../api/auth';
@@ -84,17 +85,24 @@ export default function EmailLoginScreen({ navigation }: EmailLoginScreenProps) 
         <KeyboardAvoidingView
           style={styles.keyboardView}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
-          <View style={styles.content}>
-            {/* Header */}
-            <View style={styles.header}>
-              <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
-                <Feather name="arrow-left" size={20} color="#FFFFFF" />
-              </TouchableOpacity>
-              <Text style={styles.headerTitle}>이메일로 로그인</Text>
-              <View style={styles.headerSpacer} />
-            </View>
+          {/* Header - 스크롤 밖에 고정 */}
+          <View style={styles.header}>
+            <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
+              <Feather name="arrow-left" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>이메일로 로그인</Text>
+            <View style={styles.headerSpacer} />
+          </View>
 
+          <ScrollView
+            style={styles.scrollView}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+            keyboardShouldPersistTaps="handled"
+            bounces={false}
+          >
             {/* Form Section */}
             <View style={styles.formSection}>
               {/* Email Input */}
@@ -191,7 +199,7 @@ export default function EmailLoginScreen({ navigation }: EmailLoginScreenProps) 
                 <Text style={styles.signUpLink}>회원가입</Text>
               </TouchableOpacity>
             </View>
-          </View>
+          </ScrollView>
         </KeyboardAvoidingView>
       </View>
     </TouchableWithoutFeedback>
@@ -205,6 +213,14 @@ const styles = StyleSheet.create({
   },
   keyboardView: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingHorizontal: 28,
+    justifyContent: 'space-between',
   },
   glow1: {
     position: 'absolute',
@@ -224,16 +240,13 @@ const styles = StyleSheet.create({
     borderRadius: 125,
     backgroundColor: 'rgba(139, 92, 246, 0.05)',
   },
-  content: {
-    flex: 1,
-    paddingHorizontal: 28,
-  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: 60,
     paddingBottom: 20,
+    paddingHorizontal: 28,
   },
   backBtn: {
     width: 40,
