@@ -165,6 +165,7 @@ public class Study {
     public Study(String title, String description, StudyCategory category, StudySubcategory subcategory,
                  String coverImageUrl, String targetAudience, String goals,
                  StudyMethod studyMethod, String daysOfWeek, String time, DurationType durationType, String platform,
+                 String meetingLocation, Double meetingLatitude, Double meetingLongitude,
                  User leader, Integer maxMembers, Integer deposit, String depositRefundPolicy, String requirements,
                  LocalDateTime startDate, LocalDateTime endDate) {
         this.title = title;
@@ -179,6 +180,9 @@ public class Study {
         this.time = time;
         this.durationType = durationType;
         this.platform = platform;
+        this.meetingLocation = meetingLocation;
+        this.meetingLatitude = meetingLatitude;
+        this.meetingLongitude = meetingLongitude;
         this.leader = leader;
         this.maxMembers = maxMembers;
         this.deposit = deposit;

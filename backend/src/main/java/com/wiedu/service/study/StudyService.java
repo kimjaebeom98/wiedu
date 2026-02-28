@@ -89,6 +89,9 @@ public class StudyService {
                 .requirements(request.requirements())
                 .startDate(request.startDate())
                 .endDate(request.endDate())
+                .meetingLocation(request.meetingLocation())
+                .meetingLatitude(request.meetingLatitude())
+                .meetingLongitude(request.meetingLongitude())
                 .build();
 
         Study savedStudy = studyRepository.save(study);
@@ -177,6 +180,26 @@ public class StudyService {
     public Page<StudyListResponse> searchByKeyword(String keyword, Pageable pageable) {
         return studyRepository.searchByKeywordWithLeader(keyword, pageable)
                 .map(StudyListResponse::from);
+    }
+
+    /**
+     * 근처 스터디 검색 (위치 기반)
+     */
+    public java.util.List<StudyListResponse> findNearbyStudies(Double latitude, Double longitude, Double radiusKm) {
+        return studyRepository.findNearbyStudies(latitude, longitude, radiusKm)
+                .stream()
+                .map(StudyListResponse::from)
+                .toList();
+    }
+
+    /**
+     * 인기 스터디 조회 (충원율 높은 순)
+     */
+    public java.util.List<StudyListResponse> findPopularStudies(int limit) {
+        return studyRepository.findPopularStudies(Pageable.ofSize(limit))
+                .stream()
+                .map(StudyListResponse::from)
+                .toList();
     }
 
     /**

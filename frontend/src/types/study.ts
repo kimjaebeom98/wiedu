@@ -59,6 +59,9 @@ export interface StudyCreateData {
   time: string;
   durationType: DurationType | null;
   platform: string;
+  meetingLocation: string;
+  meetingLatitude: number | null;
+  meetingLongitude: number | null;
   // Step 4
   maxMembers: number;
   deposit: number;
@@ -84,6 +87,9 @@ export interface StudyCreateRequest {
   time?: string;
   durationType?: DurationType;
   platform?: string;
+  meetingLocation?: string;
+  meetingLatitude?: number;
+  meetingLongitude?: number;
   maxMembers: number;
   deposit?: number;
   depositRefundPolicy?: string;
@@ -136,7 +142,7 @@ export interface StudyDetailResponse {
   createdAt: string;
 }
 
-// Study response from API
+// Study response from API (full detail)
 export interface StudyResponse {
   id: number;
   title: string;
@@ -149,5 +155,18 @@ export interface StudyResponse {
   maxMembers: number;
   currentMembers: number;
   status: StudyStatus;
+  createdAt: string;
+}
+
+// Study list response from API (lightweight)
+export interface StudyListResponse {
+  id: number;
+  title: string;
+  categoryName: string;
+  leaderNickname: string;
+  maxMembers: number;
+  currentMembers: number;
+  status: StudyStatus;
+  studyMethod: string;
   createdAt: string;
 }

@@ -13,9 +13,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as Location from 'expo-location';
 import { RootStackParamList } from '../navigation/types';
-import { fetchStudies, fetchCategories } from '../api/study';
-import { StudyResponse, Category } from '../types/study';
+import { fetchCategories, fetchNearbyStudies, fetchPopularStudies } from '../api/study';
+import { StudyListResponse, Category } from '../types/study';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -49,35 +50,67 @@ const STUDY_METHOD_LABELS: Record<string, string> = {
 export default function HomeScreen() {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
-  const [studies, setStudies] = useState<StudyResponse[]>([]);
+  const [popularStudies, setPopularStudies] = useState<StudyListResponse[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [nearbyStudies, setNearbyStudies] = useState<StudyListResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [popularLoading, setPopularLoading] = useState(true);
+  const [nearbyLoading, setNearbyLoading] = useState(false);
+  const [nearbyError, setNearbyError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
+
+  const loadNearbyStudies = useCallback(async () => {
+    setNearbyLoading(true);
+    setNearbyError(null);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      setLocationPermission(status === 'granted');
+      if (status === 'granted') {
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Low,
+        });
+        const nearby = await fetchNearbyStudies(
+          location.coords.latitude,
+          location.coords.longitude
+        );
+        setNearbyStudies(nearby);
+      }
+    } catch (error: any) {
+      console.error('Failed to load nearby studies:', error);
+      setNearbyError(error?.message || '근처 스터디를 불러오지 못했습니다');
+    } finally {
+      setNearbyLoading(false);
+    }
+  }, []);
 
   const loadData = useCallback(async () => {
     try {
-      const [studiesData, categoriesData] = await Promise.all([
-        fetchStudies(),
+      const [popularData, categoriesData] = await Promise.all([
+        fetchPopularStudies(5),
         fetchCategories(),
       ]);
-      setStudies(studiesData);
+      setPopularStudies(popularData);
       setCategories(categoriesData);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
       setLoading(false);
+      setPopularLoading(false);
       setRefreshing(false);
     }
   }, []);
 
   useEffect(() => {
     loadData();
-  }, [loadData]);
+    loadNearbyStudies();
+  }, [loadData, loadNearbyStudies]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadData();
-  }, [loadData]);
+    loadNearbyStudies();
+  }, [loadData, loadNearbyStudies]);
 
   const getCategoryIcon = (code: string): string => {
     return CATEGORY_ICONS[code] || 'folder';
@@ -181,30 +214,37 @@ export default function HomeScreen() {
           </View>
         </View>
 
-        {/* Studies Section */}
+        {/* Nearby Studies Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>인기 스터디</Text>
+            <Text style={styles.sectionTitle}>내 근처 스터디</Text>
             <TouchableOpacity>
               <Text style={styles.sectionMore}>전체보기</Text>
             </TouchableOpacity>
           </View>
 
-          {loading ? (
+          {nearbyLoading ? (
             <ActivityIndicator color="#8B5CF6" style={{ marginVertical: 20 }} />
-          ) : studies.length === 0 ? (
+          ) : nearbyError ? (
             <View style={styles.emptyState}>
-              <Feather name="inbox" size={40} color="#52525B" />
-              <Text style={styles.emptyStateText}>아직 등록된 스터디가 없어요</Text>
-              <TouchableOpacity
-                style={styles.emptyStateBtn}
-                onPress={() => navigation.navigate('StudyCreate')}
-              >
-                <Text style={styles.emptyStateBtnText}>첫 스터디 만들기</Text>
+              <Feather name="alert-circle" size={40} color="#EF4444" />
+              <Text style={styles.emptyStateText}>{nearbyError}</Text>
+              <TouchableOpacity onPress={loadNearbyStudies} style={{ marginTop: 8 }}>
+                <Text style={{ color: '#8B5CF6' }}>다시 시도</Text>
               </TouchableOpacity>
             </View>
+          ) : locationPermission === false ? (
+            <View style={styles.emptyState}>
+              <Feather name="map-pin" size={40} color="#52525B" />
+              <Text style={styles.emptyStateText}>위치 권한이 필요합니다</Text>
+            </View>
+          ) : nearbyStudies.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Feather name="map-pin" size={40} color="#52525B" />
+              <Text style={styles.emptyStateText}>근처에 스터디가 없어요</Text>
+            </View>
           ) : (
-            studies.map((study) => (
+            nearbyStudies.slice(0, 3).map((study) => (
               <TouchableOpacity
                 key={study.id}
                 style={styles.studyCard}
@@ -225,9 +265,86 @@ export default function HomeScreen() {
                       )}
                     </View>
                     <Text style={styles.studyTitle} numberOfLines={2}>{study.title}</Text>
-                    {study.subcategoryName && (
-                      <Text style={styles.studySubcategory}>{study.subcategoryName}</Text>
-                    )}
+                    <Text style={styles.studySubcategory}>by {study.leaderNickname}</Text>
+                  </View>
+                  <View style={styles.studyMembers}>
+                    <View style={styles.memberDot} />
+                    <View style={[styles.memberDot, { marginLeft: -8 }]} />
+                    <View style={[styles.memberDot, { marginLeft: -8 }]} />
+                  </View>
+                </View>
+                <View style={styles.studyBottom}>
+                  <View style={styles.studyMeta}>
+                    <Feather name="users" size={14} color="#71717A" />
+                    <Text style={styles.studyMetaText}>
+                      {study.currentMembers}/{study.maxMembers}명
+                    </Text>
+                  </View>
+                  <View style={styles.studyMeta}>
+                    <View style={[
+                      styles.statusDot,
+                      { backgroundColor: study.status === 'RECRUITING' ? '#22C55E' : '#71717A' }
+                    ]} />
+                    <Text style={[
+                      styles.studyMetaText,
+                      { color: study.status === 'RECRUITING' ? '#22C55E' : '#71717A' }
+                    ]}>
+                      {study.status === 'RECRUITING' ? '모집중' :
+                       study.status === 'IN_PROGRESS' ? '진행중' :
+                       study.status === 'COMPLETED' ? '완료' : '마감'}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            ))
+          )}
+        </View>
+
+        {/* Popular Studies Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>인기 스터디</Text>
+            <TouchableOpacity>
+              <Text style={styles.sectionMore}>전체보기</Text>
+            </TouchableOpacity>
+          </View>
+
+          {popularLoading ? (
+            <ActivityIndicator color="#8B5CF6" style={{ marginVertical: 20 }} />
+          ) : popularStudies.length === 0 ? (
+            <View style={styles.emptyState}>
+              <Feather name="inbox" size={40} color="#52525B" />
+              <Text style={styles.emptyStateText}>아직 등록된 스터디가 없어요</Text>
+              <TouchableOpacity
+                style={styles.emptyStateBtn}
+                onPress={() => navigation.navigate('StudyCreate')}
+              >
+                <Text style={styles.emptyStateBtnText}>첫 스터디 만들기</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            popularStudies.map((study) => (
+              <TouchableOpacity
+                key={study.id}
+                style={styles.studyCard}
+                onPress={() => navigation.navigate('StudyDetail', { studyId: study.id })}
+              >
+                <View style={styles.studyTop}>
+                  <View style={styles.studyInfo}>
+                    <View style={styles.studyTagRow}>
+                      <View style={styles.studyTag}>
+                        <Text style={styles.studyTagText}>{study.categoryName}</Text>
+                      </View>
+                      {study.studyMethod && (
+                        <View style={styles.studyMethodTag}>
+                          <Text style={styles.studyMethodText}>
+                            {STUDY_METHOD_LABELS[study.studyMethod] || study.studyMethod}
+                          </Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={styles.studyTitle} numberOfLines={2}>{study.title}</Text>
+                    <Text style={styles.studySubcategory}>by {study.leaderNickname}</Text>
                   </View>
                   <View style={styles.studyMembers}>
                     <View style={styles.memberDot} />

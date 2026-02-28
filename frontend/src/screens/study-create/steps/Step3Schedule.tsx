@@ -3,6 +3,9 @@ import { View, Text, TouchableOpacity, TextInput, Platform } from 'react-native'
 import { Feather } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../../navigation/types';
 import { Step3Props } from '../types';
 import { styles } from '../styles';
 import {
@@ -13,7 +16,10 @@ import {
   getWeeksFromDurationType,
 } from '../constants';
 
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
 export default function Step3Schedule({ data, updateData, toggleDay }: Step3Props) {
+  const navigation = useNavigation<NavigationProp>();
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [selectedTime, setSelectedTime] = useState<Date>(() => {
     // Parse existing time or default to 8 PM
@@ -207,6 +213,30 @@ export default function Step3Schedule({ data, updateData, toggleDay }: Step3Prop
             onChangeText={v => updateData('platform', v)}
             returnKeyType="done"
           />
+        </View>
+      )}
+
+      {/* Location Picker (for OFFLINE / HYBRID) */}
+      {(data.studyMethod === 'OFFLINE' || data.studyMethod === 'HYBRID') && (
+        <View style={styles.fieldGroup}>
+          <Text style={styles.fieldLabel}>모임 장소</Text>
+          <TouchableOpacity
+            style={styles.timePickerBtn}
+            onPress={() => navigation.navigate('LocationPicker', {
+              onSelect: (location) => {
+                updateData('meetingLocation', location.address);
+                updateData('meetingLatitude', location.latitude);
+                updateData('meetingLongitude', location.longitude);
+              },
+            })}
+            activeOpacity={0.7}
+          >
+            <Feather name="map-pin" size={18} color="#8B5CF6" />
+            <Text style={[styles.timePickerText, !data.meetingLocation && styles.timePickerPlaceholder]}>
+              {data.meetingLocation || '모임 장소를 선택해주세요'}
+            </Text>
+            <Feather name="chevron-right" size={18} color="#71717A" />
+          </TouchableOpacity>
         </View>
       )}
     </View>

@@ -121,6 +121,30 @@ public class StudyController {
     }
 
     /**
+     * 근처 스터디 검색
+     * GET /api/studies/nearby?latitude=&longitude=&radius=
+     */
+    @GetMapping("/nearby")
+    public ResponseEntity<java.util.List<StudyListResponse>> getNearbyStudies(
+            @RequestParam Double latitude,
+            @RequestParam Double longitude,
+            @RequestParam(defaultValue = "10.0") Double radius) {
+        java.util.List<StudyListResponse> response = studyService.findNearbyStudies(latitude, longitude, radius);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 인기 스터디 목록 (충원율 높은 순)
+     * GET /api/studies/popular?limit=5
+     */
+    @GetMapping("/popular")
+    public ResponseEntity<java.util.List<StudyListResponse>> getPopularStudies(
+            @RequestParam(defaultValue = "5") int limit) {
+        java.util.List<StudyListResponse> response = studyService.findPopularStudies(limit);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * 스터디 마감
      * POST /api/studies/{studyId}/close
      */

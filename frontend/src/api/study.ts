@@ -1,6 +1,6 @@
 import axios from 'axios';
 import { getAuthClient, getPublicClient } from './client';
-import { Category, StudyCreateRequest, StudyResponse, StudyDetailResponse } from '../types/study';
+import { Category, StudyCreateRequest, StudyResponse, StudyDetailResponse, StudyListResponse } from '../types/study';
 
 // GET /api/study-categories (no auth needed)
 export const fetchCategories = async (): Promise<Category[]> => {
@@ -22,6 +22,19 @@ export const fetchStudies = async (): Promise<StudyResponse[]> => {
   const response = await client.get('/api/studies');
   // Spring Data JPA returns paginated response with 'content' array
   return response.data.content || response.data;
+};
+
+// GET /api/studies/nearby
+export const fetchNearbyStudies = async (
+  latitude: number,
+  longitude: number,
+  radiusKm: number = 10
+): Promise<StudyListResponse[]> => {
+  const client = getAuthClient();
+  const response = await client.get('/api/studies/nearby', {
+    params: { latitude, longitude, radius: radiusKm },
+  });
+  return response.data;
 };
 
 // GET /api/studies/:id
@@ -68,4 +81,13 @@ export const getMyStudyRequests = async (): Promise<StudyRequestResponse[]> => {
 export const cancelStudyRequest = async (requestId: number): Promise<void> => {
   const client = getAuthClient();
   await client.delete(`/api/study-requests/${requestId}`);
+};
+
+// GET /api/studies/popular - Get popular studies (by fill rate)
+export const fetchPopularStudies = async (limit: number = 5): Promise<StudyListResponse[]> => {
+  const client = getPublicClient();
+  const response = await client.get('/api/studies/popular', {
+    params: { limit },
+  });
+  return response.data;
 };

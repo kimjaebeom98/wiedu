@@ -75,4 +75,26 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
 
     // 특정 리더의 스터디 개수
     long countByLeader(User leader);
+
+    // 인기 스터디 (충원율 높은 순, 모집중인 스터디만)
+    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader " +
+            "WHERE s.status = 'RECRUITING' " +
+            "ORDER BY (s.currentMembers * 1.0 / s.maxMembers) DESC, s.currentMembers DESC")
+    List<Study> findPopularStudies(Pageable pageable);
+
+    // 근처 스터디 검색 (Haversine 공식, OFFLINE/HYBRID RECRUITING 상태만)
+    @Query(value = "SELECT s.* FROM studies s " +
+            "WHERE s.meeting_latitude IS NOT NULL " +
+            "AND s.meeting_longitude IS NOT NULL " +
+            "AND s.status = 'RECRUITING' " +
+            "AND s.study_method IN ('OFFLINE', 'HYBRID') " +
+            "AND (6371 * acos(LEAST(1.0, GREATEST(-1.0, " +
+            "cos(radians(:lat)) * cos(radians(s.meeting_latitude)) * " +
+            "cos(radians(s.meeting_longitude) - radians(:lng)) + " +
+            "sin(radians(:lat)) * sin(radians(s.meeting_latitude)))))) < :radius " +
+            "ORDER BY (6371 * acos(LEAST(1.0, GREATEST(-1.0, " +
+            "cos(radians(:lat)) * cos(radians(s.meeting_latitude)) * " +
+            "cos(radians(s.meeting_longitude) - radians(:lng)) + " +
+            "sin(radians(:lat)) * sin(radians(s.meeting_latitude))))))", nativeQuery = true)
+    List<Study> findNearbyStudies(@Param("lat") Double lat, @Param("lng") Double lng, @Param("radius") Double radiusKm);
 }

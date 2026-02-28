@@ -73,5 +73,10 @@ public record StudyCreateRequest(
 
     // Optional dates
     LocalDateTime startDate,
-    LocalDateTime endDate
+    LocalDateTime endDate,
+
+    // Location
+    String meetingLocation,
+    Double meetingLatitude,
+    Double meetingLongitude
 ) {}
