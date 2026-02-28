@@ -14,7 +14,8 @@
       "backgroundColor": "#18181B"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.wiedu.app"
     },
     "android": {
       "package": "com.wiedu.app",

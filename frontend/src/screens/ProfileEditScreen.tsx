@@ -16,6 +16,8 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../navigation/types';
 import * as ImagePicker from 'expo-image-picker';
 import { getMyProfile } from '../api/profile';
 import { getAuthClient } from '../api/client';
@@ -32,7 +34,7 @@ const INTEREST_OPTIONS = [
 ];
 
 export default function ProfileEditScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -40,6 +42,8 @@ export default function ProfileEditScreen() {
   const [nickname, setNickname] = useState('');
   const [bio, setBio] = useState('');
   const [region, setRegion] = useState('');
+  const [latitude, setLatitude] = useState<number | null>(null);
+  const [longitude, setLongitude] = useState<number | null>(null);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [profileImage, setProfileImage] = useState<string | null>(null);
 
@@ -134,7 +138,9 @@ export default function ProfileEditScreen() {
       await client.put('/api/users/me', {
         nickname: nickname.trim(),
         bio: bio.trim() || null,
-        region: region.trim() || null,
+        region: region.trim(),  // 빈 문자열 전송 시 백엔드에서 지역 삭제 처리
+        latitude: region.trim() ? latitude : null,
+        longitude: region.trim() ? longitude : null,
         interests: selectedInterests,
       });
       Alert.alert('완료', '프로필이 저장되었습니다.', [
@@ -250,16 +256,24 @@ export default function ProfileEditScreen() {
           {/* Region */}
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>활동 지역</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                value={region}
-                onChangeText={setRegion}
-                placeholder="예: 서울 강남구"
-                placeholderTextColor="#52525B"
-                maxLength={30}
-              />
-            </View>
+            <TouchableOpacity
+              style={styles.inputContainer}
+              onPress={() =>
+                navigation.navigate('LocationPicker', {
+                  onSelect: (location) => {
+                    setRegion(location.address);
+                    setLatitude(location.latitude);
+                    setLongitude(location.longitude);
+                  },
+                })
+              }
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.input, !region && styles.placeholderText]}>
+                {region || '예: 서울 강남구'}
+              </Text>
+              <Feather name="chevron-right" size={18} color="#71717A" />
+            </TouchableOpacity>
           </View>
 
           {/* Interests */}
@@ -414,10 +428,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#27272A',
     borderRadius: 12,
     height: 52,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: 16,
   },
+  placeholderText: {
+    color: '#52525B',
+  },
   input: {
+    flex: 1,
     fontSize: 16,
     color: '#FFFFFF',
   },

@@ -131,7 +131,12 @@ public class ProfileService {
         }
 
         if (request.region() != null) {
-            user.updateRegion(request.region());
+            // 빈 문자열이면 지역 삭제, 아니면 좌표와 함께 업데이트
+            if (request.region().isBlank()) {
+                user.updateLocation(null, null, null);
+            } else {
+                user.updateLocation(request.region(), request.latitude(), request.longitude());
+            }
         }
 
         // 관심분야 업데이트

@@ -295,9 +295,40 @@ export const styles = StyleSheet.create({
   regionItemText: {
     fontSize: 15,
     color: '#FFFFFF',
+    flex: 1,
   },
   regionItemTextSelected: {
     fontWeight: '600',
+  },
+  regionItemCheck: {
+    marginLeft: 'auto',
+  },
+  regionEmpty: {
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  regionEmptyText: {
+    fontSize: 14,
+    color: '#52525B',
+  },
+  searchContainerActive: {
+    borderWidth: 1,
+    borderColor: '#8B5CF6',
+  },
+  gpsBtnLoading: {
+    opacity: 0.7,
+  },
+  gpsResultBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 12,
+    paddingHorizontal: 4,
+  },
+  gpsResultText: {
+    fontSize: 13,
+    color: '#8B5CF6',
   },
 
   // ─── Step 6: Profile (design.pen 기준) ─────────────────────────────────

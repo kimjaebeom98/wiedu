@@ -16,6 +16,8 @@ export interface OnboardingData {
   studyStyles: string[];
   // Step 5: Region
   region: string;
+  latitude: number | null;
+  longitude: number | null;
   // Step 6: Profile
   nickname: string;
 }

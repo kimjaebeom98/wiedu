@@ -132,7 +132,16 @@ export default function MyPageScreen() {
         </View>
 
         {/* Profile Section */}
-        <View style={styles.profileCard}>
+        <TouchableOpacity
+          style={styles.profileCard}
+          onPress={() => navigation.navigate('ProfileEdit')}
+          activeOpacity={0.7}
+        >
+          {/* Edit indicator */}
+          <View style={styles.editIndicator}>
+            <Feather name="edit-2" size={14} color="#8B5CF6" />
+          </View>
+
           {/* Avatar */}
           <View style={styles.avatarContainer}>
             {profile.profileImage ? (
@@ -179,7 +188,7 @@ export default function MyPageScreen() {
               <Text style={styles.tempHint}>40°C 달성 시 스터디장 페이지 해금!</Text>
             ) : null}
           </View>
-        </View>
+        </TouchableOpacity>
 
         {/* Stats Section */}
         <View style={styles.statsCard}>
@@ -340,6 +349,18 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: 'center',
     gap: 12,
+    position: 'relative',
+  },
+  editIndicator: {
+    position: 'absolute',
+    top: 16,
+    right: 16,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   avatarContainer: {
     marginBottom: 4,

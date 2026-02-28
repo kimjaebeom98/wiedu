@@ -38,6 +38,8 @@ export default function OnboardingScreen({ navigation, route }: OnboardingScreen
     interests: [],
     studyStyles: [],
     region: '',
+    latitude: null,
+    longitude: null,
     nickname: '',
   });
 
@@ -120,6 +122,16 @@ export default function OnboardingScreen({ navigation, route }: OnboardingScreen
     else { handleComplete(); }
   }, [currentStep]);
 
+  const handleOpenLocationPicker = useCallback(() => {
+    navigation.navigate('LocationPicker', {
+      onSelect: (location: { address: string; addressDetail: string; latitude: number; longitude: number }) => {
+        updateData('region', location.address);
+        updateData('latitude', location.latitude);
+        updateData('longitude', location.longitude);
+      },
+    });
+  }, [navigation, updateData]);
+
   const progressPercent = (currentStep / TOTAL_STEPS) * 100;
 
   // ─── Step 7: Complete screen ─────────────────────────────────────────
@@ -172,7 +184,7 @@ export default function OnboardingScreen({ navigation, route }: OnboardingScreen
               {currentStep === 2 && <Step2Experience data={data} updateData={updateData} />}
               {currentStep === 3 && <Step3Interests data={data} toggleArrayItem={toggleArrayItem} />}
               {currentStep === 4 && <Step4StudyStyle data={data} toggleArrayItem={toggleArrayItem} />}
-              {currentStep === 5 && <Step5Region data={data} updateData={updateData} />}
+              {currentStep === 5 && <Step5Region data={data} updateData={updateData} onOpenLocationPicker={handleOpenLocationPicker} />}
               {currentStep === 6 && <Step6Profile data={data} updateData={updateData} />}
 
               {error ? (

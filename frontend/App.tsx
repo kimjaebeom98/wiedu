@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { View, StyleSheet } from 'react-native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import SplashScreen from './src/screens/SplashScreen';
 import LoginScreen from './src/screens/LoginScreen';
 import EmailLoginScreen from './src/screens/EmailLoginScreen';
@@ -20,8 +21,37 @@ import MyPageScreen from './src/screens/MyPageScreen';
 import StudyLeaderScreen from './src/screens/StudyLeaderScreen';
 import ProfileEditScreen from './src/screens/ProfileEditScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
+import LocationPickerScreen from './src/screens/LocationPickerScreen';
+import LocationSearchScreenBase, { LocationData } from './src/screens/LocationSearchScreen';
 import { getAccessToken } from './src/storage/token';
 import { RootStackParamList } from './src/navigation/types';
+
+type LocationSearchRouteProp = RouteProp<RootStackParamList, 'LocationSearch'>;
+
+function LocationSearchScreen() {
+  const navigation = useNavigation();
+  const route = useRoute<LocationSearchRouteProp>();
+  const { onSelect } = route.params || {};
+
+  const handleSelect = (location: LocationData) => {
+    if (onSelect) {
+      onSelect({
+        address: location.address,
+        addressDetail: location.name,
+        latitude: location.latitude ?? 0,
+        longitude: location.longitude ?? 0,
+      });
+    }
+    navigation.goBack();
+  };
+
+  return (
+    <LocationSearchScreenBase
+      onSelect={handleSelect}
+      onBack={() => navigation.goBack()}
+    />
+  );
+}
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -97,6 +127,8 @@ export default function App() {
           <Stack.Screen name="StudyLeader" component={StudyLeaderScreen} />
           <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
+          <Stack.Screen name="LocationPicker" component={LocationPickerScreen} />
+          <Stack.Screen name="LocationSearch" component={LocationSearchScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

@@ -109,7 +109,7 @@ public class OnboardingService {
     @Transactional
     public void setRegion(Long userId, RegionRequest request) {
         User user = userService.findUserEntityById(userId);
-        user.updateRegion(request.getRegion());
+        user.updateLocation(request.getRegion(), request.getLatitude(), request.getLongitude());
     }
 
     /**

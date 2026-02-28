@@ -86,6 +86,16 @@ public class Study {
     @Comment("사용 플랫폼/장소")
     private String platform;
 
+    @Column(length = 200)
+    @Comment("오프라인 모임 장소 주소")
+    private String meetingLocation;
+
+    @Comment("모임 장소 위도")
+    private Double meetingLatitude;
+
+    @Comment("모임 장소 경도")
+    private Double meetingLongitude;
+
     // Step 4: Recruitment
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "leader_id", nullable = false)

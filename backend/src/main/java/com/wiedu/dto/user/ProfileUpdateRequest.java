@@ -6,5 +6,7 @@ public record ProfileUpdateRequest(
         String nickname,
         String bio,
         String region,
+        Double latitude,
+        Double longitude,
         List<String> interests
 ) {}

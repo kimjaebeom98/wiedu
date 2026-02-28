@@ -89,9 +89,15 @@ public class User {
     private ExperienceLevel experienceLevel;
 
     // === 지역 설정 ===
-    @Column(length = 50)
-    @Comment("활동 지역 (예: 강남구)")
+    @Column(length = 200)
+    @Comment("활동 지역 (도로명 주소)")
     private String region;
+
+    @Comment("활동 지역 위도")
+    private Double latitude;
+
+    @Comment("활동 지역 경도")
+    private Double longitude;
 
     // === 알림 설정 ===
     @Comment("푸시 알림 활성화")
@@ -169,6 +175,12 @@ public class User {
 
     public void updateRegion(String region) {
         this.region = region;
+    }
+
+    public void updateLocation(String region, Double latitude, Double longitude) {
+        this.region = region;
+        this.latitude = latitude;
+        this.longitude = longitude;
     }
 
     public void updateNickname(String nickname) {

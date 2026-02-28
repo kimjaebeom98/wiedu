@@ -10,6 +10,8 @@ export interface OnboardingData {
   interests: string[];
   studyStyles: string[];
   region: string;
+  latitude: number | null;
+  longitude: number | null;
   nickname: string;
 }
 
@@ -64,10 +66,16 @@ export const setStudyPreferences = async (studyTypes: string[]): Promise<void> =
 };
 
 // Step 6: 지역 설정
-export const setRegion = async (region: string): Promise<void> => {
+export const setRegion = async (
+  region: string,
+  latitude?: number | null,
+  longitude?: number | null
+): Promise<void> => {
   const client = getAuthClient();
   await client.post('/api/onboarding/region', {
     region,
+    latitude,
+    longitude,
   });
 };
 
@@ -114,7 +122,7 @@ export const submitAllOnboardingData = async (data: OnboardingData): Promise<voi
 
     // 5. 지역 설정 (스킵 가능)
     if (data.region) {
-      await setRegion(data.region);
+      await setRegion(data.region, data.latitude, data.longitude);
     }
 
     // 6. 프로필 설정 (닉네임 필수)

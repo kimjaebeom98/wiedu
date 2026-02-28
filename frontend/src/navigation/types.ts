@@ -24,4 +24,11 @@ export type RootStackParamList = {
   StudyLeader: undefined;
   ProfileEdit: undefined;
   Settings: undefined;
+  LocationPicker: {
+    onSelect: (location: { address: string; addressDetail: string; latitude: number; longitude: number }) => void;
+    initialLocation?: { latitude: number; longitude: number };
+  };
+  LocationSearch: {
+    onSelect: (location: { address: string; addressDetail: string; latitude: number; longitude: number }) => void;
+  };
 };
