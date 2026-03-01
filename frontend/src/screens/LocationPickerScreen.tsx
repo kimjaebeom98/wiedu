@@ -97,8 +97,9 @@ export default function LocationPickerScreen() {
         const parts: string[] = [];
 
         // 구조화된 위치 정보 추출
+        // Expo Location: region=시/도, subregion=구/군, city=도시명, district=동/읍/면
         const regionValue = result.region || '';
-        const cityValue = (result.city && result.city !== result.region) ? result.city : '';
+        const cityValue = result.subregion || ((result.city && result.city !== result.region) ? result.city : '');
         const districtValue = result.district || '';
 
         if (regionValue) parts.push(regionValue);
