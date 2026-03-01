@@ -7,6 +7,7 @@ import {
   StatusBar,
   ActivityIndicator,
   Platform,
+  DeviceEventEmitter,
 } from 'react-native';
 import MapView, { Region } from 'react-native-maps';
 import * as Location from 'expo-location';
@@ -49,7 +50,7 @@ function useDebounce<T>(value: T, delay: number): T {
 export default function LocationPickerScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<LocationPickerRouteProp>();
-  const { onSelect, initialLocation } = route.params;
+  const { onSelect, initialLocation, eventName } = route.params;
   const insets = useSafeAreaInsets();
   const mapRef = useRef<MapView>(null);
 
@@ -210,9 +211,15 @@ export default function LocationPickerScreen() {
   }, []);
 
   const handleConfirm = useCallback(() => {
-    onSelect(selectedLocation);
+    if (eventName) {
+      // Emit event for screens that use event-based pattern
+      DeviceEventEmitter.emit(eventName, selectedLocation);
+    } else if (onSelect) {
+      // Use callback for screens that use callback pattern
+      onSelect(selectedLocation);
+    }
     navigation.goBack();
-  }, [onSelect, selectedLocation, navigation]);
+  }, [eventName, onSelect, selectedLocation, navigation]);
 
   const handleSearchSelect = useCallback((location: {
     address: string;

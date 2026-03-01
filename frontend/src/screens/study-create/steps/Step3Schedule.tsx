@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Platform } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, Platform, DeviceEventEmitter } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import Slider from '@react-native-community/slider';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -17,6 +17,9 @@ import {
 } from '../constants';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+// Event name for location selection
+export const STUDY_LOCATION_SELECTED_EVENT = 'STUDY_LOCATION_SELECTED';
 
 export default function Step3Schedule({ data, updateData, toggleDay }: Step3Props) {
   const navigation = useNavigation<NavigationProp>();
@@ -36,6 +39,19 @@ export default function Step3Schedule({ data, updateData, toggleDay }: Step3Prop
   useEffect(() => {
     setSliderValue(storedWeeks);
   }, [storedWeeks]);
+
+  // Listen for location selection event
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener(
+      STUDY_LOCATION_SELECTED_EVENT,
+      (location: { address: string; latitude: number; longitude: number }) => {
+        updateData('meetingLocation', location.address);
+        updateData('meetingLatitude', location.latitude);
+        updateData('meetingLongitude', location.longitude);
+      }
+    );
+    return () => subscription.remove();
+  }, [updateData]);
 
   const handleTimeChange = (event: any, date?: Date) => {
     if (Platform.OS === 'android') {
@@ -222,13 +238,11 @@ export default function Step3Schedule({ data, updateData, toggleDay }: Step3Prop
           <Text style={styles.fieldLabel}>모임 장소</Text>
           <TouchableOpacity
             style={styles.timePickerBtn}
-            onPress={() => navigation.navigate('LocationPicker', {
-              onSelect: (location) => {
-                updateData('meetingLocation', location.address);
-                updateData('meetingLatitude', location.latitude);
-                updateData('meetingLongitude', location.longitude);
-              },
-            })}
+            onPress={() => {
+              navigation.navigate('LocationPicker', {
+                eventName: STUDY_LOCATION_SELECTED_EVENT,
+              });
+            }}
             activeOpacity={0.7}
           >
             <Feather name="map-pin" size={18} color="#8B5CF6" />
