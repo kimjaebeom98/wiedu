@@ -29,23 +29,23 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
     @Query("SELECT s FROM Study s JOIN FETCH s.leader WHERE s.id = :id")
     Optional<Study> findByIdWithLeader(@Param("id") Long id);
 
-    // 전체 목록 (리더 포함, 페이징)
-    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader",
+    // 전체 목록 (리더, 카테고리 포함, 페이징)
+    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category",
            countQuery = "SELECT COUNT(s) FROM Study s")
     Page<Study> findAllWithLeader(Pageable pageable);
 
-    // 상태별 스터디 목록 (리더 포함, 페이징)
-    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader WHERE s.status = :status",
+    // 상태별 스터디 목록 (리더, 카테고리 포함, 페이징)
+    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category WHERE s.status = :status",
            countQuery = "SELECT COUNT(s) FROM Study s WHERE s.status = :status")
     Page<Study> findByStatusWithLeader(@Param("status") StudyStatus status, Pageable pageable);
 
-    // 카테고리별 스터디 목록 (리더 포함, 페이징)
-    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader WHERE s.category.id = :categoryId",
+    // 카테고리별 스터디 목록 (리더, 카테고리 포함, 페이징)
+    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category WHERE s.category.id = :categoryId",
            countQuery = "SELECT COUNT(s) FROM Study s WHERE s.category.id = :categoryId")
     Page<Study> findByCategoryIdWithLeader(@Param("categoryId") Long categoryId, Pageable pageable);
 
-    // 제목 또는 설명으로 검색 (리더 포함, 페이징)
-    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader WHERE s.title LIKE %:keyword% OR s.description LIKE %:keyword%",
+    // 제목 또는 설명으로 검색 (리더, 카테고리 포함, 페이징)
+    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category WHERE s.title LIKE %:keyword% OR s.description LIKE %:keyword%",
            countQuery = "SELECT COUNT(s) FROM Study s WHERE s.title LIKE %:keyword% OR s.description LIKE %:keyword%")
     Page<Study> searchByKeywordWithLeader(@Param("keyword") String keyword, Pageable pageable);
 
@@ -77,10 +77,14 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
     long countByLeader(User leader);
 
     // 인기 스터디 (충원율 높은 순, 모집중인 스터디만)
-    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader " +
+    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category " +
             "WHERE s.status = 'RECRUITING' " +
-            "ORDER BY (s.currentMembers * 1.0 / s.maxMembers) DESC, s.currentMembers DESC")
+            "ORDER BY (s.currentMembers * 1.0 / NULLIF(s.maxMembers, 0)) DESC, s.currentMembers DESC")
     List<Study> findPopularStudies(Pageable pageable);
+
+    // ID 목록으로 스터디 조회 (리더, 카테고리 포함 - N+1 방지)
+    @Query("SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category WHERE s.id IN :ids")
+    List<Study> findByIdsWithLeaderAndCategory(@Param("ids") List<Long> ids);
 
     // 근처 스터디 검색 (Haversine 공식, OFFLINE/HYBRID RECRUITING 상태만)
     @Query(value = "SELECT s.* FROM studies s " +

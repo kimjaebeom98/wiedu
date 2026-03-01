@@ -30,6 +30,9 @@ const DEFAULT_REGION: Region = {
 interface SelectedLocation {
   address: string;
   addressDetail: string;
+  region: string;      // 시/도 (서울특별시)
+  city: string;        // 시/군/구 (강남구)
+  district: string;    // 동/읍/면 (역삼동)
   latitude: number;
   longitude: number;
 }
@@ -69,6 +72,9 @@ export default function LocationPickerScreen() {
   const [selectedLocation, setSelectedLocation] = useState<SelectedLocation>({
     address: '',
     addressDetail: '',
+    region: '',
+    city: '',
+    district: '',
     latitude: region.latitude,
     longitude: region.longitude,
   });
@@ -90,9 +96,14 @@ export default function LocationPickerScreen() {
         const result = results[0];
         const parts: string[] = [];
 
-        if (result.region) parts.push(result.region);
-        if (result.city && result.city !== result.region) parts.push(result.city);
-        if (result.district) parts.push(result.district);
+        // 구조화된 위치 정보 추출
+        const regionValue = result.region || '';
+        const cityValue = (result.city && result.city !== result.region) ? result.city : '';
+        const districtValue = result.district || '';
+
+        if (regionValue) parts.push(regionValue);
+        if (cityValue) parts.push(cityValue);
+        if (districtValue) parts.push(districtValue);
         if (result.street) parts.push(result.street);
 
         const address = parts.join(' ') || '주소를 찾을 수 없습니다';
@@ -103,6 +114,9 @@ export default function LocationPickerScreen() {
         setSelectedLocation({
           address,
           addressDetail: detail || address,
+          region: regionValue,
+          city: cityValue,
+          district: districtValue,
           latitude,
           longitude,
         });
@@ -113,6 +127,9 @@ export default function LocationPickerScreen() {
         ...prev,
         address: '주소를 찾을 수 없습니다',
         addressDetail: '',
+        region: '',
+        city: '',
+        district: '',
         latitude,
         longitude,
       }));
@@ -224,11 +241,19 @@ export default function LocationPickerScreen() {
   const handleSearchSelect = useCallback((location: {
     address: string;
     addressDetail: string;
+    region?: string;
+    city?: string;
+    district?: string;
     latitude: number;
     longitude: number;
   }) => {
     // Update selected location directly from search result
-    setSelectedLocation(location);
+    setSelectedLocation({
+      ...location,
+      region: location.region || '',
+      city: location.city || '',
+      district: location.district || '',
+    });
 
     // Store pending region for animation when screen regains focus
     const newRegion: Region = {

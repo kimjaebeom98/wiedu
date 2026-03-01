@@ -44,8 +44,18 @@ export default function Step3Schedule({ data, updateData, toggleDay }: Step3Prop
   useEffect(() => {
     const subscription = DeviceEventEmitter.addListener(
       STUDY_LOCATION_SELECTED_EVENT,
-      (location: { address: string; latitude: number; longitude: number }) => {
+      (location: {
+        address: string;
+        region: string;
+        city: string;
+        district: string;
+        latitude: number;
+        longitude: number;
+      }) => {
         updateData('meetingLocation', location.address);
+        updateData('meetingRegion', location.region);
+        updateData('meetingCity', location.city);
+        updateData('meetingDistrict', location.district);
         updateData('meetingLatitude', location.latitude);
         updateData('meetingLongitude', location.longitude);
       }

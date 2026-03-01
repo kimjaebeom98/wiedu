@@ -90,6 +90,9 @@ public class StudyService {
                 .startDate(request.startDate())
                 .endDate(request.endDate())
                 .meetingLocation(request.meetingLocation())
+                .meetingRegion(request.meetingRegion())
+                .meetingCity(request.meetingCity())
+                .meetingDistrict(request.meetingDistrict())
                 .meetingLatitude(request.meetingLatitude())
                 .meetingLongitude(request.meetingLongitude())
                 .build();
@@ -175,19 +178,43 @@ public class StudyService {
     }
 
     /**
-     * 키워드 검색 (N+1 방지)
+     * 키워드 검색 (N+1 방지, LIKE 와일드카드 이스케이프 처리)
      */
     public Page<StudyListResponse> searchByKeyword(String keyword, Pageable pageable) {
-        return studyRepository.searchByKeywordWithLeader(keyword, pageable)
+        // LIKE 와일드카드 문자 이스케이프 처리
+        String sanitizedKeyword = keyword
+                .replace("\\", "\\\\")
+                .replace("%", "\\%")
+                .replace("_", "\\_");
+        return studyRepository.searchByKeywordWithLeader(sanitizedKeyword, pageable)
                 .map(StudyListResponse::from);
     }
 
     /**
-     * 근처 스터디 검색 (위치 기반)
+     * 근처 스터디 검색 (위치 기반, N+1 방지)
      */
     public java.util.List<StudyListResponse> findNearbyStudies(Double latitude, Double longitude, Double radiusKm) {
-        return studyRepository.findNearbyStudies(latitude, longitude, radiusKm)
-                .stream()
+        // 1. 네이티브 쿼리로 근처 스터디 ID 조회
+        java.util.List<Study> nearbyStudies = studyRepository.findNearbyStudies(latitude, longitude, radiusKm);
+        if (nearbyStudies.isEmpty()) {
+            return java.util.List.of();
+        }
+
+        // 2. ID 목록 추출
+        java.util.List<Long> studyIds = nearbyStudies.stream()
+                .map(Study::getId)
+                .toList();
+
+        // 3. JOIN FETCH로 연관 엔티티 함께 조회 (N+1 방지)
+        java.util.List<Study> studiesWithDetails = studyRepository.findByIdsWithLeaderAndCategory(studyIds);
+
+        // 4. 원래 순서(거리순) 유지를 위한 정렬
+        java.util.Map<Long, Study> studyMap = studiesWithDetails.stream()
+                .collect(java.util.stream.Collectors.toMap(Study::getId, s -> s));
+
+        return studyIds.stream()
+                .map(studyMap::get)
+                .filter(java.util.Objects::nonNull)
                 .map(StudyListResponse::from)
                 .toList();
     }

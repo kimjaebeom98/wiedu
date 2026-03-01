@@ -75,8 +75,11 @@ public record StudyCreateRequest(
     LocalDateTime startDate,
     LocalDateTime endDate,
 
-    // Location
-    String meetingLocation,
+    // Location (구조화된 위치 정보)
+    String meetingLocation,      // 전체 주소 (표시용)
+    String meetingRegion,        // 시/도 (서울특별시)
+    String meetingCity,          // 시/군/구 (강남구)
+    String meetingDistrict,      // 동/읍/면 (역삼동)
     Double meetingLatitude,
     Double meetingLongitude
 ) {}

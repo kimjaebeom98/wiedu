@@ -25,11 +25,27 @@ export type RootStackParamList = {
   ProfileEdit: undefined;
   Settings: undefined;
   LocationPicker: {
-    onSelect?: (location: { address: string; addressDetail: string; latitude: number; longitude: number }) => void;
+    onSelect?: (location: {
+      address: string;
+      addressDetail: string;
+      region: string;
+      city: string;
+      district: string;
+      latitude: number;
+      longitude: number;
+    }) => void;
     initialLocation?: { latitude: number; longitude: number };
     eventName?: string; // If provided, emit event instead of calling onSelect
   };
   LocationSearch: {
-    onSelect: (location: { address: string; addressDetail: string; latitude: number; longitude: number }) => void;
+    onSelect: (location: {
+      address: string;
+      addressDetail: string;
+      region?: string;
+      city?: string;
+      district?: string;
+      latitude: number;
+      longitude: number;
+    }) => void;
   };
 };

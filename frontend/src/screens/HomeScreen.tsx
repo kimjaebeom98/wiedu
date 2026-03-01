@@ -280,11 +280,13 @@ export default function HomeScreen() {
                       {study.currentMembers}/{study.maxMembers}명
                     </Text>
                   </View>
-                  {study.meetingLocation && (
+                  {(study.meetingCity || study.meetingDistrict || study.meetingLocation) && (
                     <View style={styles.studyMeta}>
                       <Feather name="map-pin" size={14} color="#71717A" />
                       <Text style={styles.studyMetaText} numberOfLines={1}>
-                        {study.meetingLocation}
+                        {study.meetingCity && study.meetingDistrict
+                          ? `${study.meetingCity} ${study.meetingDistrict}`
+                          : study.meetingCity || study.meetingDistrict || study.meetingLocation}
                       </Text>
                     </View>
                   )}
@@ -367,11 +369,13 @@ export default function HomeScreen() {
                       {study.currentMembers}/{study.maxMembers}명
                     </Text>
                   </View>
-                  {study.meetingLocation && (
+                  {(study.meetingCity || study.meetingDistrict || study.meetingLocation) && (
                     <View style={styles.studyMeta}>
                       <Feather name="map-pin" size={14} color="#71717A" />
                       <Text style={styles.studyMetaText} numberOfLines={1}>
-                        {study.meetingLocation}
+                        {study.meetingCity && study.meetingDistrict
+                          ? `${study.meetingCity} ${study.meetingDistrict}`
+                          : study.meetingCity || study.meetingDistrict || study.meetingLocation}
                       </Text>
                     </View>
                   )}
