@@ -58,6 +58,8 @@ export default function ProfileEditScreen() {
       setNickname(data.nickname || '');
       setBio(data.bio || '');
       setRegion(data.region || '');
+      setLatitude(data.latitude ?? null);
+      setLongitude(data.longitude ?? null);
       setSelectedInterests(data.interests || []);
       setProfileImage(data.profileImage || null);
     } catch (err) {
