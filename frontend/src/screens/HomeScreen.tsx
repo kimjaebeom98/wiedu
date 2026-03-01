@@ -161,7 +161,7 @@ export default function HomeScreen() {
 
           <TouchableOpacity style={styles.searchBar}>
             <Feather name="search" size={20} color="#71717A" />
-            <Text style={styles.searchText}>어떤 스터디를 찾고 계세요?</Text>
+            <Text style={styles.searchText} numberOfLines={1}>스터디 검색</Text>
           </TouchableOpacity>
         </View>
 
