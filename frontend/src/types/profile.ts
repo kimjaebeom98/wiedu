@@ -14,6 +14,8 @@ export interface MyProfile {
   temperature: number;
   experienceLevel: string | null;
   region: string | null;
+  latitude: number | null;
+  longitude: number | null;
   interests: string[];
   onboardingCompleted: boolean;
   stats: ActivityStats;

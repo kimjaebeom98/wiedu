@@ -12,6 +12,8 @@ public record MyProfileResponse(
         BigDecimal temperature,
         String experienceLevel,
         String region,
+        Double latitude,
+        Double longitude,
         List<String> interests,
         boolean onboardingCompleted,
         ActivityStatsResponse stats,

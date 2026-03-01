@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,17 +8,27 @@ import {
   StatusBar,
   ActivityIndicator,
   RefreshControl,
+  DeviceEventEmitter,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import * as Location from 'expo-location';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../navigation/types';
 import { fetchCategories, fetchNearbyStudies, fetchPopularStudies } from '../api/study';
 import { getMyProfile } from '../api/profile';
 import { StudyListResponse, Category } from '../types/study';
 import { formatLocationFromAddress, formatLocationDisplay } from '../utils/location';
+
+const HOME_LOCATION_KEY = 'home_selected_location';
+
+interface SelectedLocation {
+  latitude: number;
+  longitude: number;
+  displayName: string;
+  fullAddress: string;
+}
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -60,44 +70,67 @@ export default function HomeScreen() {
   const [nearbyLoading, setNearbyLoading] = useState(false);
   const [nearbyError, setNearbyError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
-  const [userRegion, setUserRegion] = useState<string>('');
+  const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
+  const [displayRegion, setDisplayRegion] = useState<string>('');
+  const isInitialized = useRef(false);
 
-  const loadUserRegion = useCallback(async () => {
+  // 저장된 위치 또는 프로필 위치 로드
+  const loadInitialLocation = useCallback(async () => {
     try {
-      const profile = await getMyProfile();
-      if (profile?.region) {
-        const formatted = formatLocationFromAddress(profile.region);
-        setUserRegion(formatted);
+      // 1. AsyncStorage에서 저장된 위치 확인
+      const savedLocation = await AsyncStorage.getItem(HOME_LOCATION_KEY);
+      if (savedLocation) {
+        const parsed: SelectedLocation = JSON.parse(savedLocation);
+        setSelectedLocation(parsed);
+        setDisplayRegion(parsed.displayName);
+        return parsed;
       }
+
+      // 2. 없으면 프로필 위치 사용
+      const profile = await getMyProfile();
+      if (profile?.region && profile?.latitude && profile?.longitude) {
+        const displayName = formatLocationFromAddress(profile.region);
+        const location: SelectedLocation = {
+          latitude: profile.latitude,
+          longitude: profile.longitude,
+          displayName,
+          fullAddress: profile.region,
+        };
+        setSelectedLocation(location);
+        setDisplayRegion(displayName);
+        // 프로필 위치를 기본값으로 저장
+        await AsyncStorage.setItem(HOME_LOCATION_KEY, JSON.stringify(location));
+        return location;
+      }
+
+      setDisplayRegion('');
+      return null;
     } catch (error) {
-      console.error('Failed to load user region:', error);
+      console.error('Failed to load initial location:', error);
+      return null;
     }
   }, []);
 
-  const loadNearbyStudies = useCallback(async () => {
+  // 선택한 위치로 근처 스터디 조회
+  const loadNearbyStudies = useCallback(async (location?: SelectedLocation | null) => {
+    const loc = location ?? selectedLocation;
+    if (!loc) {
+      setNearbyStudies([]);
+      return;
+    }
+
     setNearbyLoading(true);
     setNearbyError(null);
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      setLocationPermission(status === 'granted');
-      if (status === 'granted') {
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Low,
-        });
-        const nearby = await fetchNearbyStudies(
-          location.coords.latitude,
-          location.coords.longitude
-        );
-        setNearbyStudies(nearby);
-      }
+      const nearby = await fetchNearbyStudies(loc.latitude, loc.longitude);
+      setNearbyStudies(nearby);
     } catch (error: any) {
       console.error('Failed to load nearby studies:', error);
       setNearbyError(error?.message || '근처 스터디를 불러오지 못했습니다');
     } finally {
       setNearbyLoading(false);
     }
-  }, []);
+  }, [selectedLocation]);
 
   const loadData = useCallback(async () => {
     try {
@@ -116,18 +149,75 @@ export default function HomeScreen() {
     }
   }, []);
 
+  // 초기 로드
   useEffect(() => {
-    loadData();
-    loadNearbyStudies();
-    loadUserRegion();
-  }, [loadData, loadNearbyStudies, loadUserRegion]);
+    const init = async () => {
+      if (isInitialized.current) return;
+      isInitialized.current = true;
 
-  const onRefresh = useCallback(() => {
+      const location = await loadInitialLocation();
+      await Promise.all([
+        loadData(),
+        loadNearbyStudies(location),
+      ]);
+    };
+    init();
+  }, [loadData, loadInitialLocation, loadNearbyStudies]);
+
+  // 위치 선택 이벤트 리스너
+  useEffect(() => {
+    const subscription = DeviceEventEmitter.addListener(
+      'HOME_LOCATION_SELECTED',
+      async (location: {
+        address: string;
+        addressDetail: string;
+        region: string;
+        city: string;
+        district: string;
+        latitude: number;
+        longitude: number;
+      }) => {
+        const displayName = formatLocationDisplay(location.region, location.city, location.district)
+          || formatLocationFromAddress(location.address);
+
+        const newLocation: SelectedLocation = {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          displayName: displayName || location.address,
+          fullAddress: location.address,
+        };
+
+        setSelectedLocation(newLocation);
+        setDisplayRegion(newLocation.displayName);
+
+        // AsyncStorage에 저장
+        await AsyncStorage.setItem(HOME_LOCATION_KEY, JSON.stringify(newLocation));
+
+        // 새 위치로 스터디 다시 로드
+        loadNearbyStudies(newLocation);
+      }
+    );
+
+    return () => subscription.remove();
+  }, [loadNearbyStudies]);
+
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    loadData();
-    loadNearbyStudies();
-    loadUserRegion();
-  }, [loadData, loadNearbyStudies, loadUserRegion]);
+    await Promise.all([
+      loadData(),
+      loadNearbyStudies(),
+    ]);
+  }, [loadData, loadNearbyStudies]);
+
+  const handleLocationPress = useCallback(() => {
+    navigation.navigate('LocationPicker', {
+      eventName: 'HOME_LOCATION_SELECTED',
+      initialLocation: selectedLocation ? {
+        latitude: selectedLocation.latitude,
+        longitude: selectedLocation.longitude,
+      } : undefined,
+    });
+  }, [navigation, selectedLocation]);
 
   const getCategoryIcon = (code: string): string => {
     return CATEGORY_ICONS[code] || 'folder';
@@ -154,8 +244,10 @@ export default function HomeScreen() {
       >
         {/* Top Row - Location & Search */}
         <View style={[styles.topRow, { paddingTop: insets.top + 20 }]}>
-          <TouchableOpacity style={styles.locationBtn}>
-            <Text style={styles.locationText}>{userRegion || '위치 설정'}</Text>
+          <TouchableOpacity style={styles.locationBtn} onPress={handleLocationPress}>
+            <Text style={styles.locationText} numberOfLines={1}>
+              {displayRegion || '위치 설정'}
+            </Text>
             <Feather name="chevron-down" size={20} color="#A1A1AA" />
           </TouchableOpacity>
 
@@ -246,14 +338,17 @@ export default function HomeScreen() {
             <View style={styles.emptyState}>
               <Feather name="alert-circle" size={40} color="#EF4444" />
               <Text style={styles.emptyStateText}>{nearbyError}</Text>
-              <TouchableOpacity onPress={loadNearbyStudies} style={{ marginTop: 8 }}>
+              <TouchableOpacity onPress={() => loadNearbyStudies()} style={{ marginTop: 8 }}>
                 <Text style={{ color: '#8B5CF6' }}>다시 시도</Text>
               </TouchableOpacity>
             </View>
-          ) : locationPermission === false ? (
+          ) : !selectedLocation ? (
             <View style={styles.emptyState}>
               <Feather name="map-pin" size={40} color="#52525B" />
-              <Text style={styles.emptyStateText}>위치 권한이 필요합니다</Text>
+              <Text style={styles.emptyStateText}>위치를 설정해주세요</Text>
+              <TouchableOpacity onPress={handleLocationPress} style={{ marginTop: 8 }}>
+                <Text style={{ color: '#8B5CF6' }}>위치 설정하기</Text>
+              </TouchableOpacity>
             </View>
           ) : nearbyStudies.length === 0 ? (
             <View style={styles.emptyState}>

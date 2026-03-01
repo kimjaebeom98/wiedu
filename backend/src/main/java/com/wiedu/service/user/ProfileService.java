@@ -102,6 +102,8 @@ public class ProfileService {
                 temperature,
                 experienceLevel,
                 user.getRegion(),
+                user.getLatitude(),
+                user.getLongitude(),
                 interests,
                 user.isOnboardingCompleted(),
                 stats,
