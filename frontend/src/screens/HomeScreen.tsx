@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { fetchCategories, fetchNearbyStudies, fetchPopularStudies } from '../api/study';
@@ -189,6 +189,57 @@ export default function HomeScreen() {
 
     return () => subscription.remove();
   }, [loadNearbyStudies]);
+
+  // 화면 포커스 시 프로필 지역 다시 로드 (프로필 수정 반영)
+  const lastProfileRegionRef = useRef<string | null>(null);
+
+  useFocusEffect(
+    useCallback(() => {
+      // 초기화 완료 후에만 실행 (초기 로드와 중복 방지)
+      if (!isInitialized.current) return;
+
+      const refreshProfileLocation = async () => {
+        try {
+          const profile = await getMyProfile();
+          if (profile?.region) {
+            // 프로필 지역이 변경되지 않았으면 스킵
+            if (lastProfileRegionRef.current === profile.region) {
+              return;
+            }
+            lastProfileRegionRef.current = profile.region;
+
+            const displayName = formatLocationFromAddress(profile.region);
+            setDisplayRegion(displayName);
+
+            if (profile.latitude && profile.longitude) {
+              const location: SelectedLocation = {
+                latitude: profile.latitude,
+                longitude: profile.longitude,
+                displayName,
+                fullAddress: profile.region,
+              };
+              setSelectedLocation(location);
+
+              // 근처 스터디 로드
+              setNearbyLoading(true);
+              try {
+                const nearby = await fetchNearbyStudies(location.latitude, location.longitude);
+                setNearbyStudies(nearby);
+              } catch (error: any) {
+                console.error('Failed to load nearby studies:', error);
+              } finally {
+                setNearbyLoading(false);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Failed to refresh profile location:', error);
+        }
+      };
+
+      refreshProfileLocation();
+    }, [])
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
