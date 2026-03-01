@@ -14,14 +14,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../navigation/types';
 import { fetchCategories, fetchNearbyStudies, fetchPopularStudies } from '../api/study';
 import { getMyProfile } from '../api/profile';
 import { StudyListResponse, Category } from '../types/study';
 import { formatLocationFromAddress, formatLocationDisplay } from '../utils/location';
-
-const HOME_LOCATION_KEY = 'home_selected_location';
 
 interface SelectedLocation {
   latitude: number;
@@ -74,25 +71,16 @@ export default function HomeScreen() {
   const [displayRegion, setDisplayRegion] = useState<string>('');
   const isInitialized = useRef(false);
 
-  // 저장된 위치 또는 프로필 위치 로드
+  // 프로필 활동지역 로드 (앱 시작 시 항상 프로필 기준)
   const loadInitialLocation = useCallback(async () => {
     try {
-      // 1. AsyncStorage에서 저장된 위치 확인
-      const savedLocation = await AsyncStorage.getItem(HOME_LOCATION_KEY);
-      if (savedLocation) {
-        const parsed: SelectedLocation = JSON.parse(savedLocation);
-        setSelectedLocation(parsed);
-        setDisplayRegion(parsed.displayName);
-        return parsed;
-      }
-
-      // 2. 없으면 프로필 활동지역 사용
+      // 프로필 활동지역 사용
       const profile = await getMyProfile();
       if (profile?.region) {
         const displayName = formatLocationFromAddress(profile.region);
         setDisplayRegion(displayName);
 
-        // 좌표가 있으면 근처 스터디 조회용으로 저장
+        // 좌표가 있으면 근처 스터디 조회용으로 설정
         if (profile.latitude && profile.longitude) {
           const location: SelectedLocation = {
             latitude: profile.latitude,
@@ -101,8 +89,6 @@ export default function HomeScreen() {
             fullAddress: profile.region,
           };
           setSelectedLocation(location);
-          // 프로필 위치를 기본값으로 저장
-          await AsyncStorage.setItem(HOME_LOCATION_KEY, JSON.stringify(location));
           return location;
         }
 
@@ -195,9 +181,6 @@ export default function HomeScreen() {
 
         setSelectedLocation(newLocation);
         setDisplayRegion(newLocation.displayName);
-
-        // AsyncStorage에 저장
-        await AsyncStorage.setItem(HOME_LOCATION_KEY, JSON.stringify(newLocation));
 
         // 새 위치로 스터디 다시 로드
         loadNearbyStudies(newLocation);
