@@ -17,6 +17,7 @@ import { RootStackParamList } from '../navigation/types';
 import { getMyProfile, getMyStudies } from '../api/profile';
 import { MyProfile } from '../types/profile';
 import { MyStudy } from '../types/mypage';
+import { clearTokens } from '../storage/token';
 
 const CATEGORY_COLORS: Record<string, string> = {
   IT_DEV: '#8B5CF6',
@@ -69,6 +70,11 @@ export default function MyPageScreen() {
     }
   }, []);
 
+  const handleLogout = async () => {
+    await clearTokens();
+    navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+  };
+
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
@@ -110,6 +116,10 @@ export default function MyPageScreen() {
         <Text style={styles.errorText}>{error ?? '프로필을 불러오지 못했어요.'}</Text>
         <TouchableOpacity style={styles.retryBtn} onPress={loadProfile}>
           <Text style={styles.retryBtnText}>다시 시도</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+          <Feather name="log-out" size={16} color="#EF4444" />
+          <Text style={styles.logoutBtnText}>로그아웃</Text>
         </TouchableOpacity>
       </View>
     );
@@ -321,6 +331,19 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  logoutBtn: {
+    marginTop: 16,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+  },
+  logoutBtnText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#EF4444',
   },
   scrollView: {
     flex: 1,
