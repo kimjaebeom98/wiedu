@@ -280,6 +280,14 @@ export default function HomeScreen() {
                       {study.currentMembers}/{study.maxMembers}명
                     </Text>
                   </View>
+                  {study.meetingLocation && (
+                    <View style={styles.studyMeta}>
+                      <Feather name="map-pin" size={14} color="#71717A" />
+                      <Text style={styles.studyMetaText} numberOfLines={1}>
+                        {study.meetingLocation}
+                      </Text>
+                    </View>
+                  )}
                   <View style={styles.studyMeta}>
                     <View style={[
                       styles.statusDot,
@@ -359,6 +367,14 @@ export default function HomeScreen() {
                       {study.currentMembers}/{study.maxMembers}명
                     </Text>
                   </View>
+                  {study.meetingLocation && (
+                    <View style={styles.studyMeta}>
+                      <Feather name="map-pin" size={14} color="#71717A" />
+                      <Text style={styles.studyMetaText} numberOfLines={1}>
+                        {study.meetingLocation}
+                      </Text>
+                    </View>
+                  )}
                   <View style={styles.studyMeta}>
                     <View style={[
                       styles.statusDot,

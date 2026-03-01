@@ -19,6 +19,7 @@ public record StudyListResponse(
         Integer currentMembers,
         StudyStatus status,
         String studyMethod,
+        String meetingLocation,
         LocalDateTime createdAt
 ) {
     // Entity → DTO 변환
@@ -32,6 +33,7 @@ public record StudyListResponse(
                 study.getCurrentMembers(),
                 study.getStatus(),
                 study.getStudyMethod() != null ? study.getStudyMethod().name() : null,
+                study.getMeetingLocation(),
                 study.getCreatedAt()
         );
     }

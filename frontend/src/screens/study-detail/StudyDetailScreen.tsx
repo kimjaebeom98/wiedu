@@ -280,6 +280,12 @@ export default function StudyDetailScreen() {
                     <Text style={styles.scheduleText}>{study.platform}</Text>
                   </View>
                 )}
+                {study.meetingLocation && (
+                  <View style={styles.scheduleRow}>
+                    <Feather name="map-pin" size={18} color="#8B5CF6" />
+                    <Text style={styles.scheduleText}>{study.meetingLocation}</Text>
+                  </View>
+                )}
               </View>
             </View>
 

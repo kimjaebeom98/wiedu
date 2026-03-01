@@ -132,6 +132,7 @@ export interface StudyDetailResponse {
   daysOfWeek?: string;
   time?: string;
   durationType?: DurationType;
+  meetingLocation?: string;
   deposit?: number;
   depositRefundPolicy?: string;
   requirements?: string;
@@ -168,5 +169,6 @@ export interface StudyListResponse {
   currentMembers: number;
   status: StudyStatus;
   studyMethod: string;
+  meetingLocation?: string;
   createdAt: string;
 }
