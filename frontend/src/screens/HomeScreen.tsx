@@ -16,7 +16,9 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import * as Location from 'expo-location';
 import { RootStackParamList } from '../navigation/types';
 import { fetchCategories, fetchNearbyStudies, fetchPopularStudies } from '../api/study';
+import { getMyProfile } from '../api/profile';
 import { StudyListResponse, Category } from '../types/study';
+import { formatLocationFromAddress, formatLocationDisplay } from '../utils/location';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -59,6 +61,19 @@ export default function HomeScreen() {
   const [nearbyError, setNearbyError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [locationPermission, setLocationPermission] = useState<boolean | null>(null);
+  const [userRegion, setUserRegion] = useState<string>('');
+
+  const loadUserRegion = useCallback(async () => {
+    try {
+      const profile = await getMyProfile();
+      if (profile?.region) {
+        const formatted = formatLocationFromAddress(profile.region);
+        setUserRegion(formatted);
+      }
+    } catch (error) {
+      console.error('Failed to load user region:', error);
+    }
+  }, []);
 
   const loadNearbyStudies = useCallback(async () => {
     setNearbyLoading(true);
@@ -104,13 +119,15 @@ export default function HomeScreen() {
   useEffect(() => {
     loadData();
     loadNearbyStudies();
-  }, [loadData, loadNearbyStudies]);
+    loadUserRegion();
+  }, [loadData, loadNearbyStudies, loadUserRegion]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     loadData();
     loadNearbyStudies();
-  }, [loadData, loadNearbyStudies]);
+    loadUserRegion();
+  }, [loadData, loadNearbyStudies, loadUserRegion]);
 
   const getCategoryIcon = (code: string): string => {
     return CATEGORY_ICONS[code] || 'folder';
@@ -138,7 +155,7 @@ export default function HomeScreen() {
         {/* Top Row - Location & Search */}
         <View style={[styles.topRow, { paddingTop: insets.top + 20 }]}>
           <TouchableOpacity style={styles.locationBtn}>
-            <Text style={styles.locationText}>강남구</Text>
+            <Text style={styles.locationText}>{userRegion || '위치 설정'}</Text>
             <Feather name="chevron-down" size={20} color="#A1A1AA" />
           </TouchableOpacity>
 
@@ -280,13 +297,11 @@ export default function HomeScreen() {
                       {study.currentMembers}/{study.maxMembers}명
                     </Text>
                   </View>
-                  {(study.meetingCity || study.meetingDistrict || study.meetingLocation) && (
+                  {(study.meetingRegion || study.meetingCity || study.meetingLocation) && (
                     <View style={styles.studyMeta}>
                       <Feather name="map-pin" size={14} color="#71717A" />
                       <Text style={styles.studyMetaText} numberOfLines={1}>
-                        {study.meetingCity && study.meetingDistrict
-                          ? `${study.meetingCity} ${study.meetingDistrict}`
-                          : study.meetingCity || study.meetingDistrict || study.meetingLocation}
+                        {formatLocationDisplay(study.meetingRegion, study.meetingCity, study.meetingDistrict) || study.meetingLocation}
                       </Text>
                     </View>
                   )}
@@ -369,13 +384,11 @@ export default function HomeScreen() {
                       {study.currentMembers}/{study.maxMembers}명
                     </Text>
                   </View>
-                  {(study.meetingCity || study.meetingDistrict || study.meetingLocation) && (
+                  {(study.meetingRegion || study.meetingCity || study.meetingLocation) && (
                     <View style={styles.studyMeta}>
                       <Feather name="map-pin" size={14} color="#71717A" />
                       <Text style={styles.studyMetaText} numberOfLines={1}>
-                        {study.meetingCity && study.meetingDistrict
-                          ? `${study.meetingCity} ${study.meetingDistrict}`
-                          : study.meetingCity || study.meetingDistrict || study.meetingLocation}
+                        {formatLocationDisplay(study.meetingRegion, study.meetingCity, study.meetingDistrict) || study.meetingLocation}
                       </Text>
                     </View>
                   )}

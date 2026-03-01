@@ -6,6 +6,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { StyleSheet } from 'react-native';
+import { formatLocationFromAddress } from '../../../utils/location';
 
 interface Step5RegionProps {
   data: { region: string };
@@ -24,7 +25,7 @@ export default function Step5Region({ data, updateData, onOpenLocationPicker }: 
       >
         <Feather name="map-pin" size={20} color={data.region ? '#8B5CF6' : '#71717A'} />
         <Text style={[styles.locationText, !data.region && styles.placeholderText]} numberOfLines={1}>
-          {data.region || '활동 지역을 선택해주세요'}
+          {data.region ? formatLocationFromAddress(data.region) : '활동 지역을 선택해주세요'}
         </Text>
         <Feather name="chevron-right" size={20} color="#71717A" />
       </TouchableOpacity>
@@ -37,7 +38,7 @@ export default function Step5Region({ data, updateData, onOpenLocationPicker }: 
           </View>
           <View style={styles.selectedContent}>
             <Text style={styles.selectedLabel}>선택된 활동 지역</Text>
-            <Text style={styles.selectedText} numberOfLines={2}>{data.region}</Text>
+            <Text style={styles.selectedText} numberOfLines={2}>{formatLocationFromAddress(data.region)}</Text>
           </View>
           <TouchableOpacity
             style={styles.clearButton}

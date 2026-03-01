@@ -18,6 +18,7 @@ import { getMyProfile, getMyStudies } from '../api/profile';
 import { MyProfile } from '../types/profile';
 import { MyStudy } from '../types/mypage';
 import { clearTokens } from '../storage/token';
+import { formatLocationFromAddress } from '../utils/location';
 
 const CATEGORY_COLORS: Record<string, string> = {
   IT_DEV: '#8B5CF6',
@@ -175,7 +176,7 @@ export default function MyPageScreen() {
           {profile.region ? (
             <View style={styles.regionRow}>
               <Feather name="map-pin" size={13} color="#71717A" />
-              <Text style={styles.regionText}>{profile.region}</Text>
+              <Text style={styles.regionText}>{formatLocationFromAddress(profile.region)}</Text>
             </View>
           ) : null}
 

@@ -17,6 +17,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { getStudyDetail } from '../../api/study';
 import { StudyDetailResponse } from '../../types/study';
+import { formatLocationDisplay } from '../../utils/location';
 import { styles } from './styles';
 import { TabType } from './types';
 import BoardListView from '../study-board/BoardListView';
@@ -280,13 +281,11 @@ export default function StudyDetailScreen() {
                     <Text style={styles.scheduleText}>{study.platform}</Text>
                   </View>
                 )}
-                {(study.meetingCity || study.meetingDistrict || study.meetingLocation) && (
+                {(study.meetingRegion || study.meetingCity || study.meetingLocation) && (
                   <View style={styles.scheduleRow}>
                     <Feather name="map-pin" size={18} color="#8B5CF6" />
                     <Text style={styles.scheduleText}>
-                      {study.meetingCity && study.meetingDistrict
-                        ? `${study.meetingCity} ${study.meetingDistrict}`
-                        : study.meetingCity || study.meetingDistrict || study.meetingLocation}
+                      {formatLocationDisplay(study.meetingRegion, study.meetingCity, study.meetingDistrict) || study.meetingLocation}
                     </Text>
                   </View>
                 )}

@@ -21,6 +21,7 @@ import { RootStackParamList } from '../navigation/types';
 import * as ImagePicker from 'expo-image-picker';
 import { getMyProfile } from '../api/profile';
 import { getAuthClient } from '../api/client';
+import { formatLocationFromAddress } from '../utils/location';
 
 const INTEREST_OPTIONS = [
   { key: 'IT_DEV', label: 'IT/개발', color: '#8B5CF6' },
@@ -270,7 +271,7 @@ export default function ProfileEditScreen() {
               activeOpacity={0.7}
             >
               <Text style={[styles.input, !region && styles.placeholderText]}>
-                {region || '예: 서울 강남구'}
+                {region ? formatLocationFromAddress(region) : '예: 서울특별시 중구'}
               </Text>
               <Feather name="chevron-right" size={18} color="#71717A" />
             </TouchableOpacity>
