@@ -385,7 +385,7 @@ export default function HomeScreen() {
                     <View style={styles.studyMeta}>
                       <Feather name="map-pin" size={14} color="#71717A" />
                       <Text style={styles.studyMetaText} numberOfLines={1}>
-                        {formatLocationDisplay(study.meetingRegion, study.meetingCity, study.meetingDistrict) || study.meetingLocation}
+                        {formatLocationDisplay(study.meetingRegion, study.meetingCity, study.meetingDistrict) || formatLocationFromAddress(study.meetingLocation)}
                       </Text>
                     </View>
                   )}
@@ -472,7 +472,7 @@ export default function HomeScreen() {
                     <View style={styles.studyMeta}>
                       <Feather name="map-pin" size={14} color="#71717A" />
                       <Text style={styles.studyMetaText} numberOfLines={1}>
-                        {formatLocationDisplay(study.meetingRegion, study.meetingCity, study.meetingDistrict) || study.meetingLocation}
+                        {formatLocationDisplay(study.meetingRegion, study.meetingCity, study.meetingDistrict) || formatLocationFromAddress(study.meetingLocation)}
                       </Text>
                     </View>
                   )}
