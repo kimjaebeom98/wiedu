@@ -86,21 +86,27 @@ export default function HomeScreen() {
         return parsed;
       }
 
-      // 2. 없으면 프로필 위치 사용
+      // 2. 없으면 프로필 활동지역 사용
       const profile = await getMyProfile();
-      if (profile?.region && profile?.latitude && profile?.longitude) {
+      if (profile?.region) {
         const displayName = formatLocationFromAddress(profile.region);
-        const location: SelectedLocation = {
-          latitude: profile.latitude,
-          longitude: profile.longitude,
-          displayName,
-          fullAddress: profile.region,
-        };
-        setSelectedLocation(location);
         setDisplayRegion(displayName);
-        // 프로필 위치를 기본값으로 저장
-        await AsyncStorage.setItem(HOME_LOCATION_KEY, JSON.stringify(location));
-        return location;
+
+        // 좌표가 있으면 근처 스터디 조회용으로 저장
+        if (profile.latitude && profile.longitude) {
+          const location: SelectedLocation = {
+            latitude: profile.latitude,
+            longitude: profile.longitude,
+            displayName,
+            fullAddress: profile.region,
+          };
+          setSelectedLocation(location);
+          // 프로필 위치를 기본값으로 저장
+          await AsyncStorage.setItem(HOME_LOCATION_KEY, JSON.stringify(location));
+          return location;
+        }
+
+        return null; // 좌표 없으면 근처 스터디 조회 불가
       }
 
       setDisplayRegion('');
