@@ -3,6 +3,9 @@ package com.wiedu.controller.user;
 import com.wiedu.dto.user.SignUpRequest;
 import com.wiedu.dto.user.UserUpdateRequest;
 import com.wiedu.dto.user.UserResponse;
+import com.wiedu.exception.BusinessException;
+import com.wiedu.exception.ErrorCode;
+import com.wiedu.security.SecurityUtils;
 import com.wiedu.service.user.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -45,11 +48,18 @@ public class UserController {
     /**
      * 사용자 정보 수정
      * PATCH /api/users/{userId}
+     * 본인만 수정 가능
      */
     @PatchMapping("/{userId}")
     public ResponseEntity<UserResponse> updateUser(
             @PathVariable Long userId,
             @Valid @RequestBody UserUpdateRequest request) {
+        // 본인 확인 - IDOR 방지
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        if (!currentUserId.equals(userId)) {
+            throw new BusinessException(ErrorCode.AUTH_ACCESS_DENIED);
+        }
+
         UserResponse response = userService.updateUser(userId, request);
         return ResponseEntity.ok(response);
     }
