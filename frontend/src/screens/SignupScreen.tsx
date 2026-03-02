@@ -6,7 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   StatusBar,
-  ActivityIndicator,
   Keyboard,
   TouchableWithoutFeedback,
   KeyboardAvoidingView,
@@ -14,8 +13,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { signup, login } from '../api/auth';
-import { saveTokens } from '../storage/token';
+// API calls moved to EmailVerifyScreen
 
 interface SignupScreenProps {
   navigation: any;
@@ -27,7 +25,6 @@ export default function SignupScreen({ navigation }: SignupScreenProps) {
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const passwordRef = useRef<TextInput>(null);
@@ -42,7 +39,7 @@ export default function SignupScreen({ navigation }: SignupScreenProps) {
     return emailRegex.test(email);
   };
 
-  const handleNext = async () => {
+  const handleNext = () => {
     Keyboard.dismiss();
 
     if (!email.trim()) {
@@ -71,25 +68,9 @@ export default function SignupScreen({ navigation }: SignupScreenProps) {
     }
 
     setError('');
-    setLoading(true);
 
-    try {
-      // 1. 회원가입 API 호출
-      await signup(email, password);
-
-      // 2. 자동 로그인
-      const tokens = await login(email, password);
-
-      // 3. 토큰 저장
-      await saveTokens(tokens.accessToken, tokens.refreshToken);
-
-      // 4. 온보딩으로 이동
-      navigation.replace('Onboarding', { email });
-    } catch (err: any) {
-      setError(err.message || '회원가입에 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
+    // 이메일 검증 화면으로 이동 (이메일과 비밀번호 전달)
+    navigation.navigate('EmailVerify', { email, password });
   };
 
   const handleLogin = () => {
@@ -146,7 +127,7 @@ export default function SignupScreen({ navigation }: SignupScreenProps) {
                     keyboardType="email-address"
                     autoCapitalize="none"
                     autoCorrect={false}
-                    editable={!loading}
+                    editable={true}
                     returnKeyType="next"
                     onSubmitEditing={() => passwordRef.current?.focus()}
                     blurOnSubmit={false}
@@ -172,7 +153,7 @@ export default function SignupScreen({ navigation }: SignupScreenProps) {
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    editable={!loading}
+                    editable={true}
                     returnKeyType="next"
                     onSubmitEditing={() => passwordConfirmRef.current?.focus()}
                     blurOnSubmit={false}
@@ -208,7 +189,7 @@ export default function SignupScreen({ navigation }: SignupScreenProps) {
                     secureTextEntry={!showPasswordConfirm}
                     autoCapitalize="none"
                     autoCorrect={false}
-                    editable={!loading}
+                    editable={true}
                     returnKeyType="done"
                     onSubmitEditing={handleNext}
                   />
@@ -235,22 +216,17 @@ export default function SignupScreen({ navigation }: SignupScreenProps) {
 
             {/* Signup Button */}
             <TouchableOpacity
-              style={[styles.signupBtn, loading && styles.signupBtnDisabled]}
+              style={styles.signupBtn}
               onPress={handleNext}
-              disabled={loading}
               activeOpacity={0.8}
             >
-              {loading ? (
-                <ActivityIndicator color="#FFF" size="small" />
-              ) : (
-                <Text style={styles.signupBtnText}>회원가입</Text>
-              )}
+              <Text style={styles.signupBtnText}>다음</Text>
             </TouchableOpacity>
 
             {/* Login Link */}
             <View style={styles.loginSection}>
               <Text style={styles.loginText}>이미 계정이 있으신가요?</Text>
-              <TouchableOpacity onPress={handleLogin} disabled={loading}>
+              <TouchableOpacity onPress={handleLogin}>
                 <Text style={styles.loginLink}>로그인</Text>
               </TouchableOpacity>
             </View>

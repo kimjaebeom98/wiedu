@@ -16,7 +16,8 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { sendVerificationCode, verifyEmailCode, signup } from '../api/auth';
+import { sendVerificationCode, verifyEmailCode, signup, login } from '../api/auth';
+import { saveTokens } from '../storage/token';
 
 interface EmailVerifyScreenProps {
   navigation: any;
@@ -124,6 +125,12 @@ export default function EmailVerifyScreen({ navigation, route }: EmailVerifyScre
 
       // Complete registration after verification
       await signup(email, password);
+
+      // Auto login
+      const tokens = await login(email, password);
+
+      // Save tokens
+      await saveTokens(tokens.accessToken, tokens.refreshToken);
 
       // Navigate to onboarding after signup
       navigation.replace('Onboarding', { email });

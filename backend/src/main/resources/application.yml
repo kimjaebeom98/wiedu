@@ -57,20 +57,22 @@ file:
   allowed-types: image/jpeg,image/png,image/webp
   base-url: ${FILE_BASE_URL}
 
-# Mail Configuration (Naver SMTP)
+# Mail Configuration (Naver SMTP) - 포트 587, TLS 사용
 spring.mail:
-  host: ${MAIL_HOST}
-  port: ${MAIL_PORT}
-  username: ${MAIL_USERNAME}
-  password: ${MAIL_PASSWORD}
+  host: ${MAIL_HOST:smtp.naver.com}
+  port: ${MAIL_PORT:587}
+  username: ${MAIL_USERNAME:}
+  password: ${MAIL_PASSWORD:}
   properties:
     mail:
+      debug: true
       smtp:
         auth: true
         ssl:
-          enable: true
-        starttls:
           enable: false
+        starttls:
+          enable: true
+          required: true
 
 # Logging
 logging:

@@ -49,6 +49,8 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         // Auth endpoints
                         .requestMatchers("/api/auth/**").permitAll()
+                        // Email verification endpoints (public)
+                        .requestMatchers("/api/email/**").permitAll()
                         // User public endpoints
                         .requestMatchers(HttpMethod.POST, "/api/users/signup").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users/check-email").permitAll()
