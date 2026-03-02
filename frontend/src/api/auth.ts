@@ -56,4 +56,51 @@ export const login = async (
   }
 };
 
+/**
+ * 이메일 인증 코드 발송
+ */
+export const sendVerificationCode = async (email: string): Promise<void> => {
+  try {
+    await apiClient.post('/api/email/send-code', { email });
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.response) {
+        throw new Error(
+          error.response.data?.message || '인증 코드 발송에 실패했습니다.'
+        );
+      } else if (error.request) {
+        throw new Error('서버에 연결할 수 없습니다.');
+      }
+    }
+    throw new Error('인증 코드 발송 중 오류가 발생했습니다.');
+  }
+};
+
+/**
+ * 이메일 인증 코드 확인
+ */
+export const verifyEmailCode = async (
+  email: string,
+  code: string
+): Promise<boolean> => {
+  try {
+    const response = await apiClient.post<{ verified: boolean; message: string }>(
+      '/api/email/verify-code',
+      { email, code }
+    );
+    return response.data.verified;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      if (error.response) {
+        throw new Error(
+          error.response.data?.message || '인증 코드 확인에 실패했습니다.'
+        );
+      } else if (error.request) {
+        throw new Error('서버에 연결할 수 없습니다.');
+      }
+    }
+    throw new Error('인증 코드 확인 중 오류가 발생했습니다.');
+  }
+};
+
 export { apiClient };
