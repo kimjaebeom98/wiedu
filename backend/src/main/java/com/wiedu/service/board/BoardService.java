@@ -21,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -56,8 +58,14 @@ public class BoardService {
             }
         }
 
+        // N+1 방지: 모든 게시글의 좋아요 여부를 한 번에 조회
+        List<Long> postIds = posts.getContent().stream()
+                .map(BoardPost::getId)
+                .collect(Collectors.toList());
+        Set<Long> likedPostIds = boardPostLikeRepository.findLikedPostIdsByUserAndPostIds(user, postIds);
+
         return posts.map(post -> {
-            boolean isLiked = boardPostLikeRepository.existsByPostAndUser(post, user);
+            boolean isLiked = likedPostIds.contains(post.getId());
             return BoardPostListResponse.from(post, isLiked);
         });
     }
@@ -82,9 +90,16 @@ public class BoardService {
         boolean isPostLiked = boardPostLikeRepository.existsByPostAndUser(post, user);
 
         List<BoardComment> comments = boardCommentRepository.findByPostWithAuthor(post);
+
+        // N+1 방지: 모든 댓글의 좋아요 여부를 한 번에 조회
+        List<Long> commentIds = comments.stream()
+                .map(BoardComment::getId)
+                .collect(Collectors.toList());
+        Set<Long> likedCommentIds = boardCommentLikeRepository.findLikedCommentIdsByUserAndCommentIds(user, commentIds);
+
         List<BoardCommentResponse> commentResponses = comments.stream()
                 .map(comment -> {
-                    boolean isCommentLiked = boardCommentLikeRepository.existsByCommentAndUser(comment, user);
+                    boolean isCommentLiked = likedCommentIds.contains(comment.getId());
                     return BoardCommentResponse.from(comment, isCommentLiked);
                 })
                 .toList();
@@ -138,9 +153,16 @@ public class BoardService {
 
         boolean isLiked = boardPostLikeRepository.existsByPostAndUser(post, user);
         List<BoardComment> comments = boardCommentRepository.findByPostWithAuthor(post);
+
+        // N+1 방지: 모든 댓글의 좋아요 여부를 한 번에 조회
+        List<Long> commentIds = comments.stream()
+                .map(BoardComment::getId)
+                .collect(Collectors.toList());
+        Set<Long> likedCommentIds = boardCommentLikeRepository.findLikedCommentIdsByUserAndCommentIds(user, commentIds);
+
         List<BoardCommentResponse> commentResponses = comments.stream()
                 .map(comment -> {
-                    boolean isCommentLiked = boardCommentLikeRepository.existsByCommentAndUser(comment, user);
+                    boolean isCommentLiked = likedCommentIds.contains(comment.getId());
                     return BoardCommentResponse.from(comment, isCommentLiked);
                 })
                 .toList();

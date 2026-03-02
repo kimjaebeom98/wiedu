@@ -8,7 +8,9 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Repository
 public interface BoardPostLikeRepository extends JpaRepository<BoardPostLike, Long> {
@@ -21,4 +23,10 @@ public interface BoardPostLikeRepository extends JpaRepository<BoardPostLike, Lo
     int countByPost(@Param("post") BoardPost post);
 
     void deleteByPostAndUser(BoardPost post, User user);
+
+    /**
+     * 여러 게시글에 대해 사용자가 좋아요한 게시글 ID 목록 조회 (N+1 방지)
+     */
+    @Query("SELECT l.post.id FROM BoardPostLike l WHERE l.user = :user AND l.post.id IN :postIds")
+    Set<Long> findLikedPostIdsByUserAndPostIds(@Param("user") User user, @Param("postIds") List<Long> postIds);
 }
