@@ -8,6 +8,7 @@ import com.wiedu.dto.study.StudyMemberResponse;
 import com.wiedu.exception.BusinessException;
 import com.wiedu.exception.ErrorCode;
 import com.wiedu.repository.study.StudyMemberRepository;
+import com.wiedu.repository.study.StudyRepository;
 import com.wiedu.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ import java.util.List;
 public class StudyMemberService {
 
     private final StudyMemberRepository studyMemberRepository;
+    private final StudyRepository studyRepository;
     private final StudyService studyService;
     private final UserService userService;
 
@@ -75,7 +77,8 @@ public class StudyMemberService {
         }
 
         member.withdraw();
-        study.decrementMember();
+        // Atomic 감소 쿼리 사용 (Lost Update 방지)
+        studyRepository.decrementMemberCount(study.getId());
     }
 
     /**
@@ -100,7 +103,8 @@ public class StudyMemberService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_MEMBER));
 
         member.withdraw();
-        study.decrementMember();
+        // Atomic 감소 쿼리 사용 (Lost Update 방지)
+        studyRepository.decrementMemberCount(study.getId());
     }
 
     /**

@@ -12,6 +12,7 @@ import com.wiedu.dto.study.StudyRequestResponse;
 import com.wiedu.exception.BusinessException;
 import com.wiedu.exception.ErrorCode;
 import com.wiedu.repository.study.StudyMemberRepository;
+import com.wiedu.repository.study.StudyRepository;
 import com.wiedu.repository.study.StudyRequestRepository;
 import com.wiedu.service.user.UserService;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class StudyRequestService {
 
     private final StudyRequestRepository studyRequestRepository;
     private final StudyMemberRepository studyMemberRepository;
+    private final StudyRepository studyRepository;
     private final StudyService studyService;
     private final UserService userService;
 
@@ -94,6 +96,12 @@ public class StudyRequestService {
         // 신청 승인
         request.approve();
 
+        // 현재 인원 atomic 증가 (Lost Update 방지, 정원 초과 방지)
+        int updated = studyRepository.incrementMemberCount(study.getId());
+        if (updated == 0) {
+            throw new BusinessException(ErrorCode.STUDY_FULL);
+        }
+
         // 멤버로 등록
         StudyMember newMember = StudyMember.builder()
                 .study(study)
@@ -101,9 +109,6 @@ public class StudyRequestService {
                 .role(MemberRole.MEMBER)
                 .build();
         studyMemberRepository.save(newMember);
-
-        // 현재 인원 증가
-        study.incrementMember();
     }
 
     /**

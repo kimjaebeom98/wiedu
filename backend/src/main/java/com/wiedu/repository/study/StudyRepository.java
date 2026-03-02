@@ -6,6 +6,7 @@ import com.wiedu.domain.enums.StudyStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -101,4 +102,21 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
             "cos(radians(s.meeting_longitude) - radians(:lng)) + " +
             "sin(radians(:lat)) * sin(radians(s.meeting_latitude))))))", nativeQuery = true)
     List<Study> findNearbyStudies(@Param("lat") Double lat, @Param("lng") Double lng, @Param("radius") Double radiusKm);
+
+    /**
+     * 멤버 수 atomic 증가 (Lost Update 방지)
+     * 정원 초과 방지: maxMembers 미만일 때만 증가
+     * @return 업데이트된 행 수 (1이면 성공, 0이면 정원 초과)
+     */
+    @Modifying
+    @Query("UPDATE Study s SET s.currentMembers = s.currentMembers + 1 WHERE s.id = :id AND s.currentMembers < s.maxMembers")
+    int incrementMemberCount(@Param("id") Long id);
+
+    /**
+     * 멤버 수 atomic 감소 (Lost Update 방지)
+     * 1 미만으로 내려가지 않음 (스터디장은 항상 존재)
+     */
+    @Modifying
+    @Query("UPDATE Study s SET s.currentMembers = CASE WHEN s.currentMembers > 1 THEN s.currentMembers - 1 ELSE 1 END WHERE s.id = :id")
+    void decrementMemberCount(@Param("id") Long id);
 }
