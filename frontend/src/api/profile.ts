@@ -1,6 +1,5 @@
 import { getAuthClient } from './client';
-import { MyProfile } from '../types/profile';
-import { MyStudy } from '../types/mypage';
+import { MyProfile, MyStudy } from '../types/profile';
 
 export const getMyProfile = async (): Promise<MyProfile> => {
   const client = getAuthClient();

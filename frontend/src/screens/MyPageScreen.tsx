@@ -15,8 +15,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { getMyProfile, getMyStudies } from '../api/profile';
-import { MyProfile } from '../types/profile';
-import { MyStudy } from '../types/mypage';
+import { MyProfile, MyStudy } from '../types/profile';
 import { clearTokens } from '../storage/token';
 import { formatLocationFromAddress } from '../utils/location';
 
