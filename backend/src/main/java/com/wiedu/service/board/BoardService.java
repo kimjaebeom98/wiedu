@@ -20,6 +20,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.dao.DataIntegrityViolationException;
+
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -191,7 +193,7 @@ public class BoardService {
         boardPostRepository.delete(post);
     }
 
-    // 게시글 좋아요 토글
+    // 게시글 좋아요 토글 (Race Condition 방지)
     @Transactional
     public boolean togglePostLike(Long studyId, Long postId, Long userId) {
         Study study = findStudyById(studyId);
@@ -208,17 +210,24 @@ public class BoardService {
         return boardPostLikeRepository.findByPostAndUser(post, user)
                 .map(like -> {
                     boardPostLikeRepository.delete(like);
-                    post.decrementLikeCount();
+                    // Atomic 감소 쿼리 사용 (Lost Update 방지)
+                    boardPostRepository.decrementLikeCount(postId);
                     return false;
                 })
                 .orElseGet(() -> {
-                    BoardPostLike like = BoardPostLike.builder()
-                            .post(post)
-                            .user(user)
-                            .build();
-                    boardPostLikeRepository.save(like);
-                    post.incrementLikeCount();
-                    return true;
+                    try {
+                        BoardPostLike like = BoardPostLike.builder()
+                                .post(post)
+                                .user(user)
+                                .build();
+                        boardPostLikeRepository.save(like);
+                        // Atomic 증가 쿼리 사용 (Lost Update 방지)
+                        boardPostRepository.incrementLikeCount(postId);
+                        return true;
+                    } catch (DataIntegrityViolationException e) {
+                        // 동시 요청으로 이미 좋아요가 추가된 경우 - 이미 좋아요 상태로 처리
+                        return true;
+                    }
                 });
     }
 
@@ -294,7 +303,7 @@ public class BoardService {
         post.decrementCommentCount();
     }
 
-    // 댓글 좋아요 토글
+    // 댓글 좋아요 토글 (Race Condition 방지)
     @Transactional
     public boolean toggleCommentLike(Long studyId, Long postId, Long commentId, Long userId) {
         Study study = findStudyById(studyId);
@@ -311,17 +320,24 @@ public class BoardService {
         return boardCommentLikeRepository.findByCommentAndUser(comment, user)
                 .map(like -> {
                     boardCommentLikeRepository.delete(like);
-                    comment.decrementLikeCount();
+                    // Atomic 감소 쿼리 사용 (Lost Update 방지)
+                    boardCommentRepository.decrementLikeCount(commentId);
                     return false;
                 })
                 .orElseGet(() -> {
-                    BoardCommentLike like = BoardCommentLike.builder()
-                            .comment(comment)
-                            .user(user)
-                            .build();
-                    boardCommentLikeRepository.save(like);
-                    comment.incrementLikeCount();
-                    return true;
+                    try {
+                        BoardCommentLike like = BoardCommentLike.builder()
+                                .comment(comment)
+                                .user(user)
+                                .build();
+                        boardCommentLikeRepository.save(like);
+                        // Atomic 증가 쿼리 사용 (Lost Update 방지)
+                        boardCommentRepository.incrementLikeCount(commentId);
+                        return true;
+                    } catch (DataIntegrityViolationException e) {
+                        // 동시 요청으로 이미 좋아요가 추가된 경우 - 이미 좋아요 상태로 처리
+                        return true;
+                    }
                 });
     }
 
