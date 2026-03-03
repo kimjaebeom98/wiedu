@@ -41,6 +41,7 @@ export default function OnboardingScreen({ navigation, route }: OnboardingScreen
     latitude: null,
     longitude: null,
     nickname: '',
+    profileImage: null,
   });
 
   const updateData = useCallback(<K extends keyof OnboardingData>(key: K, value: OnboardingData[K]) => {

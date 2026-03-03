@@ -20,6 +20,7 @@ export interface OnboardingData {
   longitude: number | null;
   // Step 6: Profile
   nickname: string;
+  profileImage: string | null; // 프로필 이미지 URL (업로드 후)
 }
 
 export interface StepProps {

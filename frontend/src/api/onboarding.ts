@@ -13,6 +13,7 @@ export interface OnboardingData {
   latitude: number | null;
   longitude: number | null;
   nickname: string;
+  profileImage: string | null;
 }
 
 // Step 1: 약관 동의
@@ -125,8 +126,8 @@ export const submitAllOnboardingData = async (data: OnboardingData): Promise<voi
       await setRegion(data.region, data.latitude, data.longitude);
     }
 
-    // 6. 프로필 설정 (닉네임 필수)
-    await setupProfile(data.nickname);
+    // 6. 프로필 설정 (닉네임 필수, 프로필 이미지는 이미 업로드됨)
+    await setupProfile(data.nickname, data.profileImage || undefined);
 
     // 7. 알림 설정 (기본값: 모두 꺼짐)
     await setNotificationSettings(false, false, false);
