@@ -15,7 +15,7 @@ import { Feather } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
-import { getStudyDetail } from '../../api/study';
+import { getStudyDetail, closeStudy, completeStudy } from '../../api/study';
 import { getLeaderReviews } from '../../api/review';
 import { StudyDetailResponse } from '../../types/study';
 import { StudyLeaderReviewsResponse } from '../../types/review';
@@ -78,6 +78,7 @@ export default function StudyDetailScreen() {
   const [activeTab, setActiveTab] = useState<TabType>('intro');
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [leaderReviews, setLeaderReviews] = useState<StudyLeaderReviewsResponse | null>(null);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     loadStudyDetail();
@@ -155,6 +156,59 @@ export default function StudyDetailScreen() {
       studyId: study!.id,
       studyTitle: study!.title,
     });
+  };
+
+  const handleCloseStudy = () => {
+    Alert.alert(
+      '모집 마감',
+      '스터디 모집을 마감하시겠습니까?\n마감 후에는 새로운 멤버를 받을 수 없습니다.',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '마감하기',
+          style: 'destructive',
+          onPress: async () => {
+            setProcessing(true);
+            try {
+              await closeStudy(studyId);
+              Alert.alert('완료', '스터디 모집이 마감되었습니다.');
+              loadStudyDetail(); // 상태 새로고침
+            } catch (error: any) {
+              console.error('Failed to close study:', error);
+              Alert.alert('오류', error.response?.data?.message || '스터디 마감에 실패했습니다.');
+            } finally {
+              setProcessing(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleCompleteStudy = () => {
+    Alert.alert(
+      '스터디 종료',
+      '스터디를 종료하시겠습니까?\n종료 후에는 멤버들이 리뷰를 작성할 수 있습니다.',
+      [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '종료하기',
+          onPress: async () => {
+            setProcessing(true);
+            try {
+              await completeStudy(studyId);
+              Alert.alert('완료', '스터디가 종료되었습니다. 멤버들에게 리뷰 작성을 요청해보세요!');
+              loadStudyDetail(); // 상태 새로고침
+            } catch (error: any) {
+              console.error('Failed to complete study:', error);
+              Alert.alert('오류', error.response?.data?.message || '스터디 종료에 실패했습니다.');
+            } finally {
+              setProcessing(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   if (loading) {
@@ -490,12 +544,89 @@ export default function StudyDetailScreen() {
       </ScrollView>
       )}
 
-      {/* Bottom Bar - 스터디장이 아닐 때만 표시 */}
-      {currentUserId !== null && study.leader.id !== currentUserId && (
+      {/* Bottom Bar */}
+      {currentUserId !== null && (
         <View style={[styles.bottomBar, { paddingBottom: Math.max(20, insets.bottom + 12) }]}>
-          <TouchableOpacity style={styles.joinBtn} onPress={handleJoinStudy}>
-            <Text style={styles.joinBtnText}>스터디 참여 신청하기</Text>
-          </TouchableOpacity>
+          {study.leader.id === currentUserId ? (
+            // 스터디장 관리 버튼
+            <View style={styles.leaderActionsContainer}>
+              {study.status === 'RECRUITING' && (
+                <>
+                  <TouchableOpacity
+                    style={[styles.leaderBtn, styles.closeBtn]}
+                    onPress={handleCloseStudy}
+                    disabled={processing}
+                  >
+                    {processing ? (
+                      <ActivityIndicator size="small" color="#F87171" />
+                    ) : (
+                      <>
+                        <Feather name="x-circle" size={18} color="#F87171" />
+                        <Text style={styles.closeBtnText}>모집 마감</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.leaderBtn, styles.completeBtn]}
+                    onPress={handleCompleteStudy}
+                    disabled={processing}
+                  >
+                    {processing ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <>
+                        <Feather name="check-circle" size={18} color="#FFFFFF" />
+                        <Text style={styles.completeBtnText}>스터디 종료</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </>
+              )}
+              {study.status === 'IN_PROGRESS' && (
+                <TouchableOpacity
+                  style={[styles.joinBtn]}
+                  onPress={handleCompleteStudy}
+                  disabled={processing}
+                >
+                  {processing ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Feather name="check-circle" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                      <Text style={styles.joinBtnText}>스터디 종료하기</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+              {study.status === 'CLOSED' && (
+                <View style={styles.statusMessage}>
+                  <Feather name="lock" size={18} color="#71717A" />
+                  <Text style={styles.statusMessageText}>마감된 스터디입니다</Text>
+                </View>
+              )}
+              {study.status === 'COMPLETED' && (
+                <View style={styles.statusMessage}>
+                  <Feather name="check" size={18} color="#22C55E" />
+                  <Text style={[styles.statusMessageText, { color: '#22C55E' }]}>완료된 스터디입니다</Text>
+                </View>
+              )}
+            </View>
+          ) : (
+            // 일반 사용자 - 참여 신청 버튼
+            study.status === 'RECRUITING' ? (
+              <TouchableOpacity style={styles.joinBtn} onPress={handleJoinStudy}>
+                <Text style={styles.joinBtnText}>스터디 참여 신청하기</Text>
+              </TouchableOpacity>
+            ) : (
+              <View style={styles.statusMessage}>
+                <Text style={styles.statusMessageText}>
+                  {study.status === 'IN_PROGRESS' ? '진행 중인 스터디입니다' :
+                   study.status === 'COMPLETED' ? '완료된 스터디입니다' :
+                   '마감된 스터디입니다'}
+                </Text>
+              </View>
+            )
+          )}
         </View>
       )}
     </View>

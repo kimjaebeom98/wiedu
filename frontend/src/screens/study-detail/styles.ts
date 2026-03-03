@@ -461,4 +461,51 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#8B5CF6',
   },
+
+  // Leader Actions
+  leaderActionsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  leaderBtn: {
+    flex: 1,
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+    gap: 8,
+  },
+  closeBtn: {
+    backgroundColor: '#27272A',
+    borderWidth: 1,
+    borderColor: '#F8717140',
+  },
+  closeBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#F87171',
+  },
+  completeBtn: {
+    backgroundColor: '#8B5CF6',
+  },
+  completeBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  statusMessage: {
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#27272A',
+    borderRadius: 12,
+    gap: 8,
+  },
+  statusMessageText: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#71717A',
+  },
 });

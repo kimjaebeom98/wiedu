@@ -91,3 +91,15 @@ export const fetchPopularStudies = async (limit: number = 5): Promise<StudyListR
   });
   return response.data;
 };
+
+// POST /api/studies/:studyId/close - Close study (stop recruiting)
+export const closeStudy = async (studyId: number): Promise<void> => {
+  const client = getAuthClient();
+  await client.post(`/api/studies/${studyId}/close`);
+};
+
+// POST /api/studies/:studyId/complete - Complete study (end study)
+export const completeStudy = async (studyId: number): Promise<void> => {
+  const client = getAuthClient();
+  await client.post(`/api/studies/${studyId}/complete`);
+};
