@@ -48,6 +48,26 @@ file:
   allowed-types: image/jpeg,image/png,image/webp
   base-url: ${FILE_BASE_URL}
 
+# Mail Configuration (Gmail SMTP)
+spring.mail:
+  host: ${MAIL_HOST:smtp.gmail.com}
+  port: ${MAIL_PORT:587}
+  username: ${MAIL_USERNAME}
+  password: ${MAIL_PASSWORD}
+  properties:
+    mail:
+      debug: false
+      smtp:
+        auth: true
+        ssl:
+          enable: false
+        starttls:
+          enable: true
+          required: true
+        connectiontimeout: 10000
+        timeout: 10000
+        writetimeout: 10000
+
 # Logging (Production)
 logging:
   level:

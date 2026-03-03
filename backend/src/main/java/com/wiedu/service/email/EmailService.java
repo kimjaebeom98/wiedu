@@ -27,7 +27,7 @@ public class EmailService {
 
     private static final int CODE_LENGTH = 6;
     private static final int EXPIRATION_MINUTES = 5;
-    private static final String FROM_EMAIL = "woqjadl6487@naver.com";
+    private static final String FROM_EMAIL = "woqjadl6488@gmail.com";
     private static final String FROM_NAME = "위듀";
 
     /**
