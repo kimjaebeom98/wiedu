@@ -25,6 +25,7 @@ import LocationPickerScreen from './src/screens/LocationPickerScreen';
 import LocationSearchScreenBase, { LocationData } from './src/screens/LocationSearchScreen';
 import ReviewWriteScreen from './src/screens/ReviewWriteScreen';
 import MemberReviewScreen from './src/screens/MemberReviewScreen';
+import ApplicantManagementScreen from './src/screens/applicant-management/ApplicantManagementScreen';
 import { getAccessToken } from './src/storage/token';
 import { RootStackParamList } from './src/navigation/types';
 
@@ -133,6 +134,7 @@ export default function App() {
           <Stack.Screen name="LocationSearch" component={LocationSearchScreen} />
           <Stack.Screen name="ReviewWrite" component={ReviewWriteScreen} />
           <Stack.Screen name="MemberReview" component={MemberReviewScreen} />
+          <Stack.Screen name="ApplicantManagement" component={ApplicantManagementScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

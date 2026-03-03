@@ -463,9 +463,30 @@ export const styles = StyleSheet.create({
   },
 
   // Leader Actions
+  leaderActionsWrapper: {
+    gap: 12,
+  },
   leaderActionsContainer: {
     flexDirection: 'row',
     gap: 12,
+  },
+  applicantManageBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#8B5CF620',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: '#8B5CF640',
+  },
+  applicantManageBtnText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#8B5CF6',
+    marginLeft: 10,
   },
   leaderBtn: {
     flex: 1,

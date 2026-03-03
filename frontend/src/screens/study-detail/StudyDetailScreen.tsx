@@ -158,6 +158,13 @@ export default function StudyDetailScreen() {
     });
   };
 
+  const handleApplicantManagement = () => {
+    navigation.navigate('ApplicantManagement', {
+      studyId: study!.id,
+      studyTitle: study!.title,
+    });
+  };
+
   const handleCloseStudy = () => {
     Alert.alert(
       '모집 마감',
@@ -549,37 +556,47 @@ export default function StudyDetailScreen() {
         <View style={[styles.bottomBar, { paddingBottom: Math.max(20, insets.bottom + 12) }]}>
           {study.leader.id === currentUserId ? (
             // 스터디장 관리 버튼
-            <View style={styles.leaderActionsContainer}>
+            <View style={styles.leaderActionsWrapper}>
               {study.status === 'RECRUITING' && (
                 <>
                   <TouchableOpacity
-                    style={[styles.leaderBtn, styles.closeBtn]}
-                    onPress={handleCloseStudy}
-                    disabled={processing}
+                    style={styles.applicantManageBtn}
+                    onPress={handleApplicantManagement}
                   >
-                    {processing ? (
-                      <ActivityIndicator size="small" color="#F87171" />
-                    ) : (
-                      <>
-                        <Feather name="x-circle" size={18} color="#F87171" />
-                        <Text style={styles.closeBtnText}>모집 마감</Text>
-                      </>
-                    )}
+                    <Feather name="users" size={18} color="#8B5CF6" />
+                    <Text style={styles.applicantManageBtnText}>신청자 관리</Text>
+                    <Feather name="chevron-right" size={18} color="#8B5CF6" />
                   </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[styles.leaderBtn, styles.completeBtn]}
-                    onPress={handleCompleteStudy}
-                    disabled={processing}
-                  >
-                    {processing ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
-                    ) : (
-                      <>
-                        <Feather name="check-circle" size={18} color="#FFFFFF" />
-                        <Text style={styles.completeBtnText}>스터디 종료</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
+                  <View style={styles.leaderActionsContainer}>
+                    <TouchableOpacity
+                      style={[styles.leaderBtn, styles.closeBtn]}
+                      onPress={handleCloseStudy}
+                      disabled={processing}
+                    >
+                      {processing ? (
+                        <ActivityIndicator size="small" color="#F87171" />
+                      ) : (
+                        <>
+                          <Feather name="x-circle" size={18} color="#F87171" />
+                          <Text style={styles.closeBtnText}>모집 마감</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={[styles.leaderBtn, styles.completeBtn]}
+                      onPress={handleCompleteStudy}
+                      disabled={processing}
+                    >
+                      {processing ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <>
+                          <Feather name="check-circle" size={18} color="#FFFFFF" />
+                          <Text style={styles.completeBtnText}>스터디 종료</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
                 </>
               )}
               {study.status === 'IN_PROGRESS' && (

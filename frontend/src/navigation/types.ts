@@ -58,4 +58,8 @@ export type RootStackParamList = {
     studyId: number;
     studyTitle: string;
   };
+  ApplicantManagement: {
+    studyId: number;
+    studyTitle: string;
+  };
 };

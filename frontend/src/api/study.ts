@@ -103,3 +103,22 @@ export const completeStudy = async (studyId: number): Promise<void> => {
   const client = getAuthClient();
   await client.post(`/api/studies/${studyId}/complete`);
 };
+
+// GET /api/studies/:studyId/requests - Get pending requests (for leader)
+export const getPendingRequests = async (studyId: number): Promise<StudyRequestResponse[]> => {
+  const client = getAuthClient();
+  const response = await client.get(`/api/studies/${studyId}/requests`);
+  return response.data.content || response.data;
+};
+
+// POST /api/study-requests/:requestId/approve - Approve request
+export const approveStudyRequest = async (requestId: number): Promise<void> => {
+  const client = getAuthClient();
+  await client.post(`/api/study-requests/${requestId}/approve`);
+};
+
+// POST /api/study-requests/:requestId/reject - Reject request
+export const rejectStudyRequest = async (requestId: number, reason?: string): Promise<void> => {
+  const client = getAuthClient();
+  await client.post(`/api/study-requests/${requestId}/reject`, { rejectReason: reason });
+};
