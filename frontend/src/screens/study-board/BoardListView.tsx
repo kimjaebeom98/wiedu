@@ -50,12 +50,14 @@ export default function BoardListView({
   const [currentPage, setCurrentPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [showSearch, setShowSearch] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const loadPosts = useCallback(
     async (page: number = 0, isRefresh: boolean = false) => {
       try {
         if (page === 0) {
           isRefresh ? setRefreshing(true) : setLoading(true);
+          setError(null);
         } else {
           setLoadingMore(true);
         }
@@ -77,8 +79,11 @@ export default function BoardListView({
 
         setHasMore(!response.last);
         setCurrentPage(page);
-      } catch (error) {
-        console.error('Failed to load posts:', error);
+      } catch (err) {
+        console.error('Failed to load posts:', err);
+        if (page === 0) {
+          setError('게시글을 불러오는데 실패했습니다');
+        }
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -211,6 +216,19 @@ export default function BoardListView({
 
   const renderEmpty = () => {
     if (loading) return null;
+
+    if (error) {
+      return (
+        <View style={styles.emptyContainer}>
+          <Feather name="alert-circle" size={48} color="#EF4444" />
+          <Text style={styles.emptyText}>{error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => loadPosts(0)}>
+            <Feather name="refresh-cw" size={16} color="#FFFFFF" />
+            <Text style={styles.retryButtonText}>다시 시도</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
 
     return (
       <View style={styles.emptyContainer}>
@@ -527,6 +545,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#71717A',
     marginTop: 8,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#8B5CF6',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 20,
+  },
+  retryButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   loadingContainer: {
     flex: 1,

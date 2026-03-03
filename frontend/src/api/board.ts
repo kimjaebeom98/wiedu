@@ -19,7 +19,7 @@ export const fetchBoardPosts = async (
   page: number = 0,
   size: number = 20
 ): Promise<PageResponse<BoardPostListItem>> => {
-  const client = await getAuthClient();
+  const client = getAuthClient();
   const params: Record<string, string | number> = { page, size };
   if (category) {
     params.category = category;
@@ -36,7 +36,7 @@ export const getBoardPostDetail = async (
   studyId: number,
   postId: number
 ): Promise<BoardPostDetail> => {
-  const client = await getAuthClient();
+  const client = getAuthClient();
   const response = await client.get(`/api/studies/${studyId}/board/posts/${postId}`);
   return response.data;
 };
@@ -46,7 +46,7 @@ export const createBoardPost = async (
   studyId: number,
   data: BoardPostCreateRequest
 ): Promise<BoardPostDetail> => {
-  const client = await getAuthClient();
+  const client = getAuthClient();
   const response = await client.post(`/api/studies/${studyId}/board/posts`, data);
   return response.data;
 };
@@ -57,7 +57,7 @@ export const updateBoardPost = async (
   postId: number,
   data: BoardPostUpdateRequest
 ): Promise<BoardPostDetail> => {
-  const client = await getAuthClient();
+  const client = getAuthClient();
   const response = await client.put(`/api/studies/${studyId}/board/posts/${postId}`, data);
   return response.data;
 };
@@ -67,7 +67,7 @@ export const deleteBoardPost = async (
   studyId: number,
   postId: number
 ): Promise<void> => {
-  const client = await getAuthClient();
+  const client = getAuthClient();
   await client.delete(`/api/studies/${studyId}/board/posts/${postId}`);
 };
 
@@ -76,7 +76,7 @@ export const togglePostLike = async (
   studyId: number,
   postId: number
 ): Promise<LikeToggleResponse> => {
-  const client = await getAuthClient();
+  const client = getAuthClient();
   const response = await client.post(`/api/studies/${studyId}/board/posts/${postId}/like`);
   return response.data;
 };
@@ -87,7 +87,7 @@ export const createBoardComment = async (
   postId: number,
   content: string
 ): Promise<BoardComment> => {
-  const client = await getAuthClient();
+  const client = getAuthClient();
   const response = await client.post(
     `/api/studies/${studyId}/board/posts/${postId}/comments`,
     { content }
@@ -102,7 +102,7 @@ export const updateBoardComment = async (
   commentId: number,
   data: BoardCommentUpdateRequest
 ): Promise<BoardComment> => {
-  const client = await getAuthClient();
+  const client = getAuthClient();
   const response = await client.put(
     `/api/studies/${studyId}/board/posts/${postId}/comments/${commentId}`,
     data
@@ -116,7 +116,7 @@ export const deleteBoardComment = async (
   postId: number,
   commentId: number
 ): Promise<void> => {
-  const client = await getAuthClient();
+  const client = getAuthClient();
   await client.delete(
     `/api/studies/${studyId}/board/posts/${postId}/comments/${commentId}`
   );
@@ -128,7 +128,7 @@ export const toggleCommentLike = async (
   postId: number,
   commentId: number
 ): Promise<LikeToggleResponse> => {
-  const client = await getAuthClient();
+  const client = getAuthClient();
   const response = await client.post(
     `/api/studies/${studyId}/board/posts/${postId}/comments/${commentId}/like`
   );

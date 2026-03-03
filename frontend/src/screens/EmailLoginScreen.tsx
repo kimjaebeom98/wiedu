@@ -14,6 +14,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { login } from '../api/auth';
 import { saveTokens } from '../storage/token';
@@ -25,6 +26,7 @@ interface EmailLoginScreenProps {
 }
 
 export default function EmailLoginScreen({ navigation }: EmailLoginScreenProps) {
+  const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -88,7 +90,7 @@ export default function EmailLoginScreen({ navigation }: EmailLoginScreenProps) 
           keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
           {/* Header - 스크롤 밖에 고정 */}
-          <View style={styles.header}>
+          <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
             <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
               <Feather name="arrow-left" size={20} color="#FFFFFF" />
             </TouchableOpacity>
@@ -244,7 +246,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: 60,
     paddingBottom: 20,
     paddingHorizontal: 28,
   },

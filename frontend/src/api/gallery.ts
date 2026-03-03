@@ -14,7 +14,7 @@ export const fetchGalleryPhotos = async (
   page: number = 0,
   size: number = 20
 ): Promise<GalleryPageResponse> => {
-  const client = await getAuthClient();
+  const client = getAuthClient();
   const response = await client.get(`/api/studies/${studyId}/gallery/photos`, {
     params: { page, size },
   });
@@ -28,7 +28,7 @@ export const getGalleryPhotoDetail = async (
   studyId: number,
   photoId: number
 ): Promise<GalleryPhoto> => {
-  const client = await getAuthClient();
+  const client = getAuthClient();
   const response = await client.get(`/api/studies/${studyId}/gallery/photos/${photoId}`);
   return response.data;
 };
@@ -41,7 +41,7 @@ export const uploadGalleryPhoto = async (
   file: { uri: string; name: string; type: string },
   caption?: string
 ): Promise<GalleryPhoto> => {
-  const client = await getAuthClient();
+  const client = getAuthClient();
 
   const formData = new FormData();
   formData.append('file', {
@@ -74,7 +74,7 @@ export const updateGalleryPhoto = async (
   photoId: number,
   data: GalleryPhotoUpdateRequest
 ): Promise<GalleryPhoto> => {
-  const client = await getAuthClient();
+  const client = getAuthClient();
   const response = await client.put(
     `/api/studies/${studyId}/gallery/photos/${photoId}`,
     data
@@ -89,7 +89,7 @@ export const deleteGalleryPhoto = async (
   studyId: number,
   photoId: number
 ): Promise<void> => {
-  const client = await getAuthClient();
+  const client = getAuthClient();
   await client.delete(`/api/studies/${studyId}/gallery/photos/${photoId}`);
 };
 
@@ -99,7 +99,7 @@ export const deleteGalleryPhoto = async (
 export const getGalleryPhotoCount = async (
   studyId: number
 ): Promise<GalleryCountResponse> => {
-  const client = await getAuthClient();
+  const client = getAuthClient();
   const response = await client.get(`/api/studies/${studyId}/gallery/count`);
   return response.data;
 };

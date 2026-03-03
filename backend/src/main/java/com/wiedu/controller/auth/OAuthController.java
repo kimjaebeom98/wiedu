@@ -28,6 +28,18 @@ public class OAuthController {
     private final OAuthStateParser stateParser;
 
     /**
+     * 카카오 인가 URL 생성
+     * 클라이언트에서 API Key를 노출하지 않고 인가 URL을 받아감
+     */
+    @GetMapping("/kakao/authorize")
+    public ResponseEntity<java.util.Map<String, String>> getKakaoAuthUrl(
+            @RequestParam String state,
+            @RequestParam(required = false, defaultValue = "profile_nickname,profile_image,account_email") String scope) {
+        String authUrl = kakaoOAuthService.generateAuthorizationUrl(state, scope);
+        return ResponseEntity.ok(java.util.Map.of("authUrl", authUrl));
+    }
+
+    /**
      * 카카오 로그인
      * 프론트엔드에서 받은 인가 코드로 로그인 처리
      */

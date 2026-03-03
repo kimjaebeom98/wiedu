@@ -25,6 +25,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class KakaoOAuthService {
 
+    private static final String KAKAO_AUTH_URL = "https://kauth.kakao.com/oauth/authorize";
     private static final String KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token";
     private static final String KAKAO_USER_INFO_URL = "https://kapi.kakao.com/v2/user/me";
     private static final String OAUTH_PROVIDER = "KAKAO";
@@ -33,6 +34,19 @@ public class KakaoOAuthService {
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
     private final WebClient webClient = WebClient.builder().build();
+
+    /**
+     * 카카오 인가 URL 생성
+     * 클라이언트에서 API Key를 노출하지 않도록 서버에서 URL 생성
+     */
+    public String generateAuthorizationUrl(String state, String scope) {
+        return KAKAO_AUTH_URL +
+                "?client_id=" + kakaoProperties.getClientId() +
+                "&redirect_uri=" + java.net.URLEncoder.encode(kakaoProperties.getRedirectUri(), java.nio.charset.StandardCharsets.UTF_8) +
+                "&response_type=code" +
+                "&state=" + state +
+                "&scope=" + scope;
+    }
 
     /**
      * 카카오 로그인 처리

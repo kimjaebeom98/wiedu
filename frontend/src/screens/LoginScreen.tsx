@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { startKakaoLogin } from '../services/kakaoAuth';
 import { saveTokens } from '../storage/token';
@@ -20,6 +21,7 @@ interface LoginScreenProps {
 }
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
+  const insets = useSafeAreaInsets();
   const [loading, setLoading] = useState(false);
 
   const handleEmailLogin = () => {
@@ -85,7 +87,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       <View style={styles.glow2} />
 
       {/* Content */}
-      <View style={styles.content}>
+      <View style={[styles.content, { paddingTop: insets.top + 80 }]}>
         {/* Logo Section */}
         <View style={styles.logoSection}>
           <Text style={styles.headline}>스터디 고민 끝,</Text>
@@ -195,7 +197,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingTop: 100,
     paddingBottom: 40,
     paddingHorizontal: 28,
     justifyContent: 'space-between',

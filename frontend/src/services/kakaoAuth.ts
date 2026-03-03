@@ -3,7 +3,6 @@ import * as Linking from 'expo-linking';
 import { getBaseURL } from '../config/api';
 import { base64UrlEncode } from '../utils/base64';
 import { generateSessionId } from '../utils/uuid';
-import { KAKAO_CLIENT_ID } from '../constants/oauth';
 
 export interface KakaoLoginResult {
   success: boolean;
@@ -30,6 +29,26 @@ const getAppRedirectUri = (): string => {
   const uri = Linking.createURL('oauth/kakao');
   console.log('[Kakao] App Redirect URI:', uri);
   return uri;
+};
+
+/**
+ * 백엔드에서 인가 URL 가져오기 (API Key 보안)
+ */
+const getAuthorizationUrl = async (state: string): Promise<string> => {
+  const baseUrl = getBaseURL();
+  const response = await fetch(
+    `${baseUrl}/api/auth/kakao/authorize?state=${encodeURIComponent(state)}`,
+    {
+      headers: { 'ngrok-skip-browser-warning': 'true' },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(`Failed to get authorization URL: ${response.status}`);
+  }
+
+  const data = await response.json();
+  return data.authUrl;
 };
 
 /**
@@ -82,7 +101,6 @@ const pollForTokens = async (
  * openBrowserAsync + Linking + 폴링 조합으로 안정적인 OAuth 처리
  */
 export const startKakaoLogin = async (): Promise<KakaoLoginResult> => {
-  const backendCallbackUrl = getBackendCallbackUrl();
   const appRedirectUri = getAppRedirectUri();
   const sessionId = generateSessionId();
 
@@ -91,24 +109,17 @@ export const startKakaoLogin = async (): Promise<KakaoLoginResult> => {
   const state = base64UrlEncode(stateData);
 
   console.log('[Kakao] Session ID:', sessionId);
-  console.log('[Kakao] Backend Callback URL:', backendCallbackUrl);
-  console.log('[Kakao] KAKAO_CLIENT_ID:', KAKAO_CLIENT_ID ? `${KAKAO_CLIENT_ID.substring(0, 8)}...` : 'NOT SET');
   console.log('[Kakao] State:', state);
 
-  // KAKAO_CLIENT_ID 검증
-  if (!KAKAO_CLIENT_ID) {
-    console.error('[Kakao] KAKAO_CLIENT_ID is not set!');
-    return { success: false, error: 'Kakao Client ID가 설정되지 않았습니다.' };
+  // 백엔드에서 인가 URL 가져오기 (API Key 보안)
+  let authUrl: string;
+  try {
+    authUrl = await getAuthorizationUrl(state);
+    console.log('[Kakao] Authorization URL from backend received');
+  } catch (error: any) {
+    console.error('[Kakao] Failed to get auth URL:', error);
+    return { success: false, error: '인가 URL을 가져오는데 실패했습니다.' };
   }
-
-  // 카카오 인증 URL 생성
-  const authUrl =
-    `https://kauth.kakao.com/oauth/authorize?` +
-    `client_id=${KAKAO_CLIENT_ID}` +
-    `&redirect_uri=${encodeURIComponent(backendCallbackUrl)}` +
-    `&response_type=code` +
-    `&state=${state}` +
-    `&scope=profile_nickname,profile_image,account_email`;
 
   console.log('[Kakao] Opening auth URL:', authUrl.substring(0, 100) + '...');
 

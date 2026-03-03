@@ -1,9 +1,11 @@
-// Kakao OAuth - REST API Key (클라이언트에서 공개적으로 사용되는 키)
-// EAS 빌드에서 환경 변수가 번들되지 않으므로 직접 설정
-const KAKAO_REST_API_KEY = '891cfab43de70f0ea8f731792876fa0b';
+// Kakao OAuth - API Key는 백엔드에서 관리
+// 클라이언트에서는 백엔드 /api/auth/kakao/authorize 엔드포인트를 통해 인가 URL을 받아옴
+// 이 파일은 하위 호환성을 위해 유지하지만, 새로운 코드에서는 사용하지 않음
 
-// 환경 변수가 있으면 사용, 없으면 하드코딩된 값 사용
-export const KAKAO_CLIENT_ID = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY || KAKAO_REST_API_KEY;
+// 레거시 지원용 (향후 제거 예정)
+export const KAKAO_CLIENT_ID = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY || '';
 
 // 디버깅용 로그
-console.log('[OAuth] KAKAO_CLIENT_ID:', KAKAO_CLIENT_ID ? 'set' : 'not set');
+if (__DEV__) {
+  console.log('[OAuth] KAKAO_CLIENT_ID from env:', KAKAO_CLIENT_ID ? 'set' : 'not set (using backend)');
+}
