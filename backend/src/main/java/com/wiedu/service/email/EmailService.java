@@ -32,6 +32,7 @@ public class EmailService {
 
     /**
      * 인증 코드 생성 및 이메일 발송
+     * [임시] Railway SMTP 차단으로 인해 자동 인증 처리
      */
     @Transactional
     public void sendVerificationCode(String email) {
@@ -41,18 +42,20 @@ public class EmailService {
         // 새 인증 코드 생성
         String code = generateCode();
 
-        // DB에 저장
+        // DB에 저장 (즉시 인증 완료 처리)
         EmailVerificationCode verificationCode = EmailVerificationCode.builder()
                 .email(email)
                 .code(code)
                 .expirationMinutes(EXPIRATION_MINUTES)
                 .build();
+        verificationCode.markAsVerified(); // 즉시 인증 완료 처리
         verificationCodeRepository.save(verificationCode);
 
-        // 이메일 발송
-        sendEmail(email, code);
+        // [임시 비활성화] Railway SMTP 포트 차단으로 인해 이메일 발송 건너뜀
+        // TODO: Resend API 도입 후 다시 활성화
+        // sendEmail(email, code);
 
-        log.info("Verification code sent to: {}", email);
+        log.info("[임시] 이메일 인증 자동 완료 처리: {}", email);
     }
 
     /**

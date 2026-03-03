@@ -1,22 +1,13 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  TextInput,
-  TouchableOpacity,
   StyleSheet,
   StatusBar,
   ActivityIndicator,
-  Keyboard,
-  TouchableWithoutFeedback,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Feather } from '@expo/vector-icons';
-import { sendVerificationCode, verifyEmailCode, signup, login } from '../api/auth';
+import { sendVerificationCode, signup, login } from '../api/auth';
 import { saveTokens } from '../storage/token';
 
 interface EmailVerifyScreenProps {
@@ -24,244 +15,85 @@ interface EmailVerifyScreenProps {
   route: any;
 }
 
+/**
+ * [임시] Railway SMTP 차단으로 인해 이메일 인증 자동 완료 처리
+ * 백엔드에서 sendVerificationCode 호출 시 자동으로 인증 완료됨
+ * TODO: Resend API 도입 후 원래 인증 코드 입력 UI로 복원
+ */
 export default function EmailVerifyScreen({ navigation, route }: EmailVerifyScreenProps) {
   const insets = useSafeAreaInsets();
   const { email, password } = route.params || {};
-  const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [timeLeft, setTimeLeft] = useState(5 * 60); // 5 minutes in seconds
-  const [canResend, setCanResend] = useState(false);
 
-  const inputRefs = useRef<(TextInput | null)[]>([]);
-
-  // Send verification code when screen mounts
+  // 화면 마운트 시 자동으로 인증 완료 처리 후 회원가입 진행
   useEffect(() => {
-    const sendInitialCode = async () => {
+    const autoVerifyAndSignup = async () => {
+      if (!email || !password) {
+        setError('이메일 또는 비밀번호 정보가 없습니다.');
+        setLoading(false);
+        return;
+      }
+
       try {
+        // 백엔드에서 자동 인증 처리됨
         await sendVerificationCode(email);
+
+        // 회원가입 진행
+        await signup(email, password);
+
+        // 자동 로그인
+        const tokens = await login(email, password);
+
+        // 토큰 저장
+        await saveTokens(tokens.accessToken, tokens.refreshToken);
+
+        // 온보딩으로 이동
+        navigation.replace('Onboarding', { email });
       } catch (err: any) {
-        Alert.alert('알림', err.message || '인증 코드 발송에 실패했습니다.');
+        setError(err.message || '회원가입에 실패했습니다.');
+        setLoading(false);
       }
     };
-    if (email) {
-      sendInitialCode();
-    }
-  }, [email]);
 
-  // Timer countdown
-  useEffect(() => {
-    if (timeLeft <= 0) {
-      setCanResend(true);
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [timeLeft]);
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
+    autoVerifyAndSignup();
+  }, [email, password, navigation]);
 
   const handleBack = () => {
     navigation.goBack();
   };
 
-  const handleCodeChange = (text: string, index: number) => {
-    // Only allow numbers
-    const numericText = text.replace(/[^0-9]/g, '');
-
-    if (numericText.length <= 1) {
-      const newCode = [...code];
-      newCode[index] = numericText;
-      setCode(newCode);
-      setError('');
-
-      // Auto-focus next input
-      if (numericText && index < 5) {
-        inputRefs.current[index + 1]?.focus();
-      }
-    } else if (numericText.length === 6) {
-      // Handle paste of full code
-      const newCode = numericText.split('');
-      setCode(newCode);
-      setError('');
-      inputRefs.current[5]?.focus();
-    }
-  };
-
-  const handleKeyPress = (e: any, index: number) => {
-    if (e.nativeEvent.key === 'Backspace' && !code[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleVerify = async () => {
-    Keyboard.dismiss();
-
-    const fullCode = code.join('');
-    if (fullCode.length !== 6) {
-      setError('인증코드 6자리를 모두 입력해주세요.');
-      return;
-    }
-
-    setError('');
-    setLoading(true);
-
-    try {
-      // Verify the email code
-      const verified = await verifyEmailCode(email, fullCode);
-
-      if (!verified) {
-        setError('인증 코드가 올바르지 않습니다.');
-        return;
-      }
-
-      // Complete registration after verification
-      await signup(email, password);
-
-      // Auto login
-      const tokens = await login(email, password);
-
-      // Save tokens
-      await saveTokens(tokens.accessToken, tokens.refreshToken);
-
-      // Navigate to onboarding after signup
-      navigation.replace('Onboarding', { email });
-    } catch (err: any) {
-      setError(err.message || '인증에 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResend = async () => {
-    if (!canResend && timeLeft > 0) return;
-
-    setLoading(true);
-    try {
-      // Call API to resend verification email
-      await sendVerificationCode(email);
-
-      setTimeLeft(5 * 60);
-      setCanResend(false);
-      setCode(['', '', '', '', '', '']);
-      setError('');
-      inputRefs.current[0]?.focus();
-    } catch (err: any) {
-      setError(err.message || '인증코드 재전송에 실패했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor="#18181B" />
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#18181B" />
 
-        {/* Background glows */}
-        <View style={styles.glow1} />
-        <View style={styles.glow2} />
+      {/* Background glows */}
+      <View style={styles.glow1} />
+      <View style={styles.glow2} />
 
-        <KeyboardAvoidingView
-          style={styles.keyboardView}
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        >
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          bounces={false}
-        >
-        <View style={[styles.content, { paddingTop: insets.top + 20, paddingBottom: Math.max(40, insets.bottom) }]}>
-          {/* Header with back button */}
-          <View style={styles.header}>
-            <TouchableOpacity onPress={handleBack} style={styles.backBtn}>
-              <Feather name="arrow-left" size={20} color="#FFFFFF" />
-            </TouchableOpacity>
+      <View style={[styles.content, { paddingTop: insets.top + 20, paddingBottom: Math.max(40, insets.bottom) }]}>
+        {loading ? (
+          // 로딩 상태: 회원가입 진행 중
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#8B5CF6" />
+            <Text style={styles.loadingText}>회원가입 진행 중...</Text>
+            <Text style={styles.loadingSubtext}>{email}</Text>
           </View>
-
-          {/* Title Section */}
-          <View style={styles.titleSection}>
-            <Text style={styles.title}>이메일로 전송된{'\n'}인증코드를 입력해주세요</Text>
-            <Text style={styles.subtitle}>{email}으로 전송했어요</Text>
-          </View>
-
-          {/* Code Input Section */}
-          <View style={styles.codeSection}>
-            <View style={styles.codeRow}>
-              {code.map((digit, index) => (
-                <TextInput
-                  key={index}
-                  ref={(ref) => { inputRefs.current[index] = ref; }}
-                  style={[
-                    styles.codeInput,
-                    digit && styles.codeInputFilled,
-                  ]}
-                  value={digit}
-                  onChangeText={(text) => handleCodeChange(text, index)}
-                  onKeyPress={(e) => handleKeyPress(e, index)}
-                  keyboardType="number-pad"
-                  maxLength={1}
-                  editable={!loading}
-                  selectTextOnFocus
-                />
-              ))}
-            </View>
-
-            {/* Timer Row */}
-            <View style={styles.timerRow}>
-              <Text style={styles.timerText}>{formatTime(timeLeft)}</Text>
-              <Text style={styles.timerDivider}>|</Text>
-              <TouchableOpacity
-                onPress={handleResend}
-                disabled={!canResend || loading}
-              >
-                <Text style={[
-                  styles.resendText,
-                  canResend && styles.resendTextActive,
-                ]}>
-                  인증코드 재전송
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Error Message */}
-          {error ? (
+        ) : error ? (
+          // 에러 상태
+          <View style={styles.errorContainer}>
             <View style={styles.errorBox}>
               <Text style={styles.errorText}>{error}</Text>
             </View>
-          ) : null}
-
-          {/* Verify Button */}
-          <View style={styles.bottomSection}>
-            <TouchableOpacity
-              style={[styles.verifyBtn, loading && styles.verifyBtnDisabled]}
-              onPress={handleVerify}
-              disabled={loading}
-              activeOpacity={0.8}
-            >
-              {loading ? (
-                <ActivityIndicator color="#FFF" size="small" />
-              ) : (
-                <Text style={styles.verifyBtnText}>인증 확인</Text>
-              )}
-            </TouchableOpacity>
+            <View style={styles.backBtnContainer}>
+              <View style={styles.backBtn} onTouchEnd={handleBack}>
+                <Text style={styles.backBtnText}>돌아가기</Text>
+              </View>
+            </View>
           </View>
-        </View>
-        </ScrollView>
-        </KeyboardAvoidingView>
+        ) : null}
       </View>
-    </TouchableWithoutFeedback>
+    </View>
   );
 }
 
@@ -269,15 +101,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#18181B',
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
   },
   glow1: {
     position: 'absolute',
@@ -300,81 +123,32 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 28,
-  },
-  header: {
-    marginBottom: 32,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    backgroundColor: '#27272A',
-    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  titleSection: {
-    marginBottom: 32,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    lineHeight: 36,
-    marginBottom: 12,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#71717A',
-  },
-  codeSection: {
+  loadingContainer: {
     alignItems: 'center',
-    marginBottom: 24,
   },
-  codeRow: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 8,
-    marginBottom: 16,
-  },
-  codeInput: {
-    width: 48,
-    height: 56,
-    backgroundColor: '#27272A',
-    borderRadius: 12,
-    fontSize: 24,
+  loadingText: {
+    fontSize: 20,
     fontWeight: '700',
     color: '#FFFFFF',
-    textAlign: 'center',
+    marginTop: 24,
   },
-  codeInputFilled: {
-    borderWidth: 1,
-    borderColor: '#8B5CF6',
-  },
-  timerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  timerText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#8B5CF6',
-  },
-  timerDivider: {
-    fontSize: 14,
-    color: '#3F3F46',
-  },
-  resendText: {
-    fontSize: 14,
+  loadingSubtext: {
+    fontSize: 15,
     color: '#71717A',
+    marginTop: 8,
   },
-  resendTextActive: {
-    color: '#8B5CF6',
+  errorContainer: {
+    width: '100%',
+    alignItems: 'center',
   },
   errorBox: {
+    width: '100%',
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
     borderRadius: 10,
-    padding: 12,
+    padding: 16,
     marginBottom: 24,
     borderWidth: 1,
     borderColor: 'rgba(239, 68, 68, 0.3)',
@@ -385,21 +159,17 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
-  bottomSection: {
-    flex: 1,
-    justifyContent: 'flex-end',
+  backBtnContainer: {
+    width: '100%',
   },
-  verifyBtn: {
+  backBtn: {
     height: 56,
     backgroundColor: '#8B5CF6',
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  verifyBtnDisabled: {
-    backgroundColor: 'rgba(139, 92, 246, 0.5)',
-  },
-  verifyBtnText: {
+  backBtnText: {
     fontSize: 17,
     fontWeight: '600',
     color: '#FFFFFF',
