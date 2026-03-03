@@ -39,7 +39,9 @@ export default function StudyApplyScreen() {
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
 
-  const canSubmit = introduction.trim() && motivation.trim() && agreeRules && agreeDeposit;
+  // 보증금이 없거나 환불정책이 없으면 자동 동의 처리
+  const hasDepositPolicy = !!depositRefundPolicy;
+  const canSubmit = introduction.trim() && motivation.trim() && agreeRules && (hasDepositPolicy ? agreeDeposit : true);
 
   const handleSubmit = async () => {
     if (!canSubmit) {
@@ -174,24 +176,25 @@ export default function StudyApplyScreen() {
                 </TouchableOpacity>
               )}
             </View>
-            <View style={styles.agreeRow}>
-              <TouchableOpacity
-                style={styles.checkboxRow}
-                onPress={() => setAgreeDeposit(!agreeDeposit)}
-              >
-                <View style={[styles.checkbox, agreeDeposit && styles.checkboxChecked]}>
-                  {agreeDeposit && <Feather name="check" size={14} color="#FFFFFF" />}
-                </View>
-                <Text style={[styles.agreeText, agreeDeposit && styles.agreeTextChecked]}>
-                  보증금 환불 정책에 동의합니다
-                </Text>
-              </TouchableOpacity>
-              {depositRefundPolicy && (
+            {/* 보증금 환불정책이 있을 때만 표시 */}
+            {hasDepositPolicy && (
+              <View style={styles.agreeRow}>
+                <TouchableOpacity
+                  style={styles.checkboxRow}
+                  onPress={() => setAgreeDeposit(!agreeDeposit)}
+                >
+                  <View style={[styles.checkbox, agreeDeposit && styles.checkboxChecked]}>
+                    {agreeDeposit && <Feather name="check" size={14} color="#FFFFFF" />}
+                  </View>
+                  <Text style={[styles.agreeText, agreeDeposit && styles.agreeTextChecked]}>
+                    보증금 환불 정책에 동의합니다
+                  </Text>
+                </TouchableOpacity>
                 <TouchableOpacity onPress={() => setShowPolicyModal(true)}>
                   <Text style={styles.detailLink}>자세히보기</Text>
                 </TouchableOpacity>
-              )}
-            </View>
+              </View>
+            )}
           </View>
         </View>
 
@@ -234,8 +237,19 @@ export default function StudyApplyScreen() {
             </View>
             <ScrollView style={styles.modalBody}>
               {rules.map((rule, idx) => (
-                <Text key={idx} style={styles.ruleText}>• {rule.content}</Text>
+                <View key={idx} style={styles.ruleCard}>
+                  <View style={styles.ruleNumber}>
+                    <Text style={styles.ruleNumberText}>{idx + 1}</Text>
+                  </View>
+                  <Text style={styles.ruleCardText}>{rule.content}</Text>
+                </View>
               ))}
+              <View style={styles.ruleNotice}>
+                <Feather name="alert-circle" size={16} color="#F59E0B" />
+                <Text style={styles.ruleNoticeText}>
+                  규칙 미준수 시 스터디장의 판단에 따라 제명될 수 있습니다
+                </Text>
+              </View>
             </ScrollView>
           </View>
         </View>
@@ -257,7 +271,18 @@ export default function StudyApplyScreen() {
               </TouchableOpacity>
             </View>
             <ScrollView style={styles.modalBody}>
-              <Text style={styles.policyText}>{depositRefundPolicy || '환불 정책이 설정되지 않았습니다.'}</Text>
+              <View style={styles.policyCard}>
+                <View style={styles.policyIcon}>
+                  <Feather name="dollar-sign" size={20} color="#22C55E" />
+                </View>
+                <Text style={styles.policyText}>{depositRefundPolicy || '환불 정책이 설정되지 않았습니다.'}</Text>
+              </View>
+              <View style={styles.policyNotice}>
+                <Feather name="info" size={16} color="#8B5CF6" />
+                <Text style={styles.policyNoticeText}>
+                  환불 조건은 스터디장이 정한 기준에 따릅니다
+                </Text>
+              </View>
             </ScrollView>
           </View>
         </View>
