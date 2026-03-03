@@ -44,8 +44,8 @@ public class KakaoOAuthService {
                 "?client_id=" + kakaoProperties.getClientId() +
                 "&redirect_uri=" + java.net.URLEncoder.encode(kakaoProperties.getRedirectUri(), java.nio.charset.StandardCharsets.UTF_8) +
                 "&response_type=code" +
-                "&state=" + state +
-                "&scope=" + scope;
+                "&state=" + java.net.URLEncoder.encode(state, java.nio.charset.StandardCharsets.UTF_8) +
+                "&scope=" + java.net.URLEncoder.encode(scope, java.nio.charset.StandardCharsets.UTF_8);
     }
 
     /**
