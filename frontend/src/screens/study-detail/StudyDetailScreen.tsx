@@ -16,7 +16,9 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { getStudyDetail } from '../../api/study';
+import { getLeaderReviews } from '../../api/review';
 import { StudyDetailResponse } from '../../types/study';
+import { StudyLeaderReviewsResponse } from '../../types/review';
 import { formatLocationDisplay } from '../../utils/location';
 import { styles } from './styles';
 import { TabType } from './types';
@@ -75,6 +77,7 @@ export default function StudyDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<TabType>('intro');
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [leaderReviews, setLeaderReviews] = useState<StudyLeaderReviewsResponse | null>(null);
 
   useEffect(() => {
     loadStudyDetail();
@@ -97,11 +100,24 @@ export default function StudyDetailScreen() {
     try {
       const data = await getStudyDetail(studyId);
       setStudy(data);
+      // Load leader reviews after getting study detail
+      if (data.leader?.id) {
+        loadLeaderReviews(data.leader.id);
+      }
     } catch (error) {
       console.error('Failed to load study detail:', error);
       Alert.alert('오류', '스터디 정보를 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadLeaderReviews = async (leaderId: number) => {
+    try {
+      const reviews = await getLeaderReviews(leaderId);
+      setLeaderReviews(reviews);
+    } catch (error) {
+      console.error('Failed to load leader reviews:', error);
     }
   };
 
@@ -122,6 +138,22 @@ export default function StudyDetailScreen() {
       maxMembers: study!.maxMembers,
       rules: study!.rules || [],
       depositRefundPolicy: study!.depositRefundPolicy,
+    });
+  };
+
+  const handleWriteReview = () => {
+    navigation.navigate('ReviewWrite', {
+      studyId: study!.id,
+      studyTitle: study!.title,
+      leaderName: study!.leader.nickname,
+      leaderProfileImage: study!.leader.profileImage,
+    });
+  };
+
+  const handleMemberReview = () => {
+    navigation.navigate('MemberReview', {
+      studyId: study!.id,
+      studyTitle: study!.title,
     });
   };
 
@@ -399,6 +431,56 @@ export default function StudyDetailScreen() {
                 </View>
               </View>
             )}
+
+            {/* Reviews Section */}
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.sectionTitle}>스터디장 리뷰</Text>
+                {leaderReviews && leaderReviews.totalCount > 0 && (
+                  <Text style={styles.membersCount}>
+                    ⭐ {leaderReviews.averageRating?.toFixed(1) || '-'} ({leaderReviews.totalCount})
+                  </Text>
+                )}
+              </View>
+              {leaderReviews && leaderReviews.reviews.length > 0 ? (
+                <View style={styles.reviewsContainer}>
+                  {leaderReviews.reviews.slice(0, 2).map((review) => (
+                    <View key={review.id} style={styles.reviewCard}>
+                      <View style={styles.reviewHeader}>
+                        <View style={styles.reviewerInfo}>
+                          <View style={styles.reviewerAvatar}>
+                            <Feather name="user" size={14} color="#71717A" />
+                          </View>
+                          <Text style={styles.reviewerName}>{review.reviewerNickname}</Text>
+                        </View>
+                        <View style={styles.ratingBadge}>
+                          <Text style={styles.ratingText}>⭐ {review.rating}</Text>
+                        </View>
+                      </View>
+                      <Text style={styles.reviewContent} numberOfLines={2}>
+                        {review.content}
+                      </Text>
+                    </View>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.noReviewsContainer}>
+                  <Text style={styles.noReviewsText}>아직 작성된 리뷰가 없습니다.</Text>
+                </View>
+              )}
+              {study.status === 'COMPLETED' && (
+                <View style={styles.reviewButtonsContainer}>
+                  <TouchableOpacity style={styles.writeReviewBtn} onPress={handleWriteReview}>
+                    <Feather name="edit-2" size={16} color="#8B5CF6" />
+                    <Text style={styles.writeReviewBtnText}>스터디장 리뷰</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity style={styles.writeReviewBtn} onPress={handleMemberReview}>
+                    <Feather name="users" size={16} color="#8B5CF6" />
+                    <Text style={styles.writeReviewBtnText}>멤버 평가</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
 
             {/* Spacer for bottom bar */}
             <View style={{ height: 160 }} />

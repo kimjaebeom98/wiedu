@@ -380,4 +380,85 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
+
+  // Reviews
+  reviewsContainer: {
+    gap: 12,
+  },
+  reviewCard: {
+    backgroundColor: '#27272A',
+    borderRadius: 12,
+    padding: 14,
+    gap: 10,
+  },
+  reviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  reviewerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  reviewerAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#3F3F46',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reviewerName: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#FFFFFF',
+  },
+  ratingBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: '#3F3F46',
+    borderRadius: 8,
+  },
+  ratingText: {
+    fontSize: 12,
+    color: '#FFFFFF',
+  },
+  reviewContent: {
+    fontSize: 13,
+    color: '#A1A1AA',
+    lineHeight: 20,
+  },
+  noReviewsContainer: {
+    backgroundColor: '#27272A',
+    borderRadius: 12,
+    padding: 24,
+    alignItems: 'center',
+  },
+  noReviewsText: {
+    fontSize: 14,
+    color: '#71717A',
+  },
+  reviewButtonsContainer: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 12,
+  },
+  writeReviewBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 12,
+    backgroundColor: '#8B5CF620',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#8B5CF640',
+  },
+  writeReviewBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#8B5CF6',
+  },
 });

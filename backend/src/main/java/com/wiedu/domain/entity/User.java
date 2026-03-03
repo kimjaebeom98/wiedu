@@ -209,4 +209,20 @@ public class User {
     public void withdraw() {
         this.status = UserStatus.WITHDRAWN;
     }
+
+    /**
+     * 온도 업데이트 (리뷰 평점에 따라)
+     * 온도 범위: 0 ~ 100
+     */
+    public void updateTemperature(BigDecimal delta) {
+        BigDecimal newTemp = this.temperature.add(delta);
+        // 최소 0, 최대 100으로 제한
+        if (newTemp.compareTo(BigDecimal.ZERO) < 0) {
+            this.temperature = BigDecimal.ZERO;
+        } else if (newTemp.compareTo(BigDecimal.valueOf(100)) > 0) {
+            this.temperature = BigDecimal.valueOf(100);
+        } else {
+            this.temperature = newTemp;
+        }
+    }
 }

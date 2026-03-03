@@ -92,7 +92,14 @@ export const startKakaoLogin = async (): Promise<KakaoLoginResult> => {
 
   console.log('[Kakao] Session ID:', sessionId);
   console.log('[Kakao] Backend Callback URL:', backendCallbackUrl);
+  console.log('[Kakao] KAKAO_CLIENT_ID:', KAKAO_CLIENT_ID ? `${KAKAO_CLIENT_ID.substring(0, 8)}...` : 'NOT SET');
   console.log('[Kakao] State:', state);
+
+  // KAKAO_CLIENT_ID 검증
+  if (!KAKAO_CLIENT_ID) {
+    console.error('[Kakao] KAKAO_CLIENT_ID is not set!');
+    return { success: false, error: 'Kakao Client ID가 설정되지 않았습니다.' };
+  }
 
   // 카카오 인증 URL 생성
   const authUrl =
@@ -103,7 +110,7 @@ export const startKakaoLogin = async (): Promise<KakaoLoginResult> => {
     `&state=${state}` +
     `&scope=profile_nickname,profile_image,account_email`;
 
-  console.log('[Kakao] Opening auth URL...');
+  console.log('[Kakao] Opening auth URL:', authUrl.substring(0, 100) + '...');
 
   return new Promise((resolve) => {
     let resolved = false;

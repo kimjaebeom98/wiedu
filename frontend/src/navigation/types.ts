@@ -48,4 +48,14 @@ export type RootStackParamList = {
       longitude: number;
     }) => void;
   };
+  ReviewWrite: {
+    studyId: number;
+    studyTitle: string;
+    leaderName: string;
+    leaderProfileImage?: string;
+  };
+  MemberReview: {
+    studyId: number;
+    studyTitle: string;
+  };
 };

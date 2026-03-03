@@ -4,6 +4,9 @@ import com.wiedu.domain.entity.Study;
 import com.wiedu.domain.entity.StudyLeaderReview;
 import com.wiedu.domain.entity.User;
 import com.wiedu.domain.enums.MemberStatus;
+import com.wiedu.domain.enums.StudyStatus;
+
+import java.math.BigDecimal;
 import com.wiedu.dto.review.CreateReviewRequest;
 import com.wiedu.dto.review.StudyLeaderReviewResponse;
 import com.wiedu.dto.review.StudyLeaderReviewsResponse;
@@ -54,6 +57,11 @@ public class ReviewService {
         Study study = findStudyById(studyId);
         User reviewer = findUserById(reviewerId);
 
+        // 스터디 완료 여부 확인
+        if (study.getStatus() != StudyStatus.COMPLETED) {
+            throw new BusinessException(ErrorCode.REVIEW_STUDY_NOT_COMPLETED);
+        }
+
         // 스터디 멤버 여부 확인
         boolean isMember = studyMemberRepository.existsByStudyAndUserAndStatus(study, reviewer, MemberStatus.ACTIVE);
         if (!isMember) {
@@ -76,7 +84,28 @@ public class ReviewService {
                 .build();
 
         StudyLeaderReview saved = reviewRepository.save(review);
+
+        // 스터디장 온도 업데이트 (리뷰 평점 기반)
+        BigDecimal temperatureDelta = calculateTemperatureDelta(request.rating());
+        leader.updateTemperature(temperatureDelta);
+        userRepository.save(leader);
+
         return StudyLeaderReviewResponse.from(saved);
+    }
+
+    /**
+     * 리뷰 평점에 따른 온도 변화량 계산
+     * 5점: +0.3, 4점: +0.2, 3점: +0.1, 2점: -0.1, 1점: -0.2
+     */
+    private BigDecimal calculateTemperatureDelta(int rating) {
+        return switch (rating) {
+            case 5 -> BigDecimal.valueOf(0.3);
+            case 4 -> BigDecimal.valueOf(0.2);
+            case 3 -> BigDecimal.valueOf(0.1);
+            case 2 -> BigDecimal.valueOf(-0.1);
+            case 1 -> BigDecimal.valueOf(-0.2);
+            default -> BigDecimal.ZERO;
+        };
     }
 
     // === Helper Methods ===
