@@ -529,4 +529,46 @@ export const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#71717A',
   },
+
+  // Member Only
+  memberOnlyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingBottom: 100,
+  },
+  memberOnlyIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#8B5CF620',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  memberOnlyTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  memberOnlyText: {
+    fontSize: 14,
+    color: '#71717A',
+    textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 24,
+  },
+  memberOnlyBtn: {
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    backgroundColor: '#8B5CF6',
+    borderRadius: 12,
+  },
+  memberOnlyBtnText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
 });

@@ -1,9 +1,9 @@
 package com.wiedu.dto.study;
 
 import com.wiedu.domain.entity.Study;
-import com.wiedu.domain.entity.StudyCurriculum;
 import com.wiedu.domain.entity.StudyRule;
 import com.wiedu.domain.entity.StudyTag;
+import com.wiedu.domain.enums.MemberRole;
 import com.wiedu.domain.enums.StudyStatus;
 import com.wiedu.dto.user.UserResponse;
 
@@ -43,10 +43,18 @@ public record StudyResponse(
         List<RuleResponse> rules,
         LocalDateTime startDate,
         LocalDateTime endDate,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        // 멤버십 정보 (로그인 사용자 기준)
+        Boolean isMember,
+        String memberRole
 ) {
-    // Entity → DTO 변환
+    // Entity → DTO 변환 (비로그인 사용자용)
     public static StudyResponse from(Study study) {
+        return from(study, null, null);
+    }
+
+    // Entity → DTO 변환 (로그인 사용자용 - 멤버십 정보 포함)
+    public static StudyResponse from(Study study, Boolean isMember, MemberRole memberRole) {
         return new StudyResponse(
                 study.getId(),
                 study.getTitle(),
@@ -81,7 +89,9 @@ public record StudyResponse(
                         .toList(),
                 study.getStartDate(),
                 study.getEndDate(),
-                study.getCreatedAt()
+                study.getCreatedAt(),
+                isMember,
+                memberRole != null ? memberRole.name() : null
         );
     }
 

@@ -42,10 +42,12 @@ public class StudyController {
     /**
      * 스터디 상세 조회
      * GET /api/studies/{studyId}
+     * 로그인된 사용자의 경우 멤버십 정보(isMember, memberRole) 포함
      */
     @GetMapping("/{studyId}")
     public ResponseEntity<StudyResponse> getStudy(@PathVariable Long studyId) {
-        StudyResponse response = studyService.findById(studyId);
+        Long userId = SecurityUtils.isAuthenticated() ? SecurityUtils.getCurrentUserId() : null;
+        StudyResponse response = studyService.findById(studyId, userId);
         return ResponseEntity.ok(response);
     }
 

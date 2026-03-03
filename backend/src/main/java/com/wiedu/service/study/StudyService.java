@@ -137,12 +137,34 @@ public class StudyService {
     }
 
     /**
-     * 스터디 상세 조회 (N+1 방지)
+     * 스터디 상세 조회 (N+1 방지) - 비로그인 사용자용
      */
     public StudyResponse findById(Long studyId) {
         Study study = studyRepository.findByIdWithDetails(studyId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
         return StudyResponse.from(study);
+    }
+
+    /**
+     * 스터디 상세 조회 (N+1 방지) - 로그인 사용자용 (멤버십 정보 포함)
+     */
+    public StudyResponse findById(Long studyId, Long userId) {
+        Study study = studyRepository.findByIdWithDetails(studyId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
+
+        if (userId == null) {
+            return StudyResponse.from(study);
+        }
+
+        // 멤버십 확인
+        User user = userService.findUserEntityById(userId);
+        java.util.Optional<StudyMember> membership = studyMemberRepository.findByStudyAndUser(study, user);
+
+        if (membership.isPresent() && membership.get().getStatus() == com.wiedu.domain.enums.MemberStatus.ACTIVE) {
+            return StudyResponse.from(study, true, membership.get().getRole());
+        } else {
+            return StudyResponse.from(study, false, null);
+        }
     }
 
     /**

@@ -279,18 +279,56 @@ export default function StudyDetailScreen() {
       </View>
 
       {activeTab === 'board' ? (
-        <BoardListView
-          studyId={studyId}
-          onPostPress={(postId) => navigation.navigate('BoardPostDetail', { studyId, postId })}
-          onCreatePress={() => {
-              const leaderId = study?.leader?.id;
-              const isLeader = currentUserId !== null && leaderId !== undefined &&
-                Number(currentUserId) === Number(leaderId);
-              navigation.navigate('BoardPostCreate', { studyId, isLeader });
-            }}
-        />
+        // 게시판 - 멤버만 접근 가능
+        study.isMember ? (
+          <BoardListView
+            studyId={studyId}
+            onPostPress={(postId) => navigation.navigate('BoardPostDetail', { studyId, postId })}
+            onCreatePress={() => {
+                const leaderId = study?.leader?.id;
+                const isLeader = currentUserId !== null && leaderId !== undefined &&
+                  Number(currentUserId) === Number(leaderId);
+                navigation.navigate('BoardPostCreate', { studyId, isLeader });
+              }}
+          />
+        ) : (
+          <View style={styles.memberOnlyContainer}>
+            <View style={styles.memberOnlyIcon}>
+              <Feather name="lock" size={32} color="#8B5CF6" />
+            </View>
+            <Text style={styles.memberOnlyTitle}>멤버 전용 공간입니다</Text>
+            <Text style={styles.memberOnlyText}>
+              게시판은 스터디 멤버만 이용할 수 있습니다.{'\n'}
+              스터디에 참여해보세요!
+            </Text>
+            {study.status === 'RECRUITING' && (
+              <TouchableOpacity style={styles.memberOnlyBtn} onPress={handleJoinStudy}>
+                <Text style={styles.memberOnlyBtnText}>참여 신청하기</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )
       ) : activeTab === 'gallery' ? (
-        <GalleryListView studyId={studyId} />
+        // 갤러리 - 멤버만 접근 가능
+        study.isMember ? (
+          <GalleryListView studyId={studyId} />
+        ) : (
+          <View style={styles.memberOnlyContainer}>
+            <View style={styles.memberOnlyIcon}>
+              <Feather name="lock" size={32} color="#8B5CF6" />
+            </View>
+            <Text style={styles.memberOnlyTitle}>멤버 전용 공간입니다</Text>
+            <Text style={styles.memberOnlyText}>
+              사진첩은 스터디 멤버만 이용할 수 있습니다.{'\n'}
+              스터디에 참여해보세요!
+            </Text>
+            {study.status === 'RECRUITING' && (
+              <TouchableOpacity style={styles.memberOnlyBtn} onPress={handleJoinStudy}>
+                <Text style={styles.memberOnlyBtnText}>참여 신청하기</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )
       ) : (
       <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {activeTab === 'intro' && (

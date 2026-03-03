@@ -15,6 +15,7 @@ export type DurationType =
   | 'TWENTY_FOUR_WEEKS'
   | 'LONG_TERM';
 export type StudyStatus = 'RECRUITING' | 'IN_PROGRESS' | 'COMPLETED' | 'CLOSED';
+export type MemberRole = 'LEADER' | 'MEMBER';
 
 export interface Category {
   id: number;
@@ -150,6 +151,9 @@ export interface StudyDetailResponse {
   startDate?: string;
   endDate?: string;
   createdAt: string;
+  // 멤버십 정보 (로그인 사용자 기준)
+  isMember?: boolean;
+  memberRole?: MemberRole;
 }
 
 // Study response from API (full detail)
