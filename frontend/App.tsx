@@ -27,6 +27,7 @@ import ReviewWriteScreen from './src/screens/ReviewWriteScreen';
 import MemberReviewScreen from './src/screens/MemberReviewScreen';
 import ApplicantManagementScreen from './src/screens/applicant-management/ApplicantManagementScreen';
 import { getAccessToken } from './src/storage/token';
+import { getMyProfile } from './src/api/profile';
 import { RootStackParamList } from './src/navigation/types';
 
 type LocationSearchRouteProp = RouteProp<RootStackParamList, 'LocationSearch'>;
@@ -61,6 +62,7 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 export default function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(true);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   useEffect(() => {
@@ -70,7 +72,20 @@ export default function App() {
   const checkAuthentication = async () => {
     try {
       const token = await getAccessToken();
-      setIsAuthenticated(!!token);
+      if (token) {
+        setIsAuthenticated(true);
+        // 토큰이 있으면 온보딩 완료 상태도 확인
+        try {
+          const profile = await getMyProfile();
+          setOnboardingCompleted(profile.onboardingCompleted);
+        } catch (profileError) {
+          console.error('Failed to get profile:', profileError);
+          // 프로필 조회 실패 시 온보딩 완료로 간주 (기존 사용자 호환)
+          setOnboardingCompleted(true);
+        }
+      } else {
+        setIsAuthenticated(false);
+      }
     } catch (error) {
       console.error('Failed to check authentication:', error);
       setIsAuthenticated(false);
@@ -107,7 +122,7 @@ export default function App() {
       <StatusBar style="light" />
       <NavigationContainer>
         <Stack.Navigator
-          initialRouteName={isAuthenticated ? 'Home' : 'Login'}
+          initialRouteName={isAuthenticated ? (onboardingCompleted ? 'Home' : 'Onboarding') : 'Login'}
           screenOptions={{
             headerShown: false,
             contentStyle: { backgroundColor: '#18181B' },
