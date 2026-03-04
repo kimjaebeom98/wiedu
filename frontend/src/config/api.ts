@@ -8,6 +8,9 @@ const NGROK_URL = 'https://f72a-121-140-123-64.ngrok-free.app';
 
 // Use Railway in production, ngrok/localhost in development
 export const getBaseURL = (): string => {
+  // 에뮬레이터 테스트용 (임시)
+  // return 'http://10.0.2.2:8080';
+
   if (__DEV__ === false) {
     return RAILWAY_URL;
   }

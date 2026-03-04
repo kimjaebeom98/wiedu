@@ -43,3 +43,5 @@ uploads/
 # Temporary Claude docs
 **/CLAUDE.md
 !/.claude/
+frontend/.env.local
+*.apk
