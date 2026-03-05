@@ -9,7 +9,7 @@ import {
   Platform,
   DeviceEventEmitter,
 } from 'react-native';
-import MapView, { Region } from 'react-native-maps';
+import KakaoMapView, { Region, KakaoMapViewRef } from '../components/KakaoMapView';
 import * as Location from 'expo-location';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -55,7 +55,7 @@ export default function LocationPickerScreen() {
   const route = useRoute<LocationPickerRouteProp>();
   const { onSelect, initialLocation, eventName } = route.params;
   const insets = useSafeAreaInsets();
-  const mapRef = useRef<MapView>(null);
+  const mapRef = useRef<KakaoMapViewRef>(null);
 
   const [region, setRegion] = useState<Region>(() => {
     if (initialLocation) {
@@ -280,15 +280,11 @@ export default function LocationPickerScreen() {
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       {/* Map (full screen) */}
-      <MapView
+      <KakaoMapView
         ref={mapRef}
         style={styles.map}
         initialRegion={region}
         onRegionChangeComplete={handleRegionChangeComplete}
-        showsUserLocation={false}
-        showsMyLocationButton={false}
-        showsCompass={false}
-        userInterfaceStyle="dark"
       />
 
       {/* Search Bar (overlaid on map) */}
