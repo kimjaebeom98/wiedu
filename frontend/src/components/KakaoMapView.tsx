@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
+import Constants from 'expo-constants';
 
-const KAKAO_JAVASCRIPT_KEY = process.env.EXPO_PUBLIC_KAKAO_JAVASCRIPT_KEY;
+const KAKAO_JAVASCRIPT_KEY = Constants.expoConfig?.extra?.kakaoJavascriptKey || '';
 
 export interface Region {
   latitude: number;
