@@ -21,7 +21,6 @@ import MyPageScreen from './src/screens/MyPageScreen';
 import StudyLeaderScreen from './src/screens/StudyLeaderScreen';
 import ProfileEditScreen from './src/screens/ProfileEditScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
-import LocationPickerScreen from './src/screens/LocationPickerScreen';
 import LocationSearchScreenBase, { LocationData } from './src/screens/LocationSearchScreen';
 import RegionPickerScreen from './src/screens/RegionPickerScreen';
 import ReviewWriteScreen from './src/screens/ReviewWriteScreen';
@@ -146,7 +145,6 @@ export default function App() {
           <Stack.Screen name="StudyLeader" component={StudyLeaderScreen} />
           <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
           <Stack.Screen name="Settings" component={SettingsScreen} />
-          <Stack.Screen name="LocationPicker" component={LocationPickerScreen} />
           <Stack.Screen name="LocationSearch" component={LocationSearchScreen} />
           <Stack.Screen name="RegionPicker" component={RegionPickerScreen} />
           <Stack.Screen name="ReviewWrite" component={ReviewWriteScreen} />
