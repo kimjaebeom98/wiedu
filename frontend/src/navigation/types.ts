@@ -48,6 +48,14 @@ export type RootStackParamList = {
       longitude: number;
     }) => void;
   };
+  RegionPicker: {
+    onSelect?: (location: {
+      address: string;
+      latitude: number;
+      longitude: number;
+    }) => void;
+    initialRegion?: string; // 예: "서울특별시 강남구"
+  };
   ReviewWrite: {
     studyId: number;
     studyTitle: string;
