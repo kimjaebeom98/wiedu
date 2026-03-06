@@ -8,7 +8,6 @@ import {
   StatusBar,
   ActivityIndicator,
   RefreshControl,
-  DeviceEventEmitter,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -156,40 +155,6 @@ export default function HomeScreen() {
     init();
   }, [loadData, loadInitialLocation, loadNearbyStudies]);
 
-  // 위치 선택 이벤트 리스너
-  useEffect(() => {
-    const subscription = DeviceEventEmitter.addListener(
-      'HOME_LOCATION_SELECTED',
-      async (location: {
-        address: string;
-        addressDetail: string;
-        region: string;
-        city: string;
-        district: string;
-        latitude: number;
-        longitude: number;
-      }) => {
-        const displayName = formatLocationDisplay(location.region, location.city, location.district)
-          || formatLocationFromAddress(location.address);
-
-        const newLocation: SelectedLocation = {
-          latitude: location.latitude,
-          longitude: location.longitude,
-          displayName: displayName || location.address,
-          fullAddress: location.address,
-        };
-
-        setSelectedLocation(newLocation);
-        setDisplayRegion(newLocation.displayName);
-
-        // 새 위치로 스터디 다시 로드
-        loadNearbyStudies(newLocation);
-      }
-    );
-
-    return () => subscription.remove();
-  }, [loadNearbyStudies]);
-
   // 화면 포커스 시 프로필 지역 다시 로드 (프로필 수정 반영)
   const lastProfileRegionRef = useRef<string | null>(null);
 
@@ -250,14 +215,24 @@ export default function HomeScreen() {
   }, [loadData, loadNearbyStudies]);
 
   const handleLocationPress = useCallback(() => {
-    navigation.navigate('LocationPicker', {
-      eventName: 'HOME_LOCATION_SELECTED',
-      initialLocation: selectedLocation ? {
-        latitude: selectedLocation.latitude,
-        longitude: selectedLocation.longitude,
-      } : undefined,
+    navigation.navigate('RegionPicker', {
+      onSelect: async (location: { address: string; latitude: number; longitude: number }) => {
+        const displayName = formatLocationFromAddress(location.address);
+        setDisplayRegion(displayName);
+
+        const newLocation: SelectedLocation = {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          displayName,
+          fullAddress: location.address,
+        };
+        setSelectedLocation(newLocation);
+
+        // 새 위치로 근처 스터디 로드
+        loadNearbyStudies(newLocation);
+      },
     });
-  }, [navigation, selectedLocation]);
+  }, [navigation, loadNearbyStudies]);
 
   const getCategoryIcon = (code: string): string => {
     return CATEGORY_ICONS[code] || 'folder';

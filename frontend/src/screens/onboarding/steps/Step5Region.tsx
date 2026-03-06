@@ -52,7 +52,7 @@ export default function Step5Region({ data, updateData, onOpenLocationPicker }: 
         <View style={styles.hintBox}>
           <Feather name="info" size={16} color="#71717A" />
           <Text style={styles.hintText}>
-            지도에서 주로 스터디하는 위치를 선택하면{'\n'}
+            주로 스터디하는 지역을 선택하면{'\n'}
             근처 스터디를 더 쉽게 찾을 수 있어요
           </Text>
         </View>

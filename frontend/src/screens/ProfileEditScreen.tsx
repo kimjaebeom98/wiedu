@@ -262,7 +262,8 @@ export default function ProfileEditScreen() {
             <TouchableOpacity
               style={styles.inputContainer}
               onPress={() =>
-                navigation.navigate('LocationPicker', {
+                navigation.navigate('RegionPicker', {
+                  initialRegion: region || undefined,
                   onSelect: (location) => {
                     setRegion(location.address);
                     setLatitude(location.latitude);

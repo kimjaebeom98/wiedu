@@ -124,8 +124,8 @@ export default function OnboardingScreen({ navigation, route }: OnboardingScreen
   }, [currentStep]);
 
   const handleOpenLocationPicker = useCallback(() => {
-    navigation.navigate('LocationPicker', {
-      onSelect: (location: { address: string; addressDetail: string; latitude: number; longitude: number }) => {
+    navigation.navigate('RegionPicker', {
+      onSelect: (location: { address: string; latitude: number; longitude: number }) => {
         updateData('region', location.address);
         updateData('latitude', location.latitude);
         updateData('longitude', location.longitude);
@@ -161,7 +161,7 @@ export default function OnboardingScreen({ navigation, route }: OnboardingScreen
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#18181B" />
-        <KeyboardAvoidingView style={styles.keyboardView} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <KeyboardAvoidingView style={styles.keyboardView} behavior={Platform.OS === 'ios' ? 'padding' : undefined} keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}>
           <View style={styles.content}>
             {/* Header */}
             <View style={styles.header}>
