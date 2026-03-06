@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useCallback, forwardRef, useImperativeHandle } from 'react';
+import React, { useRef, useCallback, forwardRef, useImperativeHandle } from 'react';
 import { StyleSheet, View, ActivityIndicator } from 'react-native';
 import { WebView, WebViewMessageEvent } from 'react-native-webview';
 import Constants from 'expo-constants';
@@ -72,6 +72,10 @@ const KakaoMapView = forwardRef<KakaoMapViewRef, KakaoMapViewProps>(
             });
           } else if (data.type === 'mapLoaded') {
             setIsLoaded(true);
+          } else if (data.type === 'error') {
+            console.error('KakaoMap Error:', data.message);
+          } else if (data.type === 'debug') {
+            console.log('KakaoMap Debug - Origin:', data.origin, 'Href:', data.href);
           }
         } catch (e) {
           console.warn('KakaoMapView message parse error:', e);
@@ -88,52 +92,89 @@ const KakaoMapView = forwardRef<KakaoMapViewRef, KakaoMapViewProps>(
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #18181B; }
     #map { width: 100%; height: 100%; }
+    #error { color: white; padding: 20px; font-family: sans-serif; display: none; }
   </style>
 </head>
 <body>
   <div id="map"></div>
+  <div id="error"></div>
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('error').innerHTML = 'Error: ' + msg + '<br>Line: ' + line;
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'error',
+        message: msg,
+        url: url,
+        line: line
+      }));
+      return false;
+    };
+
+    window.ReactNativeWebView.postMessage(JSON.stringify({
+      type: 'debug',
+      origin: window.location.origin,
+      href: window.location.href
+    }));
+  </script>
   <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JAVASCRIPT_KEY}&autoload=false"></script>
   <script>
     let map = null;
     let debounceTimer = null;
 
-    kakao.maps.load(function() {
-      const container = document.getElementById('map');
-      const options = {
-        center: new kakao.maps.LatLng(${region.latitude}, ${region.longitude}),
-        level: 3
-      };
+    if (typeof kakao === 'undefined') {
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('error').innerHTML = 'Kakao SDK failed to load. Check network and domain settings.';
+      window.ReactNativeWebView.postMessage(JSON.stringify({
+        type: 'error',
+        message: 'Kakao SDK not loaded'
+      }));
+    } else {
+      kakao.maps.load(function() {
+        try {
+          const container = document.getElementById('map');
+          const options = {
+            center: new kakao.maps.LatLng(${region.latitude}, ${region.longitude}),
+            level: 3
+          };
 
-      map = new kakao.maps.Map(container, options);
-      window.kakaoMap = map;
+          map = new kakao.maps.Map(container, options);
+          window.kakaoMap = map;
 
-      // Notify React Native that map is loaded
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'mapLoaded' }));
+          window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'mapLoaded' }));
 
-      // Listen for map center changes (drag, zoom)
-      kakao.maps.event.addListener(map, 'center_changed', function() {
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(function() {
-          const center = map.getCenter();
-          const bounds = map.getBounds();
-          const ne = bounds.getNorthEast();
-          const sw = bounds.getSouthWest();
+          kakao.maps.event.addListener(map, 'center_changed', function() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(function() {
+              const center = map.getCenter();
+              const bounds = map.getBounds();
+              const ne = bounds.getNorthEast();
+              const sw = bounds.getSouthWest();
 
-          const latDelta = Math.abs(ne.getLat() - sw.getLat());
-          const lngDelta = Math.abs(ne.getLng() - sw.getLng());
+              const latDelta = Math.abs(ne.getLat() - sw.getLat());
+              const lngDelta = Math.abs(ne.getLng() - sw.getLng());
 
+              window.ReactNativeWebView.postMessage(JSON.stringify({
+                type: 'regionChange',
+                latitude: center.getLat(),
+                longitude: center.getLng(),
+                latitudeDelta: latDelta,
+                longitudeDelta: lngDelta
+              }));
+            }, 300);
+          });
+        } catch(e) {
+          document.getElementById('error').style.display = 'block';
+          document.getElementById('error').innerHTML = 'Map init error: ' + e.message;
           window.ReactNativeWebView.postMessage(JSON.stringify({
-            type: 'regionChange',
-            latitude: center.getLat(),
-            longitude: center.getLng(),
-            latitudeDelta: latDelta,
-            longitudeDelta: lngDelta
+            type: 'error',
+            message: e.message
           }));
-        }, 300);
+        }
       });
-    });
+    }
   </script>
 </body>
 </html>
@@ -143,9 +184,11 @@ const KakaoMapView = forwardRef<KakaoMapViewRef, KakaoMapViewProps>(
       <View style={[styles.container, style]}>
         <WebView
           ref={webViewRef}
-          source={{ html: htmlContent }}
+          source={{ html: htmlContent, baseUrl: 'http://localhost:3000/' }}
           style={styles.webview}
           onMessage={handleMessage}
+          onError={(e) => console.error('WebView error:', e.nativeEvent)}
+          onHttpError={(e) => console.error('WebView HTTP error:', e.nativeEvent)}
           javaScriptEnabled={true}
           domStorageEnabled={true}
           scrollEnabled={false}
@@ -155,6 +198,10 @@ const KakaoMapView = forwardRef<KakaoMapViewRef, KakaoMapViewProps>(
           showsHorizontalScrollIndicator={false}
           cacheEnabled={true}
           originWhitelist={['*']}
+          mixedContentMode="always"
+          allowUniversalAccessFromFileURLs={true}
+          allowFileAccessFromFileURLs={true}
+          allowFileAccess={true}
         />
         {!isLoaded && (
           <View style={styles.loadingOverlay}>
