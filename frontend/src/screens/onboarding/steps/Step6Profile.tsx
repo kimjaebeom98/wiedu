@@ -62,6 +62,23 @@ export default function Step6Profile({ data, updateData }: StepProps) {
 
   return (
     <View style={styles.profileContainer}>
+      {/* Nickname - 먼저 표시 */}
+      <View style={styles.inputContainer}>
+        <Text style={styles.inputLabel}>닉네임 (필수)</Text>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            style={styles.input}
+            placeholder="닉네임을 입력해주세요"
+            placeholderTextColor="#52525B"
+            value={data.nickname}
+            onChangeText={(text) => updateData('nickname', text)}
+            autoCapitalize="none"
+            autoCorrect={false}
+            maxLength={20}
+          />
+        </View>
+      </View>
+
       {/* Avatar with image picker */}
       <TouchableOpacity
         style={styles.avatarContainer}
@@ -88,26 +105,9 @@ export default function Step6Profile({ data, updateData }: StepProps) {
           )}
         </View>
         <Text style={styles.avatarText}>
-          {uploading ? '업로드 중...' : data.profileImage ? '사진 변경' : '프로필 사진 추가'}
+          {uploading ? '업로드 중...' : data.profileImage ? '사진 변경' : '프로필 사진 추가 (선택)'}
         </Text>
       </TouchableOpacity>
-
-      {/* Nickname */}
-      <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>닉네임 (필수)</Text>
-        <View style={styles.inputWrapper}>
-          <TextInput
-            style={styles.input}
-            placeholder="닉네임을 입력해주세요"
-            placeholderTextColor="#52525B"
-            value={data.nickname}
-            onChangeText={(text) => updateData('nickname', text)}
-            autoCapitalize="none"
-            autoCorrect={false}
-            maxLength={20}
-          />
-        </View>
-      </View>
     </View>
   );
 }
