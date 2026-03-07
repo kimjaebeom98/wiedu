@@ -19,18 +19,11 @@ import { getMyStudyRequests, StudyRequestResponse } from '../api/study';
 import { MyProfile, MyStudy } from '../types/profile';
 import { clearTokens } from '../storage/token';
 import { formatLocationFromAddress } from '../utils/location';
-
-const STATUS_LABELS: Record<string, string> = {
-  PENDING: '대기중',
-  APPROVED: '승인됨',
-  REJECTED: '거절됨',
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  PENDING: '#F59E0B',
-  APPROVED: '#22C55E',
-  REJECTED: '#EF4444',
-};
+import {
+  APPLICATION_STATUS_LABELS,
+  APPLICATION_STATUS_COLORS,
+  ApplicationStatus,
+} from '../constants/studyStatus';
 
 const CATEGORY_COLORS: Record<string, string> = {
   IT_DEV: '#8B5CF6',
@@ -337,13 +330,13 @@ export default function MyPageScreen() {
                 </View>
                 <View style={[
                   styles.applicationStatusBadge,
-                  { backgroundColor: `${STATUS_COLORS[application.status]}20` }
+                  { backgroundColor: `${APPLICATION_STATUS_COLORS[application.status as ApplicationStatus]}20` }
                 ]}>
                   <Text style={[
                     styles.applicationStatusText,
-                    { color: STATUS_COLORS[application.status] }
+                    { color: APPLICATION_STATUS_COLORS[application.status as ApplicationStatus] }
                   ]}>
-                    {STATUS_LABELS[application.status]}
+                    {APPLICATION_STATUS_LABELS[application.status as ApplicationStatus]}
                   </Text>
                 </View>
               </TouchableOpacity>
