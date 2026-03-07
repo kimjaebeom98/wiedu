@@ -41,12 +41,10 @@ export default function Step3Schedule({ data, updateData, toggleDay }: Step3Prop
   const handleRegionSelect = (location: { address: string; latitude: number; longitude: number }) => {
     const parts = location.address.split(' ');
     const region = parts[0] || '';
-    const district = parts.slice(1).join(' ') || '';
+    const city = parts.slice(1).join(' ') || '';
 
-    updateData('meetingLocation', location.address);
     updateData('meetingRegion', region);
-    updateData('meetingCity', district);
-    updateData('meetingDistrict', '');
+    updateData('meetingCity', city);
     updateData('meetingLatitude', location.latitude);
     updateData('meetingLongitude', location.longitude);
   };
@@ -239,14 +237,14 @@ export default function Step3Schedule({ data, updateData, toggleDay }: Step3Prop
             onPress={() => {
               navigation.navigate('RegionPicker', {
                 onSelect: handleRegionSelect,
-                initialRegion: data.meetingLocation || undefined,
+                initialRegion: data.meetingRegion ? `${data.meetingRegion} ${data.meetingCity}`.trim() : undefined,
               });
             }}
             activeOpacity={0.7}
           >
             <Feather name="map-pin" size={18} color="#8B5CF6" />
-            <Text style={[styles.timePickerText, !data.meetingLocation && styles.timePickerPlaceholder]}>
-              {data.meetingLocation || '활동 지역을 선택해주세요'}
+            <Text style={[styles.timePickerText, !data.meetingRegion && styles.timePickerPlaceholder]}>
+              {data.meetingRegion ? `${data.meetingRegion} ${data.meetingCity}`.trim() : '활동 지역을 선택해주세요'}
             </Text>
             <Feather name="chevron-right" size={18} color="#71717A" />
           </TouchableOpacity>

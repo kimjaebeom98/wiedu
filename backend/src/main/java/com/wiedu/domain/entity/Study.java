@@ -86,10 +86,6 @@ public class Study {
     @Comment("사용 플랫폼/장소")
     private String platform;
 
-    @Column(length = 200)
-    @Comment("오프라인 모임 장소 주소 (전체)")
-    private String meetingLocation;
-
     @Column(length = 50)
     @Comment("모임 장소 시/도 (예: 서울특별시)")
     private String meetingRegion;
@@ -97,10 +93,6 @@ public class Study {
     @Column(length = 50)
     @Comment("모임 장소 시/군/구 (예: 강남구)")
     private String meetingCity;
-
-    @Column(length = 50)
-    @Comment("모임 장소 동/읍/면 (예: 역삼동)")
-    private String meetingDistrict;
 
     @Comment("모임 장소 위도")
     private Double meetingLatitude;
@@ -177,7 +169,7 @@ public class Study {
     public Study(String title, String description, StudyCategory category, StudySubcategory subcategory,
                  String coverImageUrl, String targetAudience, String goals,
                  StudyMethod studyMethod, String daysOfWeek, String time, DurationType durationType, String platform,
-                 String meetingLocation, String meetingRegion, String meetingCity, String meetingDistrict,
+                 String meetingRegion, String meetingCity,
                  Double meetingLatitude, Double meetingLongitude,
                  User leader, Integer maxMembers, Integer deposit, String depositRefundPolicy, String requirements,
                  LocalDateTime startDate, LocalDateTime endDate) {
@@ -193,10 +185,8 @@ public class Study {
         this.time = time;
         this.durationType = durationType;
         this.platform = platform;
-        this.meetingLocation = meetingLocation;
         this.meetingRegion = meetingRegion;
         this.meetingCity = meetingCity;
-        this.meetingDistrict = meetingDistrict;
         this.meetingLatitude = meetingLatitude;
         this.meetingLongitude = meetingLongitude;
         this.leader = leader;

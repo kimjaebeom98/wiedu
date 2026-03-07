@@ -407,11 +407,11 @@ export default function HomeScreen() {
                       {study.currentMembers}/{study.maxMembers}명
                     </Text>
                   </View>
-                  {(study.meetingRegion || study.meetingCity || study.meetingLocation) && (
+                  {(study.meetingRegion || study.meetingCity) && (
                     <View style={styles.studyMeta}>
                       <Feather name="map-pin" size={14} color="#71717A" />
                       <Text style={styles.studyMetaText} numberOfLines={1}>
-                        {formatLocationDisplay(study.meetingRegion, study.meetingCity, study.meetingDistrict) || formatLocationFromAddress(study.meetingLocation)}
+                        {formatLocationDisplay(study.meetingRegion, study.meetingCity)}
                       </Text>
                     </View>
                   )}
@@ -494,11 +494,11 @@ export default function HomeScreen() {
                       {study.currentMembers}/{study.maxMembers}명
                     </Text>
                   </View>
-                  {(study.meetingRegion || study.meetingCity || study.meetingLocation) && (
+                  {(study.meetingRegion || study.meetingCity) && (
                     <View style={styles.studyMeta}>
                       <Feather name="map-pin" size={14} color="#71717A" />
                       <Text style={styles.studyMetaText} numberOfLines={1}>
-                        {formatLocationDisplay(study.meetingRegion, study.meetingCity, study.meetingDistrict) || formatLocationFromAddress(study.meetingLocation)}
+                        {formatLocationDisplay(study.meetingRegion, study.meetingCity)}
                       </Text>
                     </View>
                   )}

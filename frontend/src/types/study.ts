@@ -60,10 +60,8 @@ export interface StudyCreateData {
   time: string;
   durationType: DurationType | null;
   platform: string;
-  meetingLocation: string;
   meetingRegion: string;      // 시/도 (서울특별시)
   meetingCity: string;        // 시/군/구 (강남구)
-  meetingDistrict: string;    // 동/읍/면 (역삼동)
   meetingLatitude: number | null;
   meetingLongitude: number | null;
   // Step 4
@@ -91,10 +89,8 @@ export interface StudyCreateRequest {
   time?: string;
   durationType?: DurationType;
   platform?: string;
-  meetingLocation?: string;
   meetingRegion?: string;
   meetingCity?: string;
-  meetingDistrict?: string;
   meetingLatitude?: number;
   meetingLongitude?: number;
   maxMembers: number;
@@ -139,10 +135,8 @@ export interface StudyDetailResponse {
   daysOfWeek?: string;
   time?: string;
   durationType?: DurationType;
-  meetingLocation?: string;
   meetingRegion?: string;
   meetingCity?: string;
-  meetingDistrict?: string;
   deposit?: number;
   depositRefundPolicy?: string;
   requirements?: string;
@@ -182,9 +176,7 @@ export interface StudyListResponse {
   currentMembers: number;
   status: StudyStatus;
   studyMethod: string;
-  meetingLocation?: string;
   meetingRegion?: string;
   meetingCity?: string;
-  meetingDistrict?: string;
   createdAt: string;
 }

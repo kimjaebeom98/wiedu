@@ -89,10 +89,8 @@ public class StudyService {
                 .requirements(request.requirements())
                 .startDate(request.startDate())
                 .endDate(request.endDate())
-                .meetingLocation(request.meetingLocation())
                 .meetingRegion(request.meetingRegion())
                 .meetingCity(request.meetingCity())
-                .meetingDistrict(request.meetingDistrict())
                 .meetingLatitude(request.meetingLatitude())
                 .meetingLongitude(request.meetingLongitude())
                 .build();

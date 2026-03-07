@@ -412,11 +412,11 @@ export default function StudyDetailScreen() {
                     <Text style={styles.scheduleText}>{study.platform}</Text>
                   </View>
                 )}
-                {(study.meetingRegion || study.meetingCity || study.meetingLocation) && (
+                {(study.meetingRegion || study.meetingCity) && (
                   <View style={styles.scheduleRow}>
                     <Feather name="map-pin" size={18} color="#8B5CF6" />
                     <Text style={styles.scheduleText}>
-                      {formatLocationDisplay(study.meetingRegion, study.meetingCity, study.meetingDistrict) || study.meetingLocation}
+                      {[study.meetingRegion, study.meetingCity].filter(Boolean).join(' ')}
                     </Text>
                   </View>
                 )}
