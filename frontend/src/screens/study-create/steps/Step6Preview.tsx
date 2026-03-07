@@ -83,6 +83,13 @@ export default function Step6Preview({ data, categories }: Step6Props) {
         {data.platform && (
           <PreviewInfoItem icon="video" label="플랫폼" value={data.platform} />
         )}
+        {(data.meetingRegion || data.meetingCity) && (
+          <PreviewInfoItem
+            icon="map-pin"
+            label="활동지역"
+            value={[data.meetingRegion, data.meetingCity].filter(Boolean).join(' ')}
+          />
+        )}
       </View>
 
       {/* Target & Goals */}

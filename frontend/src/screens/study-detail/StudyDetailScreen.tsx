@@ -582,7 +582,7 @@ export default function StudyDetailScreen() {
             </View>
 
             {/* Spacer for bottom bar */}
-            <View style={{ height: 160 }} />
+            <View style={{ height: 200 }} />
           </>
         )}
 
