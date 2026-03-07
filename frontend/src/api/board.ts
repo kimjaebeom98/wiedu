@@ -1,4 +1,5 @@
 import { getAuthClient } from './client';
+import { withErrorHandling } from './apiError';
 import {
   BoardPostListItem,
   BoardPostDetail,
@@ -19,16 +20,21 @@ export const fetchBoardPosts = async (
   page: number = 0,
   size: number = 20
 ): Promise<PageResponse<BoardPostListItem>> => {
-  const client = getAuthClient();
-  const params: Record<string, string | number> = { page, size };
-  if (category) {
-    params.category = category;
-  }
-  if (keyword && keyword.trim()) {
-    params.keyword = keyword.trim();
-  }
-  const response = await client.get(`/api/studies/${studyId}/board/posts`, { params });
-  return response.data;
+  return withErrorHandling(
+    async () => {
+      const client = getAuthClient();
+      const params: Record<string, string | number> = { page, size };
+      if (category) {
+        params.category = category;
+      }
+      if (keyword && keyword.trim()) {
+        params.keyword = keyword.trim();
+      }
+      const response = await client.get(`/api/studies/${studyId}/board/posts`, { params });
+      return response.data;
+    },
+    { defaultMessage: '게시글 목록을 불러오는데 실패했습니다.' }
+  );
 };
 
 // 게시글 상세 조회
@@ -36,9 +42,19 @@ export const getBoardPostDetail = async (
   studyId: number,
   postId: number
 ): Promise<BoardPostDetail> => {
-  const client = getAuthClient();
-  const response = await client.get(`/api/studies/${studyId}/board/posts/${postId}`);
-  return response.data;
+  return withErrorHandling(
+    async () => {
+      const client = getAuthClient();
+      const response = await client.get(`/api/studies/${studyId}/board/posts/${postId}`);
+      return response.data;
+    },
+    {
+      defaultMessage: '게시글을 불러오는데 실패했습니다.',
+      errorMessages: {
+        notFound: '게시글을 찾을 수 없습니다.',
+      },
+    }
+  );
 };
 
 // 게시글 작성
@@ -46,9 +62,19 @@ export const createBoardPost = async (
   studyId: number,
   data: BoardPostCreateRequest
 ): Promise<BoardPostDetail> => {
-  const client = getAuthClient();
-  const response = await client.post(`/api/studies/${studyId}/board/posts`, data);
-  return response.data;
+  return withErrorHandling(
+    async () => {
+      const client = getAuthClient();
+      const response = await client.post(`/api/studies/${studyId}/board/posts`, data);
+      return response.data;
+    },
+    {
+      defaultMessage: '게시글 작성에 실패했습니다.',
+      errorMessages: {
+        forbidden: '게시글을 작성할 권한이 없습니다.',
+      },
+    }
+  );
 };
 
 // 게시글 수정
@@ -57,9 +83,20 @@ export const updateBoardPost = async (
   postId: number,
   data: BoardPostUpdateRequest
 ): Promise<BoardPostDetail> => {
-  const client = getAuthClient();
-  const response = await client.put(`/api/studies/${studyId}/board/posts/${postId}`, data);
-  return response.data;
+  return withErrorHandling(
+    async () => {
+      const client = getAuthClient();
+      const response = await client.put(`/api/studies/${studyId}/board/posts/${postId}`, data);
+      return response.data;
+    },
+    {
+      defaultMessage: '게시글 수정에 실패했습니다.',
+      errorMessages: {
+        forbidden: '게시글을 수정할 권한이 없습니다.',
+        notFound: '게시글을 찾을 수 없습니다.',
+      },
+    }
+  );
 };
 
 // 게시글 삭제
@@ -67,8 +104,19 @@ export const deleteBoardPost = async (
   studyId: number,
   postId: number
 ): Promise<void> => {
-  const client = getAuthClient();
-  await client.delete(`/api/studies/${studyId}/board/posts/${postId}`);
+  return withErrorHandling(
+    async () => {
+      const client = getAuthClient();
+      await client.delete(`/api/studies/${studyId}/board/posts/${postId}`);
+    },
+    {
+      defaultMessage: '게시글 삭제에 실패했습니다.',
+      errorMessages: {
+        forbidden: '게시글을 삭제할 권한이 없습니다.',
+        notFound: '게시글을 찾을 수 없습니다.',
+      },
+    }
+  );
 };
 
 // 게시글 좋아요 토글
@@ -76,9 +124,14 @@ export const togglePostLike = async (
   studyId: number,
   postId: number
 ): Promise<LikeToggleResponse> => {
-  const client = getAuthClient();
-  const response = await client.post(`/api/studies/${studyId}/board/posts/${postId}/like`);
-  return response.data;
+  return withErrorHandling(
+    async () => {
+      const client = getAuthClient();
+      const response = await client.post(`/api/studies/${studyId}/board/posts/${postId}/like`);
+      return response.data;
+    },
+    { defaultMessage: '좋아요 처리에 실패했습니다.' }
+  );
 };
 
 // 댓글 작성
@@ -87,12 +140,17 @@ export const createBoardComment = async (
   postId: number,
   content: string
 ): Promise<BoardComment> => {
-  const client = getAuthClient();
-  const response = await client.post(
-    `/api/studies/${studyId}/board/posts/${postId}/comments`,
-    { content }
+  return withErrorHandling(
+    async () => {
+      const client = getAuthClient();
+      const response = await client.post(
+        `/api/studies/${studyId}/board/posts/${postId}/comments`,
+        { content }
+      );
+      return response.data;
+    },
+    { defaultMessage: '댓글 작성에 실패했습니다.' }
   );
-  return response.data;
 };
 
 // 댓글 수정
@@ -102,12 +160,22 @@ export const updateBoardComment = async (
   commentId: number,
   data: BoardCommentUpdateRequest
 ): Promise<BoardComment> => {
-  const client = getAuthClient();
-  const response = await client.put(
-    `/api/studies/${studyId}/board/posts/${postId}/comments/${commentId}`,
-    data
+  return withErrorHandling(
+    async () => {
+      const client = getAuthClient();
+      const response = await client.put(
+        `/api/studies/${studyId}/board/posts/${postId}/comments/${commentId}`,
+        data
+      );
+      return response.data;
+    },
+    {
+      defaultMessage: '댓글 수정에 실패했습니다.',
+      errorMessages: {
+        forbidden: '댓글을 수정할 권한이 없습니다.',
+      },
+    }
   );
-  return response.data;
 };
 
 // 댓글 삭제
@@ -116,9 +184,19 @@ export const deleteBoardComment = async (
   postId: number,
   commentId: number
 ): Promise<void> => {
-  const client = getAuthClient();
-  await client.delete(
-    `/api/studies/${studyId}/board/posts/${postId}/comments/${commentId}`
+  return withErrorHandling(
+    async () => {
+      const client = getAuthClient();
+      await client.delete(
+        `/api/studies/${studyId}/board/posts/${postId}/comments/${commentId}`
+      );
+    },
+    {
+      defaultMessage: '댓글 삭제에 실패했습니다.',
+      errorMessages: {
+        forbidden: '댓글을 삭제할 권한이 없습니다.',
+      },
+    }
   );
 };
 
@@ -128,9 +206,14 @@ export const toggleCommentLike = async (
   postId: number,
   commentId: number
 ): Promise<LikeToggleResponse> => {
-  const client = getAuthClient();
-  const response = await client.post(
-    `/api/studies/${studyId}/board/posts/${postId}/comments/${commentId}/like`
+  return withErrorHandling(
+    async () => {
+      const client = getAuthClient();
+      const response = await client.post(
+        `/api/studies/${studyId}/board/posts/${postId}/comments/${commentId}/like`
+      );
+      return response.data;
+    },
+    { defaultMessage: '좋아요 처리에 실패했습니다.' }
   );
-  return response.data;
 };
