@@ -362,9 +362,14 @@ export default function StudyDetailScreen() {
               key={tab}
               style={styles.tab}
               onPress={() => {
-                setActiveTab(tab);
-                if (tab === 'applicants' && applicants.length === 0) {
-                  loadApplicants();
+                if (tab === 'applicants') {
+                  // 신청자 관리 화면으로 이동
+                  navigation.navigate('ApplicantManagement', {
+                    studyId: study.id,
+                    studyTitle: study.title,
+                  });
+                } else {
+                  setActiveTab(tab);
                 }
               }}
             >
@@ -384,63 +389,7 @@ export default function StudyDetailScreen() {
         })()}
       </View>
 
-      {activeTab === 'applicants' ? (
-        // 신청자 관리 탭
-        <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <View style={styles.applicantsContainer}>
-            {applicantsLoading ? (
-              <ActivityIndicator size="large" color="#8B5CF6" style={{ marginTop: 40 }} />
-            ) : applicants.filter(a => a.status === 'PENDING').length === 0 ? (
-              <View style={styles.emptyApplicants}>
-                <Feather name="users" size={48} color="#3F3F46" />
-                <Text style={styles.emptyApplicantsText}>대기 중인 신청자가 없습니다</Text>
-              </View>
-            ) : (
-              applicants
-                .filter(a => a.status === 'PENDING')
-                .map((applicant) => (
-                  <View key={applicant.id} style={styles.applicantCard}>
-                    <View style={styles.applicantHeader}>
-                      <View style={styles.applicantAvatar}>
-                        <Feather name="user" size={24} color="#8B5CF6" />
-                      </View>
-                      <View style={styles.applicantInfo}>
-                        <Text style={styles.applicantName}>{applicant.userNickname}</Text>
-                        <Text style={styles.applicantDate}>
-                          {new Date(applicant.createdAt).toLocaleDateString('ko-KR', {
-                            month: 'long',
-                            day: 'numeric',
-                          })} 신청
-                        </Text>
-                      </View>
-                    </View>
-                    <View style={styles.applicantMessageContainer}>
-                      <Text style={styles.applicantMessageLabel}>지원 메시지</Text>
-                      <Text style={styles.applicantMessage}>{applicant.message}</Text>
-                    </View>
-                    <View style={styles.applicantActions}>
-                      <TouchableOpacity
-                        style={styles.rejectButton}
-                        onPress={() => handleRejectApplicant(applicant.id)}
-                      >
-                        <Feather name="x" size={18} color="#EF4444" />
-                        <Text style={styles.rejectButtonText}>거절</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.approveButton}
-                        onPress={() => handleApproveApplicant(applicant.id)}
-                      >
-                        <Feather name="check" size={18} color="#FFFFFF" />
-                        <Text style={styles.approveButtonText}>승인</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                ))
-            )}
-          </View>
-          <View style={{ height: 150 }} />
-        </ScrollView>
-      ) : activeTab === 'board' ? (
+      {activeTab === 'board' ? (
         // 게시판 - 멤버만 접근 가능
         study.isMember ? (
           <BoardListView
