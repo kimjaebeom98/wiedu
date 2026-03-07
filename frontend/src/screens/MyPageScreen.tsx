@@ -15,9 +15,22 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { getMyProfile, getMyStudies } from '../api/profile';
+import { getMyStudyRequests, StudyRequestResponse } from '../api/study';
 import { MyProfile, MyStudy } from '../types/profile';
 import { clearTokens } from '../storage/token';
 import { formatLocationFromAddress } from '../utils/location';
+
+const STATUS_LABELS: Record<string, string> = {
+  PENDING: '대기중',
+  APPROVED: '승인됨',
+  REJECTED: '거절됨',
+};
+
+const STATUS_COLORS: Record<string, string> = {
+  PENDING: '#F59E0B',
+  APPROVED: '#22C55E',
+  REJECTED: '#EF4444',
+};
 
 const CATEGORY_COLORS: Record<string, string> = {
   IT_DEV: '#8B5CF6',
@@ -50,18 +63,21 @@ export default function MyPageScreen() {
   const insets = useSafeAreaInsets();
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [myStudies, setMyStudies] = useState<MyStudy[]>([]);
+  const [myApplications, setMyApplications] = useState<StudyRequestResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadProfile = useCallback(async () => {
     try {
       setError(null);
-      const [profileData, studiesData] = await Promise.all([
+      const [profileData, studiesData, applicationsData] = await Promise.all([
         getMyProfile(),
         getMyStudies().catch(() => []),
+        getMyStudyRequests().catch(() => []),
       ]);
       setProfile(profileData);
       setMyStudies(studiesData);
+      setMyApplications(applicationsData);
     } catch (err) {
       console.error('Failed to load profile:', err);
       setError('프로필을 불러오지 못했어요.');
@@ -292,6 +308,44 @@ export default function MyPageScreen() {
                   </View>
                 </View>
                 <Feather name="chevron-right" size={20} color="#71717A" />
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* My Applications Section */}
+        {myApplications.length > 0 && (
+          <View style={styles.myStudySection}>
+            <View style={styles.myStudyHeader}>
+              <Text style={styles.myStudyTitle}>가입 신청 현황</Text>
+              <Text style={styles.applicationCount}>{myApplications.length}건</Text>
+            </View>
+            {myApplications.map((application) => (
+              <TouchableOpacity
+                key={application.id}
+                style={styles.applicationCard}
+                onPress={() => navigation.navigate('StudyDetail', { studyId: application.studyId })}
+              >
+                <View style={styles.applicationInfo}>
+                  <Text style={styles.studyName} numberOfLines={1}>{application.studyTitle}</Text>
+                  <Text style={styles.applicationDate}>
+                    {new Date(application.createdAt).toLocaleDateString('ko-KR', {
+                      month: 'long',
+                      day: 'numeric',
+                    })} 신청
+                  </Text>
+                </View>
+                <View style={[
+                  styles.applicationStatusBadge,
+                  { backgroundColor: `${STATUS_COLORS[application.status]}20` }
+                ]}>
+                  <Text style={[
+                    styles.applicationStatusText,
+                    { color: STATUS_COLORS[application.status] }
+                  ]}>
+                    {STATUS_LABELS[application.status]}
+                  </Text>
+                </View>
               </TouchableOpacity>
             ))}
           </View>
@@ -635,5 +689,35 @@ const styles = StyleSheet.create({
   studyMembers: {
     fontSize: 12,
     color: '#71717A',
+  },
+  applicationCount: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#8B5CF6',
+  },
+  applicationCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#27272A',
+    borderRadius: 12,
+    padding: 16,
+  },
+  applicationInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  applicationDate: {
+    fontSize: 12,
+    color: '#71717A',
+  },
+  applicationStatusBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  applicationStatusText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

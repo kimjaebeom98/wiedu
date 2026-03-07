@@ -1,2 +1,2 @@
 // Local types for StudyDetailScreen
-export type TabType = 'intro' | 'board' | 'gallery';
+export type TabType = 'intro' | 'board' | 'gallery' | 'applicants';

@@ -15,7 +15,16 @@ import { Feather } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
-import { getStudyDetail, closeStudy, completeStudy } from '../../api/study';
+import {
+  getStudyDetail,
+  closeStudy,
+  completeStudy,
+  getMyStudyRequests,
+  getPendingRequests,
+  approveStudyRequest,
+  rejectStudyRequest,
+  StudyRequestResponse,
+} from '../../api/study';
 import { getLeaderReviews } from '../../api/review';
 import { StudyDetailResponse } from '../../types/study';
 import { StudyLeaderReviewsResponse } from '../../types/review';
@@ -79,11 +88,76 @@ export default function StudyDetailScreen() {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [leaderReviews, setLeaderReviews] = useState<StudyLeaderReviewsResponse | null>(null);
   const [processing, setProcessing] = useState(false);
+  const [myApplication, setMyApplication] = useState<StudyRequestResponse | null>(null);
+  const [applicants, setApplicants] = useState<StudyRequestResponse[]>([]);
+  const [applicantsLoading, setApplicantsLoading] = useState(false);
 
   useEffect(() => {
     loadStudyDetail();
     loadCurrentUser();
+    loadMyApplication();
   }, [studyId]);
+
+  const loadMyApplication = async () => {
+    try {
+      const requests = await getMyStudyRequests();
+      const application = requests.find(r => r.studyId === studyId);
+      setMyApplication(application || null);
+    } catch (error) {
+      // 로그인하지 않은 경우 무시
+      console.log('Not logged in or failed to load applications');
+    }
+  };
+
+  const loadApplicants = async () => {
+    setApplicantsLoading(true);
+    try {
+      const data = await getPendingRequests(studyId);
+      setApplicants(data);
+    } catch (error) {
+      console.log('Failed to load applicants or not a leader');
+    } finally {
+      setApplicantsLoading(false);
+    }
+  };
+
+  const handleApproveApplicant = async (requestId: number) => {
+    Alert.alert('승인 확인', '이 신청자를 승인하시겠습니까?', [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '승인',
+        onPress: async () => {
+          try {
+            await approveStudyRequest(requestId);
+            Alert.alert('완료', '신청이 승인되었습니다.');
+            loadApplicants();
+            loadStudyDetail();
+          } catch (error: any) {
+            Alert.alert('오류', error.response?.data?.message || '승인에 실패했습니다.');
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleRejectApplicant = async (requestId: number) => {
+    Alert.alert('거절 확인', '이 신청자를 거절하시겠습니까?', [
+      { text: '취소', style: 'cancel' },
+      {
+        text: '거절',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await rejectStudyRequest(requestId);
+            Alert.alert('완료', '신청이 거절되었습니다.');
+            loadApplicants();
+          } catch (error: any) {
+            Alert.alert('오류', error.response?.data?.message || '거절에 실패했습니다.');
+          }
+        },
+      },
+    ]);
+  };
 
   const loadCurrentUser = async () => {
     try {
@@ -104,6 +178,14 @@ export default function StudyDetailScreen() {
       // Load leader reviews after getting study detail
       if (data.leader?.id) {
         loadLeaderReviews(data.leader.id);
+      }
+      // Load applicants if user is the leader and study is recruiting
+      const userStr = await AsyncStorage.getItem('user');
+      if (userStr) {
+        const user = JSON.parse(userStr);
+        if (data.leader?.id === user.id && data.status === 'RECRUITING') {
+          loadApplicants();
+        }
       }
     } catch (error) {
       console.error('Failed to load study detail:', error);
@@ -261,24 +343,104 @@ export default function StudyDetailScreen() {
 
       {/* Tab Bar */}
       <View style={styles.tabBar}>
-        {(['intro', 'board', 'gallery'] as TabType[]).map(tab => {
-          const labels: Record<TabType, string> = { intro: '소개', board: '게시판', gallery: '사진첩' };
-          return (
+        {(() => {
+          const isLeader = study.leader.id === currentUserId;
+          const showApplicantsTab = isLeader && study.status === 'RECRUITING';
+          const tabs: TabType[] = showApplicantsTab
+            ? ['intro', 'board', 'gallery', 'applicants']
+            : ['intro', 'board', 'gallery'];
+          const labels: Record<TabType, string> = {
+            intro: '소개',
+            board: '게시판',
+            gallery: '사진첩',
+            applicants: '신청자',
+          };
+          const pendingCount = applicants.filter(a => a.status === 'PENDING').length;
+
+          return tabs.map(tab => (
             <TouchableOpacity
               key={tab}
               style={styles.tab}
-              onPress={() => setActiveTab(tab)}
+              onPress={() => {
+                setActiveTab(tab);
+                if (tab === 'applicants' && applicants.length === 0) {
+                  loadApplicants();
+                }
+              }}
             >
-              <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                {labels[tab]}
-              </Text>
+              <View style={styles.tabLabelContainer}>
+                <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+                  {labels[tab]}
+                </Text>
+                {tab === 'applicants' && pendingCount > 0 && (
+                  <View style={styles.tabBadge}>
+                    <Text style={styles.tabBadgeText}>{pendingCount}</Text>
+                  </View>
+                )}
+              </View>
               {activeTab === tab && <View style={styles.tabIndicator} />}
             </TouchableOpacity>
-          );
-        })}
+          ));
+        })()}
       </View>
 
-      {activeTab === 'board' ? (
+      {activeTab === 'applicants' ? (
+        // 신청자 관리 탭
+        <ScrollView style={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.applicantsContainer}>
+            {applicantsLoading ? (
+              <ActivityIndicator size="large" color="#8B5CF6" style={{ marginTop: 40 }} />
+            ) : applicants.filter(a => a.status === 'PENDING').length === 0 ? (
+              <View style={styles.emptyApplicants}>
+                <Feather name="users" size={48} color="#3F3F46" />
+                <Text style={styles.emptyApplicantsText}>대기 중인 신청자가 없습니다</Text>
+              </View>
+            ) : (
+              applicants
+                .filter(a => a.status === 'PENDING')
+                .map((applicant) => (
+                  <View key={applicant.id} style={styles.applicantCard}>
+                    <View style={styles.applicantHeader}>
+                      <View style={styles.applicantAvatar}>
+                        <Feather name="user" size={24} color="#8B5CF6" />
+                      </View>
+                      <View style={styles.applicantInfo}>
+                        <Text style={styles.applicantName}>{applicant.userNickname}</Text>
+                        <Text style={styles.applicantDate}>
+                          {new Date(applicant.createdAt).toLocaleDateString('ko-KR', {
+                            month: 'long',
+                            day: 'numeric',
+                          })} 신청
+                        </Text>
+                      </View>
+                    </View>
+                    <View style={styles.applicantMessageContainer}>
+                      <Text style={styles.applicantMessageLabel}>지원 메시지</Text>
+                      <Text style={styles.applicantMessage}>{applicant.message}</Text>
+                    </View>
+                    <View style={styles.applicantActions}>
+                      <TouchableOpacity
+                        style={styles.rejectButton}
+                        onPress={() => handleRejectApplicant(applicant.id)}
+                      >
+                        <Feather name="x" size={18} color="#EF4444" />
+                        <Text style={styles.rejectButtonText}>거절</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.approveButton}
+                        onPress={() => handleApproveApplicant(applicant.id)}
+                      >
+                        <Feather name="check" size={18} color="#FFFFFF" />
+                        <Text style={styles.approveButtonText}>승인</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ))
+            )}
+          </View>
+          <View style={{ height: 150 }} />
+        </ScrollView>
+      ) : activeTab === 'board' ? (
         // 게시판 - 멤버만 접근 가능
         study.isMember ? (
           <BoardListView
@@ -669,9 +831,46 @@ export default function StudyDetailScreen() {
           ) : (
             // 일반 사용자 - 참여 신청 버튼
             study.status === 'RECRUITING' ? (
-              <TouchableOpacity style={styles.joinBtn} onPress={handleJoinStudy}>
-                <Text style={styles.joinBtnText}>스터디 참여 신청하기</Text>
-              </TouchableOpacity>
+              myApplication ? (
+                // 이미 신청한 경우
+                <View style={styles.applicationStatusContainer}>
+                  <View style={[
+                    styles.applicationStatusBtn,
+                    myApplication.status === 'PENDING' && styles.pendingBtn,
+                    myApplication.status === 'APPROVED' && styles.approvedBtn,
+                    myApplication.status === 'REJECTED' && styles.rejectedBtn,
+                  ]}>
+                    <Feather
+                      name={
+                        myApplication.status === 'PENDING' ? 'clock' :
+                        myApplication.status === 'APPROVED' ? 'check-circle' : 'x-circle'
+                      }
+                      size={18}
+                      color={
+                        myApplication.status === 'PENDING' ? '#F59E0B' :
+                        myApplication.status === 'APPROVED' ? '#22C55E' : '#EF4444'
+                      }
+                      style={{ marginRight: 8 }}
+                    />
+                    <Text style={[
+                      styles.applicationStatusBtnText,
+                      myApplication.status === 'PENDING' && styles.pendingText,
+                      myApplication.status === 'APPROVED' && styles.approvedText,
+                      myApplication.status === 'REJECTED' && styles.rejectedText,
+                    ]}>
+                      {myApplication.status === 'PENDING' ? '신청 대기중' :
+                       myApplication.status === 'APPROVED' ? '신청 승인됨' : '신청 거절됨'}
+                    </Text>
+                  </View>
+                  {myApplication.status === 'REJECTED' && myApplication.rejectReason && (
+                    <Text style={styles.rejectReasonText}>사유: {myApplication.rejectReason}</Text>
+                  )}
+                </View>
+              ) : (
+                <TouchableOpacity style={styles.joinBtn} onPress={handleJoinStudy}>
+                  <Text style={styles.joinBtnText}>스터디 참여 신청하기</Text>
+                </TouchableOpacity>
+              )
             ) : (
               <View style={styles.statusMessage}>
                 <Text style={styles.statusMessageText}>

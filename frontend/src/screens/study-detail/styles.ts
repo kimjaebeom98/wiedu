@@ -571,4 +571,171 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
+
+  // Application Status
+  applicationStatusContainer: {
+    gap: 8,
+  },
+  applicationStatusBtn: {
+    height: 56,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 12,
+  },
+  pendingBtn: {
+    backgroundColor: '#F59E0B20',
+    borderWidth: 1,
+    borderColor: '#F59E0B40',
+  },
+  approvedBtn: {
+    backgroundColor: '#22C55E20',
+    borderWidth: 1,
+    borderColor: '#22C55E40',
+  },
+  rejectedBtn: {
+    backgroundColor: '#EF444420',
+    borderWidth: 1,
+    borderColor: '#EF444440',
+  },
+  applicationStatusBtnText: {
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  pendingText: {
+    color: '#F59E0B',
+  },
+  approvedText: {
+    color: '#22C55E',
+  },
+  rejectedText: {
+    color: '#EF4444',
+  },
+  rejectReasonText: {
+    fontSize: 13,
+    color: '#71717A',
+    textAlign: 'center',
+  },
+
+  // Tab Badge
+  tabLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  tabBadge: {
+    backgroundColor: '#EF4444',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  tabBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+
+  // Applicants Tab
+  applicantsContainer: {
+    padding: 16,
+    gap: 16,
+  },
+  emptyApplicants: {
+    alignItems: 'center',
+    paddingTop: 60,
+    gap: 16,
+  },
+  emptyApplicantsText: {
+    fontSize: 15,
+    color: '#71717A',
+  },
+  applicantCard: {
+    backgroundColor: '#27272A',
+    borderRadius: 16,
+    padding: 20,
+    gap: 16,
+  },
+  applicantHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  applicantAvatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#8B5CF620',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  applicantInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  applicantName: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  applicantDate: {
+    fontSize: 13,
+    color: '#71717A',
+  },
+  applicantMessageContainer: {
+    backgroundColor: '#3F3F4640',
+    borderRadius: 12,
+    padding: 16,
+    gap: 8,
+  },
+  applicantMessageLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#8B5CF6',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  applicantMessage: {
+    fontSize: 15,
+    color: '#E4E4E7',
+    lineHeight: 24,
+  },
+  applicantActions: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  rejectButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 48,
+    backgroundColor: '#3F3F46',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#EF444440',
+  },
+  rejectButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#EF4444',
+  },
+  approveButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    height: 48,
+    backgroundColor: '#8B5CF6',
+    borderRadius: 12,
+  },
+  approveButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
 });
