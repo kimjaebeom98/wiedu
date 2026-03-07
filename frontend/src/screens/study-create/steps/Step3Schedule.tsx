@@ -45,8 +45,8 @@ export default function Step3Schedule({ data, updateData, toggleDay }: Step3Prop
 
     updateData('meetingLocation', location.address);
     updateData('meetingRegion', region);
-    updateData('meetingCity', region);
-    updateData('meetingDistrict', district);
+    updateData('meetingCity', district);
+    updateData('meetingDistrict', '');
     updateData('meetingLatitude', location.latitude);
     updateData('meetingLongitude', location.longitude);
   };
