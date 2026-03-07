@@ -60,7 +60,7 @@ export const fetchNearbyStudies = async (
 export const getStudyDetail = async (studyId: number): Promise<StudyDetailResponse> => {
   return withErrorHandling(
     async () => {
-      const client = getPublicClient();
+      const client = getAuthClient();
       const response = await client.get(`/api/studies/${studyId}`);
       return response.data;
     },
