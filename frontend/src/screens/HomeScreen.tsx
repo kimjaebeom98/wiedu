@@ -97,7 +97,8 @@ export default function HomeScreen() {
 
       setDisplayRegion('');
       return null;
-    } catch {
+    } catch (error) {
+      console.error('Failed to load initial location:', error);
       return null;
     }
   }, []);
@@ -116,6 +117,7 @@ export default function HomeScreen() {
       const nearby = await fetchNearbyStudies(loc.latitude, loc.longitude);
       setNearbyStudies(nearby);
     } catch (error: any) {
+      console.error('Failed to load nearby studies:', error);
       setNearbyError(error?.message || '근처 스터디를 불러오지 못했습니다');
     } finally {
       setNearbyLoading(false);
@@ -130,7 +132,8 @@ export default function HomeScreen() {
       ]);
       setPopularStudies(popularData);
       setCategories(categoriesData);
-    } catch {
+    } catch (error) {
+      console.error('Failed to load data:', error);
     } finally {
       setLoading(false);
       setPopularLoading(false);
@@ -188,13 +191,15 @@ export default function HomeScreen() {
               try {
                 const nearby = await fetchNearbyStudies(location.latitude, location.longitude);
                 setNearbyStudies(nearby);
-              } catch {
+              } catch (error: any) {
+                console.error('Failed to load nearby studies:', error);
               } finally {
                 setNearbyLoading(false);
               }
             }
           }
-        } catch {
+        } catch (error) {
+          console.error('Failed to refresh profile location:', error);
         }
       };
 

@@ -80,6 +80,7 @@ export default function BoardListView({
         setHasMore(!response.last);
         setCurrentPage(page);
       } catch (err) {
+        console.error('Failed to load posts:', err);
         if (page === 0) {
           setError('게시글을 불러오는데 실패했습니다');
         }
@@ -135,7 +136,8 @@ export default function BoardListView({
             : p
         )
       );
-    } catch {
+    } catch (error) {
+      console.error('Failed to toggle like:', error);
     }
   };
 

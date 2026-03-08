@@ -85,6 +85,7 @@ export default function BoardPostCreateScreen({ navigation, route }: Props) {
         ],
       });
     } catch (error: any) {
+      console.error('Failed to create post:', error);
       showAlert({
         title: '오류',
         message: error.response?.data?.message || '게시글 작성에 실패했습니다.',

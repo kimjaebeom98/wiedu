@@ -46,6 +46,7 @@ const searchLocations = async (query: string): Promise<LocationData[]> => {
     );
 
     if (!response.ok) {
+      console.error('Kakao API error:', response.status);
       return [];
     }
 
@@ -67,7 +68,8 @@ const searchLocations = async (query: string): Promise<LocationData[]> => {
       latitude: parseFloat(doc.y),
       longitude: parseFloat(doc.x),
     }));
-  } catch {
+  } catch (err) {
+    console.error('Search error:', err);
     return [];
   }
 };
@@ -102,7 +104,8 @@ export default function LocationSearchScreen({ onSelect, onBack }: LocationSearc
     try {
       const data = await searchLocations(searchQuery);
       setResults(data);
-    } catch {
+    } catch (err) {
+      console.error('Search error:', err);
       setResults([]);
     } finally {
       setLoading(false);
@@ -159,7 +162,8 @@ export default function LocationSearchScreen({ onSelect, onBack }: LocationSearc
       };
 
       onSelect(locationData);
-    } catch {
+    } catch (err) {
+      console.error('Location error:', err);
       showAlert({ title: '오류', message: '현재 위치를 가져오지 못했어요.', icon: 'x-circle' });
     } finally {
       setGettingLocation(false);

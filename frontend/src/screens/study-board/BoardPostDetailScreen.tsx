@@ -80,7 +80,8 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
         const user = JSON.parse(userStr);
         setCurrentUserId(user.id);
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to load current user:', error);
     }
   };
 
@@ -90,6 +91,7 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
       const data = await getBoardPostDetail(studyId, postId);
       setPost(data);
     } catch (error) {
+      console.error('Failed to load post:', error);
       showAlert({ title: '게시글을 불러오는데 실패했습니다.', icon: 'x-circle', buttons: [{ text: '확인', onPress: () => navigation.goBack() }] });
     } finally {
       setLoading(false);
@@ -126,6 +128,7 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
       setEditingPost(false);
       showAlert({ title: '게시글이 수정되었습니다.', icon: 'check-circle' });
     } catch (error) {
+      console.error('Failed to update post:', error);
       showAlert({ title: '게시글 수정에 실패했습니다.', icon: 'x-circle' });
     } finally {
       setSubmitting(false);
@@ -147,6 +150,7 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
               await deleteBoardPost(studyId, postId);
               showAlert({ title: '게시글이 삭제되었습니다.', icon: 'check-circle', buttons: [{ text: '확인', onPress: () => navigation.goBack() }] });
             } catch (error) {
+              console.error('Failed to delete post:', error);
               showAlert({ title: '게시글 삭제에 실패했습니다.', icon: 'x-circle' });
             }
           },
@@ -168,7 +172,8 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
             }
           : null
       );
-    } catch {
+    } catch (error) {
+      console.error('Failed to toggle post like:', error);
     }
   };
 
@@ -190,6 +195,7 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
       );
       setCommentText('');
     } catch (error) {
+      console.error('Failed to create comment:', error);
       showAlert({ title: '댓글 작성에 실패했습니다.', icon: 'x-circle' });
     } finally {
       setSubmitting(false);
@@ -222,6 +228,7 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
       setEditingCommentId(null);
       setEditCommentText('');
     } catch (error) {
+      console.error('Failed to update comment:', error);
       showAlert({ title: '댓글 수정에 실패했습니다.', icon: 'x-circle' });
     } finally {
       setSubmitting(false);
@@ -256,6 +263,7 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
                   : null
               );
             } catch (error) {
+              console.error('Failed to delete comment:', error);
               showAlert({ title: '댓글 삭제에 실패했습니다.', icon: 'x-circle' });
             }
           },
@@ -283,7 +291,8 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
             }
           : null
       );
-    } catch {
+    } catch (error) {
+      console.error('Failed to toggle comment like:', error);
     }
   };
 

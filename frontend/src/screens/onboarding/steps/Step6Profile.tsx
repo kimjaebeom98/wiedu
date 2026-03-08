@@ -66,6 +66,7 @@ export default function Step6Profile({ data, updateData }: StepProps) {
 
       updateData('profileImage', response.data.imageUrl);
     } catch (err: any) {
+      console.error('Failed to upload image:', err);
       showAlert({ title: '오류', message: '이미지 업로드에 실패했어요. 나중에 다시 시도해주세요.', icon: 'x-circle' });
     } finally {
       setUploading(false);

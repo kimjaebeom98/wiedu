@@ -35,7 +35,8 @@ export default function StudyMembersScreen() {
     try {
       const study = await getStudyDetail(studyId);
       setMembers(study.members || []);
-    } catch {
+    } catch (error) {
+      console.error('Failed to fetch members:', error);
     } finally {
       setLoading(false);
     }

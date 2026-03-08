@@ -16,7 +16,8 @@ const decodeJwt = (token: string): any => {
         .join('')
     );
     return JSON.parse(jsonPayload);
-  } catch {
+  } catch (error) {
+    console.error('Failed to decode JWT:', error);
     return null;
   }
 };
@@ -45,6 +46,7 @@ export const saveTokens = async (
 
     await AsyncStorage.multiSet(items);
   } catch (error) {
+    console.error('Failed to save tokens:', error);
     throw error;
   }
 };
@@ -52,7 +54,8 @@ export const saveTokens = async (
 export const getAccessToken = async (): Promise<string | null> => {
   try {
     return await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
-  } catch {
+  } catch (error) {
+    console.error('Failed to get access token:', error);
     return null;
   }
 };
@@ -60,7 +63,8 @@ export const getAccessToken = async (): Promise<string | null> => {
 export const getRefreshToken = async (): Promise<string | null> => {
   try {
     return await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
-  } catch {
+  } catch (error) {
+    console.error('Failed to get refresh token:', error);
     return null;
   }
 };
@@ -69,6 +73,7 @@ export const clearTokens = async (): Promise<void> => {
   try {
     await AsyncStorage.multiRemove([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY, USER_KEY]);
   } catch (error) {
+    console.error('Failed to clear tokens:', error);
     throw error;
   }
 };
@@ -77,7 +82,8 @@ export const getCurrentUser = async (): Promise<{ id: number; email: string; nic
   try {
     const userStr = await AsyncStorage.getItem(USER_KEY);
     return userStr ? JSON.parse(userStr) : null;
-  } catch {
+  } catch (error) {
+    console.error('Failed to get current user:', error);
     return null;
   }
 };

@@ -57,6 +57,7 @@ export default function StudyLeaderScreen() {
       setReviewsData(reviews);
       setCategoryTemps(categories);
     } catch (err) {
+      console.error('Failed to load leader profile data:', err);
       setError('프로필을 불러오지 못했어요.');
     } finally {
       setLoading(false);

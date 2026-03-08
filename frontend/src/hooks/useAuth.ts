@@ -13,7 +13,8 @@ export const useAuth = () => {
     try {
       const token = await getAccessToken();
       setIsAuthenticated(!!token);
-    } catch {
+    } catch (error) {
+      console.error('Failed to check auth status:', error);
       setIsAuthenticated(false);
     } finally {
       setIsLoading(false);

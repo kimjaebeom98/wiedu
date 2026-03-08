@@ -128,8 +128,9 @@ export default function StudyDetailScreen() {
       const requests = await getMyStudyRequests();
       const application = requests.find(r => r.studyId === studyId);
       setMyApplication(application || null);
-    } catch {
+    } catch (error) {
       // 로그인하지 않은 경우 무시
+      console.log('Not logged in or failed to load applications');
     }
   };
 
@@ -138,7 +139,8 @@ export default function StudyDetailScreen() {
     try {
       const data = await getStudyRequests(studyId);
       setApplicants(data);
-    } catch {
+    } catch (error) {
+      console.log('Failed to load applicants or not a leader');
     } finally {
       setApplicantsLoading(false);
     }
@@ -236,7 +238,8 @@ export default function StudyDetailScreen() {
         const user = JSON.parse(userStr);
         setCurrentUserId(user.id);
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to load current user:', error);
     }
   };
 
@@ -257,6 +260,7 @@ export default function StudyDetailScreen() {
         }
       }
     } catch (error) {
+      console.error('Failed to load study detail:', error);
       showAlert({
         title: '오류',
         message: '스터디 정보를 불러오는데 실패했습니다.',
@@ -272,7 +276,8 @@ export default function StudyDetailScreen() {
     try {
       const reviews = await getLeaderReviews(leaderId);
       setLeaderReviews(reviews);
-    } catch {
+    } catch (error) {
+      console.error('Failed to load leader reviews:', error);
     }
   };
 
@@ -341,6 +346,7 @@ export default function StudyDetailScreen() {
               });
               loadStudyDetail();
             } catch (error: any) {
+              console.error('Failed to close study:', error);
               showAlert({
                 title: '오류',
                 message: error.response?.data?.message || '스터디 마감에 실패했습니다.',
@@ -378,6 +384,7 @@ export default function StudyDetailScreen() {
               });
               loadStudyDetail();
             } catch (error: any) {
+              console.error('Failed to complete study:', error);
               showAlert({
                 title: '오류',
                 message: error.response?.data?.message || '스터디 종료에 실패했습니다.',

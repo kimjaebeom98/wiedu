@@ -75,6 +75,7 @@ export default function ProfileEditScreen() {
       setSelectedInterests(data.interests || []);
       setProfileImage(data.profileImage || null);
     } catch (err) {
+      console.error('Failed to load profile:', err);
       showAlert({ title: '오류', message: '프로필을 불러오지 못했어요.', icon: 'x-circle' });
     } finally {
       setLoading(false);
@@ -127,6 +128,7 @@ export default function ProfileEditScreen() {
       setProfileImage(response.data.imageUrl);
       showAlert({ title: '완료', message: '프로필 사진이 변경되었습니다.', icon: 'check-circle' });
     } catch (err: any) {
+      console.error('Failed to upload image:', err);
       showAlert({ title: '오류', message: '이미지 업로드에 실패했어요.', icon: 'x-circle' });
     } finally {
       setUploading(false);
@@ -158,6 +160,7 @@ export default function ProfileEditScreen() {
       });
       showAlert({ title: '완료', message: '프로필이 저장되었습니다.', icon: 'check-circle', buttons: [{ text: '확인', onPress: () => navigation.goBack() }] });
     } catch (err: any) {
+      console.error('Failed to save profile:', err);
       const message = err.response?.data?.message || '프로필 저장에 실패했어요.';
       showAlert({ title: '오류', message, icon: 'x-circle' });
     } finally {
