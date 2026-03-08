@@ -35,10 +35,13 @@ const CATEGORY_ICONS: Record<string, string> = {
   CAREER: 'briefcase',
   IT_DEV: 'code',
   CERTIFICATION: 'award',
-  CIVIL_SERVICE: 'building',
+  CIVIL_SERVICE: 'shield',
   FINANCE: 'trending-up',
   DESIGN: 'pen-tool',
   BUSINESS: 'bar-chart-2',
+  EDUCATION: 'book-open',
+  LIFESTYLE: 'heart',
+  CONTENT: 'video',
 };
 
 // Member data (mock for now - will be replaced with API)
@@ -239,8 +242,8 @@ export default function HomeScreen() {
     return CATEGORY_ICONS[code] || 'folder';
   };
 
-  // Limit categories to 8 for display
-  const displayCategories = categories.slice(0, 8);
+  // Display all categories
+  const displayCategories = categories;
 
   return (
     <View style={styles.container}>
@@ -281,36 +284,20 @@ export default function HomeScreen() {
           {loading ? (
             <ActivityIndicator color="#8B5CF6" style={{ marginVertical: 20 }} />
           ) : (
-            <>
-              <View style={styles.categoryRow}>
-                {displayCategories.slice(0, 4).map((cat) => (
-                  <TouchableOpacity key={cat.id} style={styles.categoryItem}>
-                    <View style={styles.categoryCircle}>
-                      <Feather name={getCategoryIcon(cat.code)} size={22} color="#E4E4E7" />
-                    </View>
-                    <Text style={styles.categoryName}>{cat.name}</Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-              <View style={styles.categoryRow}>
-                {displayCategories.slice(4, 8).map((cat) => (
-                  <TouchableOpacity key={cat.id} style={styles.categoryItem}>
-                    <View style={styles.categoryCircle}>
-                      <Feather name={getCategoryIcon(cat.code)} size={22} color="#E4E4E7" />
-                    </View>
-                    <Text style={styles.categoryName}>{cat.name}</Text>
-                  </TouchableOpacity>
-                ))}
-                {displayCategories.length < 8 && (
-                  <TouchableOpacity style={styles.categoryItem}>
-                    <View style={styles.categoryCircle}>
-                      <Feather name="more-horizontal" size={22} color="#E4E4E7" />
-                    </View>
-                    <Text style={styles.categoryName}>더보기</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            </>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.categoryScrollContent}
+            >
+              {displayCategories.map((cat) => (
+                <TouchableOpacity key={cat.id} style={styles.categoryItem}>
+                  <View style={styles.categoryCircle}>
+                    <Feather name={getCategoryIcon(cat.code)} size={22} color="#E4E4E7" />
+                  </View>
+                  <Text style={styles.categoryName}>{cat.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           )}
         </View>
 
@@ -633,15 +620,14 @@ const styles = StyleSheet.create({
   },
   categorySection: {
     marginTop: 24,
-    gap: 8,
+    marginHorizontal: -24,
   },
-  categoryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
+  categoryScrollContent: {
+    paddingHorizontal: 24,
+    gap: 12,
   },
   categoryItem: {
-    flex: 1,
+    width: 72,
     backgroundColor: '#27272A',
     borderRadius: 16,
     paddingVertical: 16,
