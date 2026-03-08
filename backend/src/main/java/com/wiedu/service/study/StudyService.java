@@ -197,6 +197,17 @@ public class StudyService {
     }
 
     /**
+     * 카테고리 + 서브카테고리별 스터디 목록 조회 (N+1 방지)
+     */
+    public Page<StudyListResponse> findByCategoryAndSubcategory(Long categoryId, Long subcategoryId, Pageable pageable) {
+        if (subcategoryId == null) {
+            return findByCategory(categoryId, pageable);
+        }
+        return studyRepository.findByCategoryIdAndSubcategoryIdWithLeader(categoryId, subcategoryId, pageable)
+                .map(StudyListResponse::from);
+    }
+
+    /**
      * 모집 중인 스터디 목록 조회 (N+1 방지)
      */
     public Page<StudyListResponse> findRecruitingStudies(Pageable pageable) {

@@ -86,14 +86,15 @@ public class StudyController {
     }
 
     /**
-     * 카테고리별 스터디 목록
-     * GET /api/studies/category/{categoryId}
+     * 카테고리별 스터디 목록 (서브카테고리 필터 지원)
+     * GET /api/studies/category/{categoryId}?subcategoryId=xxx
      */
     @GetMapping("/category/{categoryId}")
     public ResponseEntity<Page<StudyListResponse>> getStudiesByCategory(
             @PathVariable Long categoryId,
+            @RequestParam(required = false) Long subcategoryId,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
-        Page<StudyListResponse> response = studyService.findByCategory(categoryId, pageable);
+        Page<StudyListResponse> response = studyService.findByCategoryAndSubcategory(categoryId, subcategoryId, pageable);
         return ResponseEntity.ok(response);
     }
 

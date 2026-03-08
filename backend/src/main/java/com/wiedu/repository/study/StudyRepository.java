@@ -45,6 +45,11 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
            countQuery = "SELECT COUNT(s) FROM Study s WHERE s.category.id = :categoryId")
     Page<Study> findByCategoryIdWithLeader(@Param("categoryId") Long categoryId, Pageable pageable);
 
+    // 카테고리 + 서브카테고리별 스터디 목록 (리더, 카테고리 포함, 페이징)
+    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category WHERE s.category.id = :categoryId AND s.subcategory.id = :subcategoryId",
+           countQuery = "SELECT COUNT(s) FROM Study s WHERE s.category.id = :categoryId AND s.subcategory.id = :subcategoryId")
+    Page<Study> findByCategoryIdAndSubcategoryIdWithLeader(@Param("categoryId") Long categoryId, @Param("subcategoryId") Long subcategoryId, Pageable pageable);
+
     // 제목 또는 설명으로 검색 (리더, 카테고리 포함, 페이징)
     @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category WHERE s.title LIKE %:keyword% OR s.description LIKE %:keyword%",
            countQuery = "SELECT COUNT(s) FROM Study s WHERE s.title LIKE %:keyword% OR s.description LIKE %:keyword%")

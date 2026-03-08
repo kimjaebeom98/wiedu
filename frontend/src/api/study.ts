@@ -295,9 +295,10 @@ export const searchStudies = async (params: SearchStudiesParams): Promise<Pagina
   );
 };
 
-// GET /api/studies/category/:categoryId - Get studies by category
+// GET /api/studies/category/:categoryId - Get studies by category (with optional subcategory filter)
 export interface CategoryStudiesParams {
   categoryId: number;
+  subcategoryId?: number | null;
   page?: number;
   size?: number;
 }
@@ -306,11 +307,16 @@ export const fetchStudiesByCategory = async (params: CategoryStudiesParams): Pro
   return withErrorHandling(
     async () => {
       const client = getPublicClient();
+      const queryParams: Record<string, number> = {
+        page: params.page || 0,
+        size: params.size || 10,
+      };
+      // Add subcategoryId if provided
+      if (params.subcategoryId) {
+        queryParams.subcategoryId = params.subcategoryId;
+      }
       const response = await client.get(`/api/studies/category/${params.categoryId}`, {
-        params: {
-          page: params.page || 0,
-          size: params.size || 10,
-        },
+        params: queryParams,
       });
       return response.data;
     },

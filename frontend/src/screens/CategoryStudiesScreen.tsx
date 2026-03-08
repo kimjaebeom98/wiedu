@@ -64,8 +64,8 @@ export default function CategoryStudiesScreen() {
     loadCategories();
   }, []);
 
-  // Load studies when category changes
-  const loadStudies = useCallback(async (catId: number, pageNum: number = 0) => {
+  // Load studies when category or subcategory changes
+  const loadStudies = useCallback(async (catId: number, subId: number | null, pageNum: number = 0) => {
     if (pageNum === 0) {
       setLoading(true);
       setStudies([]);
@@ -76,6 +76,7 @@ export default function CategoryStudiesScreen() {
     try {
       const response: PaginatedStudyResponse = await fetchStudiesByCategory({
         categoryId: catId,
+        subcategoryId: subId,
         page: pageNum,
         size: 10,
       });
@@ -97,8 +98,8 @@ export default function CategoryStudiesScreen() {
   }, []);
 
   useEffect(() => {
-    loadStudies(selectedCategoryId, 0);
-  }, [selectedCategoryId, loadStudies]);
+    loadStudies(selectedCategoryId, selectedSubcategoryId, 0);
+  }, [selectedCategoryId, selectedSubcategoryId, loadStudies]);
 
   const handleCategorySelect = (catId: number) => {
     setSelectedCategoryId(catId);
@@ -109,19 +110,15 @@ export default function CategoryStudiesScreen() {
 
   const handleSubcategorySelect = (subId: number | null) => {
     setSelectedSubcategoryId(subId);
-    // TODO: Filter by subcategory when backend supports it
+    setPage(0);
+    setHasMore(true);
   };
 
   const handleLoadMore = useCallback(() => {
     if (!loadingMore && hasMore) {
-      loadStudies(selectedCategoryId, page + 1);
+      loadStudies(selectedCategoryId, selectedSubcategoryId, page + 1);
     }
-  }, [loadingMore, hasMore, selectedCategoryId, page, loadStudies]);
-
-  // Filter studies by subcategory (client-side for now)
-  const filteredStudies = selectedSubcategoryId
-    ? studies // TODO: Backend filter support needed
-    : studies;
+  }, [loadingMore, hasMore, selectedCategoryId, selectedSubcategoryId, page, loadStudies]);
 
   const renderStudyCard = ({ item: study }: { item: StudyListResponse }) => (
     <TouchableOpacity
@@ -330,7 +327,7 @@ export default function CategoryStudiesScreen() {
         </View>
       ) : (
         <FlatList
-          data={filteredStudies}
+          data={studies}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderStudyCard}
           contentContainerStyle={styles.listContent}
