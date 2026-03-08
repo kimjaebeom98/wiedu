@@ -6,10 +6,10 @@ import {
   ScrollView,
   StatusBar,
   ActivityIndicator,
-  Alert,
   RefreshControl,
   Modal,
   TextInput,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -17,11 +17,12 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import {
-  getPendingRequests,
+  getStudyRequests,
   approveStudyRequest,
   rejectStudyRequest,
   StudyRequestResponse,
 } from '../../api/study';
+import { CustomAlert, AlertButton } from '../../components/common';
 import { styles } from './styles';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -48,13 +49,33 @@ export default function ApplicantManagementScreen() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<StudyRequestResponse | null>(null);
 
+  // Custom Alert State
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    title: string;
+    message?: string;
+    buttons?: AlertButton[];
+    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'user-check' | 'user-x';
+    iconColor?: string;
+  }>({ title: '' });
+
+  const showAlert = (config: typeof alertConfig) => {
+    setAlertConfig(config);
+    setAlertVisible(true);
+  };
+
   const loadRequests = useCallback(async () => {
     try {
-      const data = await getPendingRequests(studyId);
+      const data = await getStudyRequests(studyId);
       setRequests(data);
     } catch (error) {
       console.error('Failed to load requests:', error);
-      Alert.alert('오류', '신청 목록을 불러오는데 실패했습니다.');
+      showAlert({
+        title: '오류',
+        message: '신청 목록을 불러오는데 실패했습니다.',
+        icon: 'alert-circle',
+        buttons: [{ text: '확인', style: 'default' }],
+      });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -79,28 +100,40 @@ export default function ApplicantManagementScreen() {
   };
 
   const handleApprove = async (requestId: number) => {
-    Alert.alert(
-      '승인 확인',
-      '이 신청자를 승인하시겠습니까?',
-      [
+    showAlert({
+      title: '승인 확인',
+      message: '이 신청자를 승인하시겠습니까?',
+      icon: 'user-check',
+      buttons: [
         { text: '취소', style: 'cancel' },
         {
           text: '승인',
+          style: 'default',
           onPress: async () => {
             setProcessing(requestId);
             try {
               await approveStudyRequest(requestId);
-              Alert.alert('완료', '신청이 승인되었습니다.');
+              showAlert({
+                title: '승인 완료',
+                message: '신청이 승인되었습니다.',
+                icon: 'check-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
               loadRequests();
             } catch (error: any) {
-              Alert.alert('오류', error.response?.data?.message || '승인에 실패했습니다.');
+              showAlert({
+                title: '오류',
+                message: error.response?.data?.message || '승인에 실패했습니다.',
+                icon: 'alert-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
             } finally {
               setProcessing(null);
             }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const openRejectModal = (requestId: number) => {
@@ -117,10 +150,20 @@ export default function ApplicantManagementScreen() {
 
     try {
       await rejectStudyRequest(rejectTargetId, rejectReason || undefined);
-      Alert.alert('완료', '신청이 거절되었습니다.');
+      showAlert({
+        title: '거절 완료',
+        message: '신청이 거절되었습니다.',
+        icon: 'user-x',
+        buttons: [{ text: '확인', style: 'default' }],
+      });
       loadRequests();
     } catch (error: any) {
-      Alert.alert('오류', error.response?.data?.message || '거절에 실패했습니다.');
+      showAlert({
+        title: '오류',
+        message: error.response?.data?.message || '거절에 실패했습니다.',
+        icon: 'alert-circle',
+        buttons: [{ text: '확인', style: 'default' }],
+      });
     } finally {
       setProcessing(null);
       setRejectTargetId(null);
@@ -141,6 +184,50 @@ export default function ApplicantManagementScreen() {
 
   const getAvatarColor = (id: number) => AVATAR_COLORS[id % AVATAR_COLORS.length];
 
+  // Parse message sections like [자기소개], [지원 동기] etc.
+  const parseMessageSections = (message: string) => {
+    if (!message) return [];
+
+    const sectionRegex = /\[([^\]]+)\]\s*/g;
+    const sections: { title: string; content: string }[] = [];
+    let lastIndex = 0;
+    let match;
+
+    const matches: { title: string; startIndex: number; endIndex: number }[] = [];
+
+    while ((match = sectionRegex.exec(message)) !== null) {
+      matches.push({
+        title: match[1],
+        startIndex: match.index,
+        endIndex: match.index + match[0].length,
+      });
+    }
+
+    for (let i = 0; i < matches.length; i++) {
+      const current = matches[i];
+      const next = matches[i + 1];
+      const contentEnd = next ? next.startIndex : message.length;
+      const content = message.slice(current.endIndex, contentEnd).trim();
+
+      if (content) {
+        sections.push({
+          title: current.title,
+          content: content,
+        });
+      }
+    }
+
+    // If no sections found, return the whole message as a single section
+    if (sections.length === 0 && message.trim()) {
+      sections.push({
+        title: '신청 메시지',
+        content: message.trim(),
+      });
+    }
+
+    return sections;
+  };
+
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -159,7 +246,7 @@ export default function ApplicantManagementScreen() {
         <TouchableOpacity style={styles.headerBackBtn} onPress={() => navigation.goBack()}>
           <Feather name="arrow-left" size={20} color="#FFFFFF" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>신청자 관리</Text>
+        <Text style={styles.headerTitle}>가입 관리</Text>
         <View style={styles.headerSpacer} />
       </View>
 
@@ -203,84 +290,117 @@ export default function ApplicantManagementScreen() {
             </Text>
           </View>
         ) : (
-          filteredRequests.map((request) => (
-            <View key={request.id} style={styles.applicantCard}>
-              {/* Card Header */}
-              <View style={styles.cardHeader}>
-                <View style={[styles.avatar, { backgroundColor: `${getAvatarColor(request.userId)}40` }]}>
-                  <Feather name="user" size={24} color={getAvatarColor(request.userId)} />
-                </View>
-                <View style={styles.cardInfo}>
-                  <Text style={styles.applicantName}>{request.userNickname}</Text>
-                  <View style={styles.metaRow}>
-                    <Text style={styles.metaText}>{formatDate(request.createdAt)}</Text>
+          filteredRequests.map((request) => {
+            const sections = parseMessageSections(request.message);
+            const firstSection = sections[0];
+
+            return (
+              <TouchableOpacity
+                key={request.id}
+                style={styles.applicantCard}
+                onPress={() => openDetailModal(request)}
+                activeOpacity={0.7}
+              >
+                {/* Card Header */}
+                <View style={styles.cardHeader}>
+                  {request.userProfileImage ? (
+                    <Image
+                      source={{ uri: request.userProfileImage }}
+                      style={styles.cardAvatarImage}
+                    />
+                  ) : (
+                    <View style={[styles.avatar, { backgroundColor: `${getAvatarColor(request.userId)}30` }]}>
+                      <Feather name="user" size={22} color={getAvatarColor(request.userId)} />
+                    </View>
+                  )}
+                  <View style={styles.cardInfo}>
+                    <Text style={styles.applicantName}>{request.userNickname}</Text>
+                    <View style={styles.metaRow}>
+                      <Feather name="calendar" size={12} color="#71717A" />
+                      <Text style={styles.metaText}>{formatDate(request.createdAt)}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.cardChevron}>
+                    <Feather name="chevron-right" size={20} color="#71717A" />
                   </View>
                 </View>
-              </View>
 
-              {/* Card Content */}
-              <View style={styles.cardContent}>
-                <Text style={styles.messageText} numberOfLines={3}>
-                  {request.message}
-                </Text>
-                <TouchableOpacity onPress={() => openDetailModal(request)}>
-                  <Text style={styles.viewMoreText}>자세히 보기 &rarr;</Text>
-                </TouchableOpacity>
-              </View>
+                {/* Card Content - First section preview */}
+                {firstSection && (
+                  <View style={styles.cardPreviewSection}>
+                    <View style={styles.cardPreviewBadge}>
+                      <Text style={styles.cardPreviewBadgeText}>{firstSection.title}</Text>
+                    </View>
+                    <Text style={styles.cardPreviewText} numberOfLines={2}>
+                      {firstSection.content}
+                    </Text>
+                  </View>
+                )}
 
-              {/* Card Buttons - Only show for pending */}
-              {activeTab === 'PENDING' && (
-                <View style={styles.cardButtons}>
-                  <TouchableOpacity
-                    style={styles.rejectBtn}
-                    onPress={() => openRejectModal(request.id)}
-                    disabled={processing === request.id}
-                  >
-                    {processing === request.id ? (
-                      <ActivityIndicator size="small" color="#F87171" />
-                    ) : (
-                      <>
-                        <Feather name="x" size={16} color="#F87171" />
-                        <Text style={styles.rejectBtnText}>거절</Text>
-                      </>
+                {/* Card Buttons - Only show for pending */}
+                {activeTab === 'PENDING' && (
+                  <View style={styles.cardButtons}>
+                    <TouchableOpacity
+                      style={styles.rejectBtn}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        openRejectModal(request.id);
+                      }}
+                      disabled={processing === request.id}
+                    >
+                      {processing === request.id ? (
+                        <ActivityIndicator size="small" color="#F87171" />
+                      ) : (
+                        <>
+                          <Feather name="x" size={16} color="#F87171" />
+                          <Text style={styles.rejectBtnText}>거절</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.approveBtn}
+                      onPress={(e) => {
+                        e.stopPropagation();
+                        handleApprove(request.id);
+                      }}
+                      disabled={processing === request.id}
+                    >
+                      {processing === request.id ? (
+                        <ActivityIndicator size="small" color="#FFFFFF" />
+                      ) : (
+                        <>
+                          <Feather name="check" size={16} color="#FFFFFF" />
+                          <Text style={styles.approveBtnText}>승인</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* Status badge for approved/rejected */}
+                {activeTab === 'APPROVED' && (
+                  <View style={styles.cardStatusBadge}>
+                    <Feather name="check-circle" size={14} color="#22C55E" />
+                    <Text style={[styles.cardStatusBadgeText, { color: '#22C55E' }]}>승인 완료</Text>
+                  </View>
+                )}
+
+                {activeTab === 'REJECTED' && (
+                  <View style={styles.cardStatusSection}>
+                    <View style={styles.cardStatusBadge}>
+                      <Feather name="x-circle" size={14} color="#F87171" />
+                      <Text style={[styles.cardStatusBadgeText, { color: '#F87171' }]}>거절됨</Text>
+                    </View>
+                    {request.rejectReason && (
+                      <Text style={styles.cardRejectReasonText} numberOfLines={2}>
+                        사유: {request.rejectReason}
+                      </Text>
                     )}
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.approveBtn}
-                    onPress={() => handleApprove(request.id)}
-                    disabled={processing === request.id}
-                  >
-                    {processing === request.id ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
-                    ) : (
-                      <>
-                        <Feather name="check" size={16} color="#FFFFFF" />
-                        <Text style={styles.approveBtnText}>승인</Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              )}
-
-              {/* Status badge for approved/rejected */}
-              {activeTab === 'APPROVED' && (
-                <View style={styles.statusBadge}>
-                  <Feather name="check-circle" size={14} color="#22C55E" />
-                  <Text style={[styles.statusBadgeText, { color: '#22C55E' }]}>승인 완료</Text>
-                </View>
-              )}
-
-              {activeTab === 'REJECTED' && (
-                <View style={styles.statusBadge}>
-                  <Feather name="x-circle" size={14} color="#F87171" />
-                  <Text style={[styles.statusBadgeText, { color: '#F87171' }]}>거절됨</Text>
-                  {request.rejectReason && (
-                    <Text style={styles.rejectReasonText}>사유: {request.rejectReason}</Text>
-                  )}
-                </View>
-              )}
-            </View>
-          ))
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })
         )}
       </ScrollView>
 
@@ -334,34 +454,149 @@ export default function ApplicantManagementScreen() {
         onRequestClose={() => setShowDetailModal(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>신청서 상세</Text>
-              <TouchableOpacity onPress={() => setShowDetailModal(false)}>
-                <Feather name="x" size={24} color="#FFFFFF" />
+          <View style={styles.detailModalContent}>
+            {/* Modal Header */}
+            <View style={styles.detailModalHeader}>
+              <TouchableOpacity
+                style={styles.detailModalCloseBtn}
+                onPress={() => setShowDetailModal(false)}
+              >
+                <Feather name="x" size={20} color="#A1A1AA" />
               </TouchableOpacity>
             </View>
-            <ScrollView style={styles.modalBody}>
+
+            <ScrollView
+              style={styles.detailModalBody}
+              contentContainerStyle={styles.detailModalBodyContent}
+              showsVerticalScrollIndicator={false}
+            >
               {selectedRequest && (
                 <>
-                  <View style={styles.detailHeader}>
-                    <View style={[styles.avatar, { backgroundColor: `${getAvatarColor(selectedRequest.userId)}40` }]}>
-                      <Feather name="user" size={24} color={getAvatarColor(selectedRequest.userId)} />
+                  {/* Profile Section */}
+                  <View style={styles.detailProfileSection}>
+                    {selectedRequest.userProfileImage ? (
+                      <Image
+                        source={{ uri: selectedRequest.userProfileImage }}
+                        style={styles.detailAvatarImage}
+                      />
+                    ) : (
+                      <View style={[styles.detailAvatar, { backgroundColor: `${getAvatarColor(selectedRequest.userId)}30` }]}>
+                        <Feather name="user" size={32} color={getAvatarColor(selectedRequest.userId)} />
+                      </View>
+                    )}
+                    <Text style={styles.detailNickname}>{selectedRequest.userNickname}</Text>
+                    <View style={styles.detailMetaRow}>
+                      <Feather name="calendar" size={14} color="#71717A" />
+                      <Text style={styles.detailMetaText}>{formatDate(selectedRequest.createdAt)}</Text>
                     </View>
-                    <View style={styles.detailInfo}>
-                      <Text style={styles.detailName}>{selectedRequest.userNickname}</Text>
-                      <Text style={styles.detailDate}>{formatDate(selectedRequest.createdAt)}</Text>
+                    {/* Status Badge */}
+                    <View style={[
+                      styles.detailStatusBadge,
+                      selectedRequest.status === 'PENDING' && styles.detailStatusPending,
+                      selectedRequest.status === 'APPROVED' && styles.detailStatusApproved,
+                      selectedRequest.status === 'REJECTED' && styles.detailStatusRejected,
+                    ]}>
+                      <Feather
+                        name={
+                          selectedRequest.status === 'PENDING' ? 'clock' :
+                          selectedRequest.status === 'APPROVED' ? 'check-circle' : 'x-circle'
+                        }
+                        size={14}
+                        color={
+                          selectedRequest.status === 'PENDING' ? '#F59E0B' :
+                          selectedRequest.status === 'APPROVED' ? '#22C55E' : '#EF4444'
+                        }
+                      />
+                      <Text style={[
+                        styles.detailStatusText,
+                        selectedRequest.status === 'PENDING' && { color: '#F59E0B' },
+                        selectedRequest.status === 'APPROVED' && { color: '#22C55E' },
+                        selectedRequest.status === 'REJECTED' && { color: '#EF4444' },
+                      ]}>
+                        {selectedRequest.status === 'PENDING' ? '대기중' :
+                         selectedRequest.status === 'APPROVED' ? '승인됨' : '거절됨'}
+                      </Text>
                     </View>
                   </View>
-                  <View style={styles.detailContent}>
-                    <Text style={styles.detailMessage}>{selectedRequest.message}</Text>
+
+                  {/* Message Sections - Parsed */}
+                  <View style={styles.detailSectionsContainer}>
+                    {parseMessageSections(selectedRequest.message).map((section, index) => (
+                      <View key={index} style={styles.detailQuestionSection}>
+                        <View style={styles.detailQuestionHeader}>
+                          <View style={styles.detailQuestionBadge}>
+                            <Text style={styles.detailQuestionBadgeText}>{section.title}</Text>
+                          </View>
+                        </View>
+                        <View style={styles.detailAnswerCard}>
+                          <Text style={styles.detailAnswerText}>{section.content}</Text>
+                        </View>
+                      </View>
+                    ))}
+                    {!selectedRequest.message && (
+                      <View style={styles.detailEmptyMessage}>
+                        <Feather name="message-circle" size={24} color="#3F3F46" />
+                        <Text style={styles.detailEmptyMessageText}>작성된 메시지가 없습니다.</Text>
+                      </View>
+                    )}
                   </View>
+
+                  {/* Reject Reason (if rejected) */}
+                  {selectedRequest.status === 'REJECTED' && selectedRequest.rejectReason && (
+                    <View style={styles.detailRejectSection}>
+                      <View style={styles.detailQuestionHeader}>
+                        <View style={[styles.detailQuestionBadge, styles.detailRejectBadge]}>
+                          <Text style={[styles.detailQuestionBadgeText, { color: '#F87171' }]}>거절 사유</Text>
+                        </View>
+                      </View>
+                      <View style={styles.detailRejectCard}>
+                        <Text style={styles.detailRejectText}>{selectedRequest.rejectReason}</Text>
+                      </View>
+                    </View>
+                  )}
+
+                  {/* Action Buttons (only for pending) */}
+                  {selectedRequest.status === 'PENDING' && (
+                    <View style={styles.detailActionButtons}>
+                      <TouchableOpacity
+                        style={styles.detailRejectBtn}
+                        onPress={() => {
+                          setShowDetailModal(false);
+                          openRejectModal(selectedRequest.id);
+                        }}
+                      >
+                        <Feather name="x" size={18} color="#F87171" />
+                        <Text style={styles.detailRejectBtnText}>거절하기</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.detailApproveBtn}
+                        onPress={() => {
+                          setShowDetailModal(false);
+                          handleApprove(selectedRequest.id);
+                        }}
+                      >
+                        <Feather name="check" size={18} color="#FFFFFF" />
+                        <Text style={styles.detailApproveBtnText}>승인하기</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </>
               )}
             </ScrollView>
           </View>
         </View>
       </Modal>
+
+      {/* Custom Alert */}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        icon={alertConfig.icon}
+        iconColor={alertConfig.iconColor}
+        onClose={() => setAlertVisible(false)}
+      />
     </View>
   );
 }

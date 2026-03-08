@@ -179,8 +179,9 @@ export const completeStudy = async (studyId: number): Promise<void> => {
   );
 };
 
-// GET /api/studies/:studyId/requests - Get pending requests (for leader)
-export const getPendingRequests = async (studyId: number): Promise<StudyRequestResponse[]> => {
+// GET /api/studies/:studyId/requests - Get all study requests (for leader)
+// Returns all requests including PENDING, APPROVED, and REJECTED
+export const getStudyRequests = async (studyId: number): Promise<StudyRequestResponse[]> => {
   return withErrorHandling(
     async () => {
       const client = getAuthClient();
@@ -195,6 +196,9 @@ export const getPendingRequests = async (studyId: number): Promise<StudyRequestR
     }
   );
 };
+
+// Alias for backward compatibility
+export const getPendingRequests = getStudyRequests;
 
 // POST /api/study-requests/:requestId/approve - Approve request
 export const approveStudyRequest = async (requestId: number): Promise<void> => {
@@ -225,6 +229,51 @@ export const rejectStudyRequest = async (requestId: number, reason?: string): Pr
       errorMessages: {
         forbidden: '스터디 리더만 신청을 거절할 수 있습니다.',
         notFound: '신청 정보를 찾을 수 없습니다.',
+      },
+    }
+  );
+};
+
+// Study Update Types (uses same structure as StudyCreateRequest)
+export interface StudyUpdateRequest {
+  title?: string;
+  categoryId?: number;
+  subcategoryId?: number;
+  coverImageUrl?: string;
+  tags?: string[];
+  description?: string;
+  targetAudience?: string;
+  goals?: string;
+  studyMethod?: 'ONLINE' | 'OFFLINE' | 'HYBRID';
+  daysOfWeek?: string[];
+  time?: string;
+  durationType?: string;
+  platform?: string;
+  meetingRegion?: string;
+  meetingCity?: string;
+  meetingLatitude?: number;
+  meetingLongitude?: number;
+  maxMembers?: number;
+  deposit?: number;
+  depositRefundPolicy?: string;
+  requirements?: string;
+  curriculums?: Array<{ weekNumber: number; title: string; content: string }>;
+  rules?: Array<{ ruleOrder: number; content: string }>;
+}
+
+// PATCH /api/studies/:studyId - Update study (full update)
+export const updateStudy = async (studyId: number, data: StudyUpdateRequest): Promise<StudyResponse> => {
+  return withErrorHandling(
+    async () => {
+      const client = getAuthClient();
+      const response = await client.patch(`/api/studies/${studyId}`, data);
+      return response.data;
+    },
+    {
+      defaultMessage: '스터디 수정에 실패했습니다.',
+      errorMessages: {
+        forbidden: '스터디 리더만 수정할 수 있습니다.',
+        notFound: '스터디를 찾을 수 없습니다.',
       },
     }
   );
