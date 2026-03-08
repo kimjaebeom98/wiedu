@@ -1,2 +1,3 @@
 // Common components barrel export
-// TODO: Add shared UI components (Button, Input, Card, etc.)
+export { default as CustomAlert } from './CustomAlert';
+export type { CustomAlertProps, AlertButton } from './CustomAlert';
