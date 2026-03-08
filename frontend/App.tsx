@@ -26,6 +26,7 @@ import RegionPickerScreen from './src/screens/RegionPickerScreen';
 import ReviewWriteScreen from './src/screens/ReviewWriteScreen';
 import MemberReviewScreen from './src/screens/MemberReviewScreen';
 import ApplicantManagementScreen from './src/screens/applicant-management/ApplicantManagementScreen';
+import StudyMembersScreen from './src/screens/StudyMembersScreen';
 import { getAccessToken } from './src/storage/token';
 import { getMyProfile } from './src/api/profile';
 import { RootStackParamList } from './src/navigation/types';
@@ -150,6 +151,7 @@ export default function App() {
           <Stack.Screen name="ReviewWrite" component={ReviewWriteScreen} />
           <Stack.Screen name="MemberReview" component={MemberReviewScreen} />
           <Stack.Screen name="ApplicantManagement" component={ApplicantManagementScreen} />
+          <Stack.Screen name="StudyMembers" component={StudyMembersScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>
