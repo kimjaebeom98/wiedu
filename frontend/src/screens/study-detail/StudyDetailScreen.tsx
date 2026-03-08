@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,12 +7,12 @@ import {
   StatusBar,
   ActivityIndicator,
   Image,
-  Alert,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Feather } from '@expo/vector-icons';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import {
@@ -20,7 +20,7 @@ import {
   closeStudy,
   completeStudy,
   getMyStudyRequests,
-  getPendingRequests,
+  getStudyRequests,
   approveStudyRequest,
   rejectStudyRequest,
   StudyRequestResponse,
@@ -29,6 +29,7 @@ import { getLeaderReviews } from '../../api/review';
 import { StudyDetailResponse } from '../../types/study';
 import { StudyLeaderReviewsResponse } from '../../types/review';
 import { formatLocationDisplay } from '../../utils/location';
+import { CustomAlert, AlertButton } from '../../components/common';
 import { styles } from './styles';
 import { TabType } from './types';
 import BoardListView from '../study-board/BoardListView';
@@ -91,12 +92,36 @@ export default function StudyDetailScreen() {
   const [myApplication, setMyApplication] = useState<StudyRequestResponse | null>(null);
   const [applicants, setApplicants] = useState<StudyRequestResponse[]>([]);
   const [applicantsLoading, setApplicantsLoading] = useState(false);
+  const [expandedCurriculums, setExpandedCurriculums] = useState<Set<number>>(new Set());
+  const [showPolicyModal, setShowPolicyModal] = useState(false);
 
-  useEffect(() => {
-    loadStudyDetail();
-    loadCurrentUser();
-    loadMyApplication();
-  }, [studyId]);
+  // Toggle curriculum expansion
+  const toggleCurriculum = (index: number) => {
+    setExpandedCurriculums(prev => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
+  };
+
+  // Custom Alert State
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    title: string;
+    message?: string;
+    buttons?: AlertButton[];
+    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'user-check' | 'user-x' | 'lock' | 'calendar';
+    iconColor?: string;
+  }>({ title: '' });
+
+  const showAlert = (config: typeof alertConfig) => {
+    setAlertConfig(config);
+    setAlertVisible(true);
+  };
 
   const loadMyApplication = async () => {
     try {
@@ -109,54 +134,101 @@ export default function StudyDetailScreen() {
     }
   };
 
-  const loadApplicants = async () => {
+  const loadApplicants = useCallback(async () => {
     setApplicantsLoading(true);
     try {
-      const data = await getPendingRequests(studyId);
+      const data = await getStudyRequests(studyId);
       setApplicants(data);
     } catch (error) {
       console.log('Failed to load applicants or not a leader');
     } finally {
       setApplicantsLoading(false);
     }
-  };
+  }, [studyId]);
+
+  useEffect(() => {
+    loadStudyDetail();
+    loadCurrentUser();
+    loadMyApplication();
+  }, [studyId]);
+
+  // Reload study data when screen gains focus (e.g., returning from edit)
+  useFocusEffect(
+    useCallback(() => {
+      loadStudyDetail();
+      if (study?.leader?.id === currentUserId && study?.status === 'RECRUITING') {
+        loadApplicants();
+      }
+    }, [study?.leader?.id, study?.status, currentUserId, loadApplicants])
+  );
 
   const handleApproveApplicant = async (requestId: number) => {
-    Alert.alert('승인 확인', '이 신청자를 승인하시겠습니까?', [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '승인',
-        onPress: async () => {
-          try {
-            await approveStudyRequest(requestId);
-            Alert.alert('완료', '신청이 승인되었습니다.');
-            loadApplicants();
-            loadStudyDetail();
-          } catch (error: any) {
-            Alert.alert('오류', error.response?.data?.message || '승인에 실패했습니다.');
-          }
+    showAlert({
+      title: '승인 확인',
+      message: '이 신청자를 승인하시겠습니까?',
+      icon: 'user-check',
+      buttons: [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '승인',
+          style: 'default',
+          onPress: async () => {
+            try {
+              await approveStudyRequest(requestId);
+              showAlert({
+                title: '승인 완료',
+                message: '신청이 승인되었습니다.',
+                icon: 'check-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
+              loadApplicants();
+              loadStudyDetail();
+            } catch (error: any) {
+              showAlert({
+                title: '오류',
+                message: error.response?.data?.message || '승인에 실패했습니다.',
+                icon: 'alert-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
+            }
+          },
         },
-      },
-    ]);
+      ],
+    });
   };
 
   const handleRejectApplicant = async (requestId: number) => {
-    Alert.alert('거절 확인', '이 신청자를 거절하시겠습니까?', [
-      { text: '취소', style: 'cancel' },
-      {
-        text: '거절',
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await rejectStudyRequest(requestId);
-            Alert.alert('완료', '신청이 거절되었습니다.');
-            loadApplicants();
-          } catch (error: any) {
-            Alert.alert('오류', error.response?.data?.message || '거절에 실패했습니다.');
-          }
+    showAlert({
+      title: '거절 확인',
+      message: '이 신청자를 거절하시겠습니까?',
+      icon: 'user-x',
+      buttons: [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '거절',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await rejectStudyRequest(requestId);
+              showAlert({
+                title: '거절 완료',
+                message: '신청이 거절되었습니다.',
+                icon: 'check-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
+              loadApplicants();
+            } catch (error: any) {
+              showAlert({
+                title: '오류',
+                message: error.response?.data?.message || '거절에 실패했습니다.',
+                icon: 'alert-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
+            }
+          },
         },
-      },
-    ]);
+      ],
+    });
   };
 
   const loadCurrentUser = async () => {
@@ -189,7 +261,12 @@ export default function StudyDetailScreen() {
       }
     } catch (error) {
       console.error('Failed to load study detail:', error);
-      Alert.alert('오류', '스터디 정보를 불러오는데 실패했습니다.');
+      showAlert({
+        title: '오류',
+        message: '스터디 정보를 불러오는데 실패했습니다.',
+        icon: 'alert-circle',
+        buttons: [{ text: '확인', style: 'default' }],
+      });
     } finally {
       setLoading(false);
     }
@@ -248,10 +325,11 @@ export default function StudyDetailScreen() {
   };
 
   const handleCloseStudy = () => {
-    Alert.alert(
-      '모집 마감',
-      '스터디 모집을 마감하시겠습니까?\n마감 후에는 새로운 멤버를 받을 수 없습니다.',
-      [
+    showAlert({
+      title: '모집 마감',
+      message: '스터디 모집을 마감하시겠습니까?\n마감 후에는 새로운 멤버를 받을 수 없습니다.',
+      icon: 'lock',
+      buttons: [
         { text: '취소', style: 'cancel' },
         {
           text: '마감하기',
@@ -260,44 +338,66 @@ export default function StudyDetailScreen() {
             setProcessing(true);
             try {
               await closeStudy(studyId);
-              Alert.alert('완료', '스터디 모집이 마감되었습니다.');
-              loadStudyDetail(); // 상태 새로고침
+              showAlert({
+                title: '마감 완료',
+                message: '스터디 모집이 마감되었습니다.',
+                icon: 'check-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
+              loadStudyDetail();
             } catch (error: any) {
               console.error('Failed to close study:', error);
-              Alert.alert('오류', error.response?.data?.message || '스터디 마감에 실패했습니다.');
+              showAlert({
+                title: '오류',
+                message: error.response?.data?.message || '스터디 마감에 실패했습니다.',
+                icon: 'alert-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
             } finally {
               setProcessing(false);
             }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const handleCompleteStudy = () => {
-    Alert.alert(
-      '스터디 종료',
-      '스터디를 종료하시겠습니까?\n종료 후에는 멤버들이 리뷰를 작성할 수 있습니다.',
-      [
+    showAlert({
+      title: '스터디 종료',
+      message: '스터디를 종료하시겠습니까?\n종료 후에는 멤버들이 리뷰를 작성할 수 있습니다.',
+      icon: 'calendar',
+      buttons: [
         { text: '취소', style: 'cancel' },
         {
           text: '종료하기',
+          style: 'default',
           onPress: async () => {
             setProcessing(true);
             try {
               await completeStudy(studyId);
-              Alert.alert('완료', '스터디가 종료되었습니다. 멤버들에게 리뷰 작성을 요청해보세요!');
-              loadStudyDetail(); // 상태 새로고침
+              showAlert({
+                title: '종료 완료',
+                message: '스터디가 종료되었습니다.\n멤버들에게 리뷰 작성을 요청해보세요!',
+                icon: 'check-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
+              loadStudyDetail();
             } catch (error: any) {
               console.error('Failed to complete study:', error);
-              Alert.alert('오류', error.response?.data?.message || '스터디 종료에 실패했습니다.');
+              showAlert({
+                title: '오류',
+                message: error.response?.data?.message || '스터디 종료에 실패했습니다.',
+                icon: 'alert-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
             } finally {
               setProcessing(false);
             }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   if (loading) {
@@ -332,6 +432,11 @@ export default function StudyDetailScreen() {
         </TouchableOpacity>
         <Text style={styles.headerTitle}>스터디 상세</Text>
         <View style={styles.headerActions}>
+          {study.leader.id === currentUserId && (
+            <TouchableOpacity onPress={() => navigation.navigate('StudyCreate', { studyId: study.id })}>
+              <Feather name="edit-2" size={22} color="#8B5CF6" />
+            </TouchableOpacity>
+          )}
           <TouchableOpacity>
             <Feather name="share-2" size={22} color="#A1A1AA" />
           </TouchableOpacity>
@@ -353,7 +458,7 @@ export default function StudyDetailScreen() {
             intro: '소개',
             board: '게시판',
             gallery: '사진첩',
-            applicants: '신청자',
+            applicants: '가입관리',
           };
           const pendingCount = applicants.filter(a => a.status === 'PENDING').length;
 
@@ -538,26 +643,50 @@ export default function StudyDetailScreen() {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>참여 멤버</Text>
-                <Text style={styles.membersCount}>
-                  {study.currentMembers}/{study.maxMembers}명
-                </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('StudyMembers', { studyId: study.id, studyTitle: study.title })}>
+                  <Text style={styles.viewMoreLink}>자세히보기</Text>
+                </TouchableOpacity>
               </View>
-              <View style={styles.membersAvatars}>
-                {Array.from({ length: Math.min(study.currentMembers, 4) }).map((_, idx) => (
-                  <View
-                    key={idx}
-                    style={[
-                      styles.memberAvatar,
-                      {
-                        marginLeft: idx > 0 ? -8 : 0,
-                        backgroundColor: MEMBER_AVATAR_COLORS[idx % MEMBER_AVATAR_COLORS.length],
-                      },
-                    ]}
-                  />
-                ))}
-                {study.currentMembers > 4 && (
-                  <View style={[styles.memberAvatar, styles.memberAvatarMore]}>
-                    <Text style={styles.memberAvatarMoreText}>+{study.currentMembers - 4}</Text>
+              <View style={styles.membersListContainer}>
+                {study.members && study.members.length > 0 ? (
+                  study.members.slice(0, 5).map((member) => (
+                    <View key={member.id} style={styles.memberItem}>
+                      <View style={styles.memberAvatarWrapper}>
+                        <View style={styles.memberCircleAvatar}>
+                          {member.profileImage ? (
+                            <Image source={{ uri: member.profileImage }} style={styles.memberCircleAvatarImg} />
+                          ) : (
+                            <Feather name="user" size={22} color="#71717A" />
+                          )}
+                        </View>
+                        {member.role === 'LEADER' && (
+                          <View style={styles.leaderBadgeOverlay}>
+                            <Feather name="star" size={12} color="#FFFFFF" />
+                          </View>
+                        )}
+                      </View>
+                      <Text style={styles.memberNickname} numberOfLines={1}>{member.nickname}</Text>
+                    </View>
+                  ))
+                ) : (
+                  <View style={styles.membersAvatars}>
+                    {Array.from({ length: Math.min(study.currentMembers, 4) }).map((_, idx) => (
+                      <View
+                        key={idx}
+                        style={[
+                          styles.memberAvatar,
+                          {
+                            marginLeft: idx > 0 ? -8 : 0,
+                            backgroundColor: MEMBER_AVATAR_COLORS[idx % MEMBER_AVATAR_COLORS.length],
+                          },
+                        ]}
+                      />
+                    ))}
+                    {study.currentMembers > 4 && (
+                      <View style={[styles.memberAvatar, styles.memberAvatarMore]}>
+                        <Text style={styles.memberAvatarMoreText}>+{study.currentMembers - 4}</Text>
+                      </View>
+                    )}
                   </View>
                 )}
               </View>
@@ -605,12 +734,29 @@ export default function StudyDetailScreen() {
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>커리큘럼</Text>
                 {study.curriculums.map((item, idx) => (
-                  <View key={idx} style={styles.curriculumItem}>
-                    <View style={[styles.weekBadge, idx === 0 ? styles.weekBadgeActive : styles.weekBadgeInactive]}>
-                      <Text style={styles.weekBadgeText}>{item.weekNumber}</Text>
+                  <TouchableOpacity
+                    key={idx}
+                    style={styles.curriculumItem}
+                    onPress={() => toggleCurriculum(idx)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.curriculumHeader}>
+                      <View style={[styles.weekBadge, idx === 0 ? styles.weekBadgeActive : styles.weekBadgeInactive]}>
+                        <Text style={styles.weekBadgeText}>{item.weekNumber}</Text>
+                      </View>
+                      <Text style={styles.curriculumText}>{item.title}</Text>
+                      <Feather
+                        name={expandedCurriculums.has(idx) ? 'chevron-up' : 'chevron-down'}
+                        size={18}
+                        color="#A1A1AA"
+                      />
                     </View>
-                    <Text style={styles.curriculumText}>{item.title}</Text>
-                  </View>
+                    {expandedCurriculums.has(idx) && item.content && (
+                      <View style={styles.curriculumContent}>
+                        <Text style={styles.curriculumContentText}>{item.content}</Text>
+                      </View>
+                    )}
+                  </TouchableOpacity>
                 ))}
               </View>
             )}
@@ -619,12 +765,21 @@ export default function StudyDetailScreen() {
             {study.rules && study.rules.length > 0 && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>스터디 규칙</Text>
-                <View style={styles.rulesCard}>
+                <View style={styles.rulesContainer}>
                   {study.rules.map((rule, idx) => (
-                    <Text key={idx} style={styles.ruleText}>
-                      • {rule.content}
-                    </Text>
+                    <View key={idx} style={styles.ruleCard}>
+                      <View style={styles.ruleNumberBadge}>
+                        <Text style={styles.ruleNumberText}>{idx + 1}</Text>
+                      </View>
+                      <Text style={styles.ruleCardText}>{rule.content}</Text>
+                    </View>
                   ))}
+                  <View style={styles.ruleNotice}>
+                    <Feather name="alert-circle" size={14} color="#F59E0B" />
+                    <Text style={styles.ruleNoticeText}>
+                      규칙 미준수 시 스터디장의 판단에 따라 제명될 수 있습니다
+                    </Text>
+                  </View>
                 </View>
               </View>
             )}
@@ -633,52 +788,33 @@ export default function StudyDetailScreen() {
             {study.deposit && (
               <View style={styles.section}>
                 <Text style={styles.sectionTitle}>보증금 정보</Text>
-                <View style={styles.feeCard}>
-                  <View style={styles.feeRow}>
-                    <Text style={styles.feeLabel}>보증금</Text>
-                    <Text style={styles.feeValue}>{study.deposit.toLocaleString()}원</Text>
+                <View style={styles.depositCard}>
+                  <View style={styles.depositHeader}>
+                    <View style={styles.depositIconWrapper}>
+                      <Feather name="dollar-sign" size={20} color="#22C55E" />
+                    </View>
+                    <View style={styles.depositInfo}>
+                      <Text style={styles.depositLabel}>보증금</Text>
+                      <Text style={styles.depositValue}>{study.deposit.toLocaleString()}원</Text>
+                    </View>
                   </View>
+                  {study.depositRefundPolicy && (
+                    <TouchableOpacity
+                      style={styles.policyLinkRow}
+                      onPress={() => setShowPolicyModal(true)}
+                    >
+                      <Feather name="info" size={14} color="#8B5CF6" />
+                      <Text style={styles.policyLinkText}>환불 정책 자세히보기</Text>
+                      <Feather name="chevron-right" size={16} color="#8B5CF6" />
+                    </TouchableOpacity>
+                  )}
                 </View>
               </View>
             )}
 
-            {/* Reviews Section */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>스터디장 리뷰</Text>
-                {leaderReviews && leaderReviews.totalCount > 0 && (
-                  <Text style={styles.membersCount}>
-                    ⭐ {leaderReviews.averageRating?.toFixed(1) || '-'} ({leaderReviews.totalCount})
-                  </Text>
-                )}
-              </View>
-              {leaderReviews && leaderReviews.reviews.length > 0 ? (
-                <View style={styles.reviewsContainer}>
-                  {leaderReviews.reviews.slice(0, 2).map((review) => (
-                    <View key={review.id} style={styles.reviewCard}>
-                      <View style={styles.reviewHeader}>
-                        <View style={styles.reviewerInfo}>
-                          <View style={styles.reviewerAvatar}>
-                            <Feather name="user" size={14} color="#71717A" />
-                          </View>
-                          <Text style={styles.reviewerName}>{review.reviewerNickname}</Text>
-                        </View>
-                        <View style={styles.ratingBadge}>
-                          <Text style={styles.ratingText}>⭐ {review.rating}</Text>
-                        </View>
-                      </View>
-                      <Text style={styles.reviewContent} numberOfLines={2}>
-                        {review.content}
-                      </Text>
-                    </View>
-                  ))}
-                </View>
-              ) : (
-                <View style={styles.noReviewsContainer}>
-                  <Text style={styles.noReviewsText}>아직 작성된 리뷰가 없습니다.</Text>
-                </View>
-              )}
-              {study.status === 'COMPLETED' && (
+            {/* Reviews Section - only show if completed */}
+            {study.status === 'COMPLETED' && (
+              <View style={styles.section}>
                 <View style={styles.reviewButtonsContainer}>
                   <TouchableOpacity style={styles.writeReviewBtn} onPress={handleWriteReview}>
                     <Feather name="edit-2" size={16} color="#8B5CF6" />
@@ -689,8 +825,8 @@ export default function StudyDetailScreen() {
                     <Text style={styles.writeReviewBtnText}>멤버 평가</Text>
                   </TouchableOpacity>
                 </View>
-              )}
-            </View>
+              </View>
+            )}
 
             {/* Spacer for bottom bar */}
             <View style={{ height: 200 }} />
@@ -708,14 +844,6 @@ export default function StudyDetailScreen() {
             <View style={styles.leaderActionsWrapper}>
               {study.status === 'RECRUITING' && (
                 <>
-                  <TouchableOpacity
-                    style={styles.applicantManageBtn}
-                    onPress={handleApplicantManagement}
-                  >
-                    <Feather name="users" size={18} color="#8B5CF6" />
-                    <Text style={styles.applicantManageBtnText}>신청자 관리</Text>
-                    <Feather name="chevron-right" size={18} color="#8B5CF6" />
-                  </TouchableOpacity>
                   <View style={styles.leaderActionsContainer}>
                     <TouchableOpacity
                       style={[styles.leaderBtn, styles.closeBtn]}
@@ -777,38 +905,32 @@ export default function StudyDetailScreen() {
                 </View>
               )}
             </View>
+          ) : study.isMember ? (
+            // 이미 멤버인 경우 - 하단 바 숨김 (null 반환)
+            null
           ) : (
             // 일반 사용자 - 참여 신청 버튼
             study.status === 'RECRUITING' ? (
               myApplication ? (
-                // 이미 신청한 경우
+                // 이미 신청한 경우 (대기중 또는 거절됨만 표시, 승인됨은 isMember로 처리)
                 <View style={styles.applicationStatusContainer}>
                   <View style={[
                     styles.applicationStatusBtn,
                     myApplication.status === 'PENDING' && styles.pendingBtn,
-                    myApplication.status === 'APPROVED' && styles.approvedBtn,
                     myApplication.status === 'REJECTED' && styles.rejectedBtn,
                   ]}>
                     <Feather
-                      name={
-                        myApplication.status === 'PENDING' ? 'clock' :
-                        myApplication.status === 'APPROVED' ? 'check-circle' : 'x-circle'
-                      }
+                      name={myApplication.status === 'PENDING' ? 'clock' : 'x-circle'}
                       size={18}
-                      color={
-                        myApplication.status === 'PENDING' ? '#F59E0B' :
-                        myApplication.status === 'APPROVED' ? '#22C55E' : '#EF4444'
-                      }
+                      color={myApplication.status === 'PENDING' ? '#F59E0B' : '#EF4444'}
                       style={{ marginRight: 8 }}
                     />
                     <Text style={[
                       styles.applicationStatusBtnText,
                       myApplication.status === 'PENDING' && styles.pendingText,
-                      myApplication.status === 'APPROVED' && styles.approvedText,
                       myApplication.status === 'REJECTED' && styles.rejectedText,
                     ]}>
-                      {myApplication.status === 'PENDING' ? '신청 대기중' :
-                       myApplication.status === 'APPROVED' ? '신청 승인됨' : '신청 거절됨'}
+                      {myApplication.status === 'PENDING' ? '신청 대기중' : '신청 거절됨'}
                     </Text>
                   </View>
                   {myApplication.status === 'REJECTED' && myApplication.rejectReason && (
@@ -832,6 +954,52 @@ export default function StudyDetailScreen() {
           )}
         </View>
       )}
+
+      {/* Custom Alert */}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        icon={alertConfig.icon}
+        iconColor={alertConfig.iconColor}
+        onClose={() => setAlertVisible(false)}
+      />
+
+      {/* Deposit Refund Policy Modal */}
+      <Modal
+        visible={showPolicyModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowPolicyModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>보증금 환불 정책</Text>
+              <TouchableOpacity onPress={() => setShowPolicyModal(false)}>
+                <Feather name="x" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.modalBody}>
+              <View style={styles.policyCard}>
+                <View style={styles.policyIcon}>
+                  <Feather name="dollar-sign" size={24} color="#22C55E" />
+                </View>
+                <Text style={styles.policyText}>
+                  {study?.depositRefundPolicy || '환불 정책이 설정되지 않았습니다.'}
+                </Text>
+              </View>
+              <View style={styles.policyNotice}>
+                <Feather name="info" size={16} color="#8B5CF6" />
+                <Text style={styles.policyNoticeText}>
+                  환불 조건은 스터디장이 정한 기준에 따릅니다
+                </Text>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

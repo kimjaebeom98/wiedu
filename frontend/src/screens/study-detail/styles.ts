@@ -244,6 +244,126 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     color: '#FFFFFF',
   },
+  // Members Horizontal Row (Updated Design)
+  membersListContainer: {
+    flexDirection: 'row',
+    gap: 20,
+  },
+  memberItem: {
+    alignItems: 'center',
+    width: 52,
+  },
+  memberAvatarWrapper: {
+    width: 52,
+    height: 52,
+    position: 'relative',
+  },
+  memberCircleAvatar: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    backgroundColor: '#3F3F46',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  memberCircleAvatarImg: {
+    width: 52,
+    height: 52,
+  },
+  leaderBadgeOverlay: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 6,
+    backgroundColor: '#8B5CF6',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#18181B',
+  },
+  memberNickname: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#A1A1AA',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  viewMoreLink: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#8B5CF6',
+  },
+  // Legacy styles (kept for fallback)
+  leaderBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#8B5CF620',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 100,
+  },
+  leaderBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#8B5CF6',
+  },
+  // Leader Intro Section (New)
+  leaderIntroCard: {
+    backgroundColor: '#27272A',
+    borderRadius: 16,
+    padding: 20,
+  },
+  leaderIntroHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 16,
+  },
+  leaderIntroAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#3F3F46',
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+  },
+  leaderIntroAvatarImg: {
+    width: 56,
+    height: 56,
+  },
+  leaderIntroInfo: {
+    flex: 1,
+  },
+  leaderIntroNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  leaderIntroName: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  leaderIntroTemp: {
+    fontSize: 13,
+    color: '#A1A1AA',
+    marginTop: 4,
+  },
+  leaderIntroBio: {
+    fontSize: 14,
+    color: '#E4E4E7',
+    lineHeight: 22,
+  },
+  leaderIntroNoBio: {
+    fontSize: 14,
+    color: '#71717A',
+    fontStyle: 'italic',
+  },
 
   // Description
   descriptionText: {
@@ -277,13 +397,15 @@ export const styles = StyleSheet.create({
 
   // Curriculum
   curriculumItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
     backgroundColor: '#27272A',
     borderRadius: 12,
     padding: 16,
     marginBottom: 8,
+  },
+  curriculumHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
   },
   weekBadge: {
     width: 32,
@@ -309,13 +431,69 @@ export const styles = StyleSheet.create({
     color: '#FFFFFF',
     flex: 1,
   },
+  curriculumContent: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#3F3F46',
+  },
+  curriculumContentText: {
+    fontSize: 14,
+    color: '#A1A1AA',
+    lineHeight: 20,
+  },
 
   // Rules
+  rulesContainer: {
+    gap: 10,
+  },
   rulesCard: {
     backgroundColor: '#27272A',
     borderRadius: 16,
     padding: 16,
     gap: 10,
+  },
+  ruleCard: {
+    backgroundColor: '#27272A',
+    borderRadius: 12,
+    padding: 14,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  ruleNumberBadge: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#8B5CF6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  ruleNumberText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  ruleCardText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#E4E4E7',
+    lineHeight: 20,
+  },
+  ruleNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#F59E0B15',
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 4,
+  },
+  ruleNoticeText: {
+    flex: 1,
+    fontSize: 12,
+    color: '#F59E0B',
+    lineHeight: 18,
   },
   ruleText: {
     fontSize: 14,
@@ -341,6 +519,124 @@ export const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+
+  // Deposit Card (New)
+  depositCard: {
+    backgroundColor: '#27272A',
+    borderRadius: 16,
+    padding: 16,
+    gap: 14,
+  },
+  depositHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  depositIconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#22C55E20',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  depositInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  depositLabel: {
+    fontSize: 13,
+    color: '#71717A',
+  },
+  depositValue: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  policyLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#8B5CF610',
+    borderRadius: 10,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#8B5CF630',
+  },
+  policyLinkText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#8B5CF6',
+  },
+
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    width: '100%',
+    maxHeight: '70%',
+    backgroundColor: '#27272A',
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3F3F46',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  modalBody: {
+    padding: 20,
+  },
+  policyCard: {
+    backgroundColor: '#3F3F4640',
+    borderRadius: 16,
+    padding: 20,
+    alignItems: 'center',
+    gap: 16,
+  },
+  policyIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#22C55E20',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  policyText: {
+    fontSize: 15,
+    color: '#E4E4E7',
+    lineHeight: 24,
+    textAlign: 'center',
+  },
+  policyNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#8B5CF615',
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 16,
+  },
+  policyNoticeText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#A78BFA',
+    lineHeight: 18,
   },
 
   // Empty Tab
