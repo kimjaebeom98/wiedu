@@ -4,19 +4,19 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   ActivityIndicator,
   StatusBar,
   KeyboardAvoidingView,
   Platform,
   Keyboard,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
 import { RootStackParamList } from '../../navigation/types';
-import { fetchCategories, createStudy } from '../../api/study';
-import { Category, StudyCreateData, CurriculumItem } from '../../types/study';
+import { fetchCategories, createStudy, getStudyDetail, updateStudy } from '../../api/study';
+import { Category, StudyCreateData, CurriculumItem, DurationType } from '../../types/study';
 import { TOTAL_STEPS, STEP_INFO, INITIAL_DATA } from './constants';
 import { styles } from './styles';
 
@@ -28,12 +28,19 @@ import Step5Curriculum from './steps/Step5Curriculum';
 import Step6Preview from './steps/Step6Preview';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type StudyCreateRouteProp = RouteProp<RootStackParamList, 'StudyCreate'>;
 
 export default function StudyCreateScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<StudyCreateRouteProp>();
+  const insets = useSafeAreaInsets();
+  const studyId = route.params?.studyId;
+  const isEditMode = !!studyId;
+
   const scrollViewRef = useRef<ScrollView>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(isEditMode);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [error, setError] = useState('');
   const [categories, setCategories] = useState<Category[]>([]);
@@ -55,6 +62,72 @@ export default function StudyCreateScreen() {
     };
     loadCategories();
   }, []);
+
+  // Load existing study data in edit mode
+  useEffect(() => {
+    if (!isEditMode || !studyId) return;
+
+    const loadStudyData = async () => {
+      setInitialLoading(true);
+      try {
+        const study = await getStudyDetail(studyId);
+
+        // Find category ID from categories list
+        let categoryId: number | null = null;
+        let subcategoryId: number | null = null;
+
+        // We'll set categoryId after categories are loaded
+        // For now, search by name
+        const foundCategory = categories.find(c => c.name === study.categoryName);
+        if (foundCategory) {
+          categoryId = foundCategory.id;
+          if (study.subcategoryName) {
+            const foundSub = foundCategory.subcategories?.find(s => s.name === study.subcategoryName);
+            if (foundSub) subcategoryId = foundSub.id;
+          }
+        }
+
+        // Parse daysOfWeek from comma-separated string
+        const daysOfWeek = study.daysOfWeek ? study.daysOfWeek.split(',').map(d => d.trim()) : [];
+
+        setData({
+          title: study.title,
+          categoryId,
+          subcategoryId,
+          coverImageUrl: study.coverImageUrl || '',
+          tags: study.tags || [],
+          description: study.description,
+          targetAudience: study.targetAudience || '',
+          goals: study.goals || '',
+          studyMethod: study.studyMethod || null,
+          daysOfWeek,
+          time: study.time || '',
+          durationType: study.durationType || null,
+          platform: study.platform || '',
+          meetingRegion: study.meetingRegion || '',
+          meetingCity: study.meetingCity || '',
+          meetingLatitude: null,
+          meetingLongitude: null,
+          maxMembers: study.maxMembers,
+          deposit: study.deposit || 0,
+          depositRefundPolicy: study.depositRefundPolicy || '',
+          requirements: study.requirements || '',
+          curriculums: study.curriculums || [],
+          rules: study.rules || [],
+        });
+      } catch (err) {
+        console.error('Failed to load study:', err);
+        setError('스터디 정보를 불러오는데 실패했습니다.');
+      } finally {
+        setInitialLoading(false);
+      }
+    };
+
+    // Wait for categories to load first
+    if (categories.length > 0) {
+      loadStudyData();
+    }
+  }, [isEditMode, studyId, categories]);
 
   // ─── Updaters ─────────────────────────────────────────────────────────
 
@@ -230,7 +303,7 @@ export default function StudyCreateScreen() {
     }
     setLoading(true);
     try {
-      const response = await createStudy({
+      const requestData = {
         title: data.title.trim(),
         categoryId: data.categoryId,
         subcategoryId: data.subcategoryId ?? undefined,
@@ -258,10 +331,18 @@ export default function StudyCreateScreen() {
         rules: data.rules.filter(r => r.content.trim()).length > 0
           ? data.rules.filter(r => r.content.trim())
           : undefined,
-      });
-      navigation.replace('Home');
+      };
+
+      if (isEditMode && studyId) {
+        await updateStudy(studyId, requestData);
+        navigation.goBack();
+      } else {
+        await createStudy(requestData);
+        navigation.replace('Home');
+      }
     } catch (err: any) {
-      setError(err?.response?.data?.message || '스터디 등록에 실패했습니다. 다시 시도해주세요.');
+      const defaultMsg = isEditMode ? '스터디 수정에 실패했습니다.' : '스터디 등록에 실패했습니다.';
+      setError(err?.response?.data?.message || err?.message || defaultMsg);
     } finally {
       setLoading(false);
     }
@@ -273,10 +354,23 @@ export default function StudyCreateScreen() {
 
   // ─── Render ───────────────────────────────────────────────────────────
 
+  // Show loading screen while loading existing study data in edit mode
+  if (initialLoading) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#18181B" />
+        <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: insets.bottom, justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color="#8B5CF6" />
+          <Text style={{ color: '#A1A1AA', marginTop: 16 }}>스터디 정보를 불러오는 중...</Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#18181B" />
-      <SafeAreaView style={styles.safeArea}>
+      <View style={[styles.safeArea, { paddingTop: insets.top }]}>
         <KeyboardAvoidingView
           style={styles.keyboardView}
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -356,7 +450,7 @@ export default function StudyCreateScreen() {
               </ScrollView>
 
               {/* Bottom Buttons */}
-              <View style={styles.buttons}>
+              <View style={[styles.buttons, { paddingBottom: Math.max(insets.bottom, 16) }]}>
                 <TouchableOpacity
                   style={[
                     styles.nextBtn,
@@ -371,7 +465,7 @@ export default function StudyCreateScreen() {
                     <ActivityIndicator color="#FFF" size="small" />
                   ) : (
                     <Text style={styles.nextBtnText}>
-                      {currentStep === TOTAL_STEPS ? '등록하기' : '다음'}
+                      {currentStep === TOTAL_STEPS ? (isEditMode ? '수정하기' : '등록하기') : '다음'}
                     </Text>
                   )}
                 </TouchableOpacity>
@@ -379,7 +473,7 @@ export default function StudyCreateScreen() {
 
             </View>
           </KeyboardAvoidingView>
-        </SafeAreaView>
+        </View>
       </View>
   );
 }
