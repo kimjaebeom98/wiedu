@@ -62,6 +62,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/studies/status/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/studies/category/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/studies/search").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/studies/popular").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/studies/popular/all").permitAll()
                         // Study category public endpoints
                         .requestMatchers(HttpMethod.GET, "/api/study-categories").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/study-categories/**").permitAll()
