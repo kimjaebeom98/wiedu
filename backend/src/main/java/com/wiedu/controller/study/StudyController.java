@@ -148,6 +148,31 @@ public class StudyController {
     }
 
     /**
+     * 인기 스터디 목록 페이지네이션 (충원율 높은 순)
+     * GET /api/studies/popular/all?page=0&size=10
+     */
+    @GetMapping("/popular/all")
+    public ResponseEntity<Page<StudyListResponse>> getPopularStudiesPaginated(
+            @PageableDefault(size = 10) Pageable pageable) {
+        Page<StudyListResponse> response = studyService.findPopularStudiesPaginated(pageable);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 근처 스터디 검색 페이지네이션
+     * GET /api/studies/nearby/all?latitude=&longitude=&radius=&page=0&size=10
+     */
+    @GetMapping("/nearby/all")
+    public ResponseEntity<Page<StudyListResponse>> getNearbyStudiesPaginated(
+            @RequestParam Double latitude,
+            @RequestParam Double longitude,
+            @RequestParam(defaultValue = "10.0") Double radius,
+            @PageableDefault(size = 10) Pageable pageable) {
+        Page<StudyListResponse> response = studyService.findNearbyStudiesPaginated(latitude, longitude, radius, pageable);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * 스터디 마감
      * POST /api/studies/{studyId}/close
      */

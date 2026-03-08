@@ -88,6 +88,13 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
             "ORDER BY (s.currentMembers * 1.0 / NULLIF(s.maxMembers, 0)) DESC, s.currentMembers DESC")
     List<Study> findPopularStudies(Pageable pageable);
 
+    // 인기 스터디 페이지네이션 (충원율 높은 순, 모집중인 스터디만)
+    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category " +
+            "WHERE s.status = 'RECRUITING' " +
+            "ORDER BY (s.currentMembers * 1.0 / NULLIF(s.maxMembers, 0)) DESC, s.currentMembers DESC",
+            countQuery = "SELECT COUNT(s) FROM Study s WHERE s.status = 'RECRUITING'")
+    Page<Study> findPopularStudiesPaginated(Pageable pageable);
+
     // 최신 스터디 (모집중, 생성일 기준 최신순) - 인기 스터디 fallback용
     @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category " +
             "WHERE s.status = 'RECRUITING' " +
@@ -119,6 +126,32 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
             "cos(radians(s.meeting_longitude) - radians(:lng)) + " +
             "sin(radians(:lat)) * sin(radians(s.meeting_latitude))))))", nativeQuery = true)
     List<Study> findNearbyStudies(@Param("lat") Double lat, @Param("lng") Double lng, @Param("radius") Double radiusKm);
+
+    // 근처 스터디 검색 페이지네이션 (Haversine 공식)
+    @Query(value = "SELECT s.* FROM studies s " +
+            "WHERE s.meeting_latitude IS NOT NULL " +
+            "AND s.meeting_longitude IS NOT NULL " +
+            "AND s.status = 'RECRUITING' " +
+            "AND s.study_method IN ('OFFLINE', 'HYBRID') " +
+            "AND (6371 * acos(LEAST(1.0, GREATEST(-1.0, " +
+            "cos(radians(:lat)) * cos(radians(s.meeting_latitude)) * " +
+            "cos(radians(s.meeting_longitude) - radians(:lng)) + " +
+            "sin(radians(:lat)) * sin(radians(s.meeting_latitude)))))) < :radius " +
+            "ORDER BY (6371 * acos(LEAST(1.0, GREATEST(-1.0, " +
+            "cos(radians(:lat)) * cos(radians(s.meeting_latitude)) * " +
+            "cos(radians(s.meeting_longitude) - radians(:lng)) + " +
+            "sin(radians(:lat)) * sin(radians(s.meeting_latitude))))))",
+            countQuery = "SELECT COUNT(*) FROM studies s " +
+            "WHERE s.meeting_latitude IS NOT NULL " +
+            "AND s.meeting_longitude IS NOT NULL " +
+            "AND s.status = 'RECRUITING' " +
+            "AND s.study_method IN ('OFFLINE', 'HYBRID') " +
+            "AND (6371 * acos(LEAST(1.0, GREATEST(-1.0, " +
+            "cos(radians(:lat)) * cos(radians(s.meeting_latitude)) * " +
+            "cos(radians(s.meeting_longitude) - radians(:lng)) + " +
+            "sin(radians(:lat)) * sin(radians(s.meeting_latitude)))))) < :radius",
+            nativeQuery = true)
+    Page<Study> findNearbyStudiesPaginated(@Param("lat") Double lat, @Param("lng") Double lng, @Param("radius") Double radiusKm, Pageable pageable);
 
     /**
      * 멤버 수 atomic 증가 (Lost Update 방지)

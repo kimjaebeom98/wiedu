@@ -3,12 +3,14 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
+  Image,
+  StatusBar,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CustomAlert, AlertButton } from '../components/common';
 import { Feather } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -37,6 +39,7 @@ const SATISFACTION_OPTIONS: SatisfactionOption[] = [
 export default function MemberReviewScreen() {
   const navigation = useNavigation<MemberReviewScreenNavigationProp>();
   const route = useRoute<MemberReviewScreenRouteProp>();
+  const insets = useSafeAreaInsets();
   const { studyId, studyTitle } = route.params;
 
   const [members, setMembers] = useState<StudyMemberToReview[]>([]);
@@ -114,18 +117,20 @@ export default function MemberReviewScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#18181B" />
+        <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
           <ActivityIndicator size="large" color="#8B5CF6" />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#18181B" />
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
           <Feather name="x" size={24} color="#FFFFFF" />
         </TouchableOpacity>
@@ -146,13 +151,26 @@ export default function MemberReviewScreen() {
           <View style={styles.allReviewedContainer}>
             <Text style={styles.allReviewedEmoji}>🎉</Text>
             <Text style={styles.allReviewedText}>모든 멤버 평가를 완료했습니다!</Text>
+            <Text style={styles.allReviewedSubText}>
+              평가해 주셔서 감사합니다.{'\n'}평가는 멤버의 온도에 반영됩니다.
+            </Text>
+            <TouchableOpacity
+              style={styles.homeButton}
+              onPress={() => navigation.reset({ index: 0, routes: [{ name: 'Home' }] })}
+            >
+              <Text style={styles.homeButtonText}>홈으로 돌아가기</Text>
+            </TouchableOpacity>
           </View>
         ) : selectedMember ? (
           /* Review Form */
           <View style={styles.reviewFormContainer}>
             <View style={styles.selectedMemberCard}>
               <View style={styles.memberAvatar}>
-                <Feather name="user" size={24} color="#71717A" />
+                {selectedMember.profileImage ? (
+                  <Image source={{ uri: selectedMember.profileImage }} style={styles.memberAvatarImage} />
+                ) : (
+                  <Feather name="user" size={24} color="#71717A" />
+                )}
               </View>
               <Text style={styles.memberName}>{selectedMember.nickname}</Text>
               <TouchableOpacity onPress={() => setSelectedMember(null)}>
@@ -224,7 +242,11 @@ export default function MemberReviewScreen() {
               >
                 <View style={styles.memberInfo}>
                   <View style={styles.memberAvatar}>
-                    <Feather name="user" size={20} color="#71717A" />
+                    {member.profileImage ? (
+                      <Image source={{ uri: member.profileImage }} style={styles.memberAvatarImage} />
+                    ) : (
+                      <Feather name="user" size={20} color="#71717A" />
+                    )}
                   </View>
                   <Text style={styles.memberName}>{member.nickname}</Text>
                 </View>
@@ -249,7 +271,7 @@ export default function MemberReviewScreen() {
         buttons={alertConfig.buttons}
         onClose={() => setAlertVisible(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -319,6 +341,25 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
   },
+  allReviewedSubText: {
+    fontSize: 14,
+    color: '#71717A',
+    textAlign: 'center',
+    lineHeight: 21,
+    marginTop: 8,
+  },
+  homeButton: {
+    marginTop: 24,
+    backgroundColor: '#8B5CF6',
+    paddingHorizontal: 32,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  homeButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
   memberList: {
     gap: 12,
     paddingBottom: 40,
@@ -346,6 +387,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#3F3F46',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  memberAvatarImage: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
   },
   memberName: {
     fontSize: 15,

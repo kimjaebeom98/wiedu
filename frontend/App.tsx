@@ -29,6 +29,8 @@ import ApplicantManagementScreen from './src/screens/applicant-management/Applic
 import StudyMembersScreen from './src/screens/StudyMembersScreen';
 import StudySearchScreen from './src/screens/StudySearchScreen';
 import CategoryStudiesScreen from './src/screens/CategoryStudiesScreen';
+import StudyListScreen from './src/screens/StudyListScreen';
+import NotificationScreen from './src/screens/NotificationScreen';
 import { getAccessToken } from './src/storage/token';
 import { getMyProfile } from './src/api/profile';
 import { RootStackParamList } from './src/navigation/types';
@@ -140,6 +142,7 @@ export default function App() {
           <Stack.Screen name="Home" component={HomeScreen} />
           <Stack.Screen name="StudySearch" component={StudySearchScreen} />
           <Stack.Screen name="CategoryStudies" component={CategoryStudiesScreen} />
+          <Stack.Screen name="StudyList" component={StudyListScreen} />
           <Stack.Screen name="StudyCreate" component={StudyCreateScreen} />
           <Stack.Screen name="StudyDetail" component={StudyDetailScreen} />
           <Stack.Screen name="StudyApply" component={StudyApplyScreen} />
@@ -156,6 +159,7 @@ export default function App() {
           <Stack.Screen name="MemberReview" component={MemberReviewScreen} />
           <Stack.Screen name="ApplicantManagement" component={ApplicantManagementScreen} />
           <Stack.Screen name="StudyMembers" component={StudyMembersScreen} />
+          <Stack.Screen name="Notifications" component={NotificationScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>

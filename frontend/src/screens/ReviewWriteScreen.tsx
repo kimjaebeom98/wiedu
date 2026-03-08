@@ -3,14 +3,16 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   TextInput,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
+  Image,
+  StatusBar,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CustomAlert, AlertButton } from '../components/common';
 import { Feather } from '@expo/vector-icons';
@@ -48,6 +50,7 @@ const REVIEW_TAGS = [
 export default function ReviewWriteScreen() {
   const navigation = useNavigation<ReviewWriteScreenNavigationProp>();
   const route = useRoute<ReviewWriteScreenRouteProp>();
+  const insets = useSafeAreaInsets();
   const { studyId, studyTitle, leaderName, leaderProfileImage } = route.params;
 
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
@@ -116,7 +119,8 @@ export default function ReviewWriteScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#18181B" />
       {/* Loading Overlay */}
       {isSubmitting && (
         <View style={styles.loadingOverlay}>
@@ -130,7 +134,7 @@ export default function ReviewWriteScreen() {
         style={styles.keyboardView}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeButton}>
             <Feather name="x" size={24} color="#FFFFFF" />
           </TouchableOpacity>
@@ -150,7 +154,7 @@ export default function ReviewWriteScreen() {
           <View style={styles.profileCard}>
             <View style={styles.avatar}>
               {leaderProfileImage ? (
-                <Feather name="user" size={28} color="#71717A" />
+                <Image source={{ uri: leaderProfileImage }} style={styles.avatarImage} />
               ) : (
                 <Feather name="user" size={28} color="#71717A" />
               )}
@@ -233,7 +237,7 @@ export default function ReviewWriteScreen() {
         </ScrollView>
 
         {/* Bottom Buttons */}
-        <View style={styles.bottomButtons}>
+        <View style={[styles.bottomButtons, { paddingBottom: Math.max(insets.bottom, 20) }]}>
           <TouchableOpacity
             style={styles.cancelButton}
             onPress={() => navigation.goBack()}
@@ -262,7 +266,7 @@ export default function ReviewWriteScreen() {
         buttons={alertConfig.buttons}
         onClose={() => setAlertVisible(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -339,6 +343,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#3F3F46',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
   },
   profileInfo: {
     flex: 1,

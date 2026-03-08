@@ -17,6 +17,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { fetchCategories, fetchNearbyStudies, fetchPopularStudies } from '../api/study';
 import { getMyProfile } from '../api/profile';
+import { fetchUnreadCount } from '../api/notification';
 import { StudyListResponse, Category } from '../types/study';
 import { formatLocationFromAddress, formatLocationDisplay } from '../utils/location';
 
@@ -72,6 +73,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
   const [displayRegion, setDisplayRegion] = useState<string>('');
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const isInitialized = useRef(false);
 
   // 프로필 활동지역 로드 (앱 시작 시 항상 프로필 기준)
@@ -159,6 +161,16 @@ export default function HomeScreen() {
     init();
   }, [loadData, loadInitialLocation, loadNearbyStudies]);
 
+  // 읽지 않은 알림 수 로드
+  const loadUnreadCount = useCallback(async () => {
+    try {
+      const count = await fetchUnreadCount();
+      setUnreadNotificationCount(count);
+    } catch (error) {
+      console.error('Failed to load unread count:', error);
+    }
+  }, []);
+
   // 화면 포커스 시 프로필 지역 다시 로드 (프로필 수정 반영)
   const lastProfileRegionRef = useRef<string | null>(null);
 
@@ -207,7 +219,8 @@ export default function HomeScreen() {
       };
 
       refreshProfileLocation();
-    }, [])
+      loadUnreadCount();
+    }, [loadUnreadCount])
   );
 
   const onRefresh = useCallback(async () => {
@@ -271,11 +284,24 @@ export default function HomeScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.searchBar}
+            style={styles.searchBtn}
             onPress={() => navigation.navigate('StudySearch')}
           >
-            <Feather name="search" size={20} color="#71717A" />
-            <Text style={styles.searchText} numberOfLines={1}>스터디 검색</Text>
+            <Feather name="search" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.notificationBtn}
+            onPress={() => navigation.navigate('Notifications')}
+          >
+            <Feather name="bell" size={22} color="#FFFFFF" />
+            {unreadNotificationCount > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>
+                  {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -345,8 +371,23 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>내 근처 스터디</Text>
-            <TouchableOpacity>
-              <Text style={styles.sectionMore}>전체보기</Text>
+            <TouchableOpacity
+              onPress={() => {
+                if (selectedLocation) {
+                  navigation.navigate('StudyList', {
+                    type: 'nearby',
+                    title: '내 근처 스터디',
+                    location: {
+                      latitude: selectedLocation.latitude,
+                      longitude: selectedLocation.longitude,
+                      displayName: selectedLocation.displayName,
+                    },
+                  });
+                }
+              }}
+              disabled={!selectedLocation}
+            >
+              <Text style={[styles.sectionMore, !selectedLocation && { opacity: 0.5 }]}>전체보기</Text>
             </TouchableOpacity>
           </View>
 
@@ -457,7 +498,12 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>인기 스터디</Text>
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('StudyList', {
+                type: 'popular',
+                title: '인기 스터디',
+              })}
+            >
               <Text style={styles.sectionMore}>전체보기</Text>
             </TouchableOpacity>
           </View>
@@ -616,19 +662,38 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  searchBar: {
-    flex: 1,
-    height: 48,
+  searchBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
     backgroundColor: '#27272A',
-    borderRadius: 14,
-    flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    gap: 10,
+    justifyContent: 'center',
   },
-  searchText: {
-    fontSize: 14,
-    color: '#71717A',
+  notificationBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: '#27272A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  notificationBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  notificationBadgeText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   categorySection: {
     marginTop: 20,

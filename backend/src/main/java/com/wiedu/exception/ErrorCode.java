@@ -92,7 +92,13 @@ public enum ErrorCode {
     VERIFICATION_CODE_NOT_FOUND(HttpStatus.NOT_FOUND, "E001", "인증 코드를 찾을 수 없습니다."),
     VERIFICATION_CODE_EXPIRED(HttpStatus.BAD_REQUEST, "E002", "인증 코드가 만료되었습니다."),
     VERIFICATION_CODE_INVALID(HttpStatus.BAD_REQUEST, "E003", "인증 코드가 올바르지 않습니다."),
-    EMAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "E004", "이메일 발송에 실패했습니다.");
+    EMAIL_SEND_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "E004", "이메일 발송에 실패했습니다."),
+
+    // Notification
+    NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "N001", "알림을 찾을 수 없습니다."),
+
+    // Common Authorization
+    FORBIDDEN(HttpStatus.FORBIDDEN, "C006", "접근 권한이 없습니다.");
 
     private final HttpStatus status;
     private final String code;

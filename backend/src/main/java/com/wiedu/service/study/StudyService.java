@@ -23,6 +23,7 @@ import com.wiedu.repository.study.StudyCategoryRepository;
 import com.wiedu.repository.study.StudyMemberRepository;
 import com.wiedu.repository.study.StudyRepository;
 import com.wiedu.repository.study.StudySubcategoryRepository;
+import com.wiedu.service.notification.NotificationService;
 import com.wiedu.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -43,6 +44,7 @@ public class StudyService {
     private final StudyCategoryRepository studyCategoryRepository;
     private final StudySubcategoryRepository studySubcategoryRepository;
     private final UserService userService;
+    private final NotificationService notificationService;
     private final jakarta.persistence.EntityManager entityManager;
 
     /**
@@ -284,6 +286,55 @@ public class StudyService {
     }
 
     /**
+     * 인기 스터디 조회 - 페이지네이션 (충원율 높은 순)
+     */
+    public Page<StudyListResponse> findPopularStudiesPaginated(Pageable pageable) {
+        Page<Study> popularStudies = studyRepository.findPopularStudiesPaginated(pageable);
+
+        // Fallback: 결과가 없으면 최신 모집중 스터디로 대체
+        if (popularStudies.isEmpty()) {
+            return studyRepository.findByStatusWithLeader(StudyStatus.RECRUITING, pageable)
+                    .map(StudyListResponse::from);
+        }
+
+        return popularStudies.map(StudyListResponse::from);
+    }
+
+    /**
+     * 근처 스터디 검색 - 페이지네이션 (위치 기반)
+     */
+    public Page<StudyListResponse> findNearbyStudiesPaginated(Double latitude, Double longitude, Double radiusKm, Pageable pageable) {
+        Page<Study> nearbyStudies = studyRepository.findNearbyStudiesPaginated(latitude, longitude, radiusKm, pageable);
+
+        // Fallback: 근처 스터디가 없으면 모집중인 최신 스터디로 대체
+        if (nearbyStudies.isEmpty()) {
+            return studyRepository.findByStatusWithLeader(StudyStatus.RECRUITING, pageable)
+                    .map(StudyListResponse::from);
+        }
+
+        // Native query 결과에서 leader와 category를 별도로 조회
+        java.util.List<Long> studyIds = nearbyStudies.getContent().stream()
+                .map(Study::getId)
+                .toList();
+
+        if (studyIds.isEmpty()) {
+            return nearbyStudies.map(StudyListResponse::from);
+        }
+
+        // JOIN FETCH로 연관 엔티티 함께 조회
+        java.util.List<Study> studiesWithDetails = studyRepository.findByIdsWithLeaderAndCategory(studyIds);
+        java.util.Map<Long, Study> studyMap = studiesWithDetails.stream()
+                .collect(java.util.stream.Collectors.toMap(Study::getId, s -> s));
+
+        java.util.List<StudyListResponse> content = nearbyStudies.getContent().stream()
+                .map(s -> studyMap.getOrDefault(s.getId(), s))
+                .map(StudyListResponse::from)
+                .toList();
+
+        return new org.springframework.data.domain.PageImpl<>(content, pageable, nearbyStudies.getTotalElements());
+    }
+
+    /**
      * 스터디 수정 (리더만 가능) - 전체 필드 지원
      */
     @Transactional
@@ -395,13 +446,16 @@ public class StudyService {
     }
 
     /**
-     * 스터디 완료
+     * 스터디 완료 - 모든 멤버에게 리뷰 요청 알림 생성
      */
     @Transactional
     public void completeStudy(Long studyId, Long userId) {
         Study study = findStudyEntityById(studyId);
         validateLeaderPermission(study, userId);
         study.complete();
+
+        // 모든 멤버에게 리뷰 요청 알림 생성
+        notificationService.createReviewRequestNotifications(study);
     }
 
     /**

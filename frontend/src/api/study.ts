@@ -147,6 +147,56 @@ export const fetchPopularStudies = async (limit: number = 5): Promise<StudyListR
   );
 };
 
+// GET /api/studies/popular/all - Get popular studies with pagination
+export interface PopularStudiesParams {
+  page?: number;
+  size?: number;
+}
+
+export const fetchPopularStudiesPaginated = async (params: PopularStudiesParams): Promise<PaginatedStudyResponse> => {
+  return withErrorHandling(
+    async () => {
+      const client = getPublicClient();
+      const response = await client.get('/api/studies/popular/all', {
+        params: {
+          page: params.page || 0,
+          size: params.size || 10,
+        },
+      });
+      return response.data;
+    },
+    { defaultMessage: '인기 스터디를 불러오는데 실패했습니다.' }
+  );
+};
+
+// GET /api/studies/nearby/all - Get nearby studies with pagination
+export interface NearbyStudiesParams {
+  latitude: number;
+  longitude: number;
+  radius?: number;
+  page?: number;
+  size?: number;
+}
+
+export const fetchNearbyStudiesPaginated = async (params: NearbyStudiesParams): Promise<PaginatedStudyResponse> => {
+  return withErrorHandling(
+    async () => {
+      const client = getAuthClient();
+      const response = await client.get('/api/studies/nearby/all', {
+        params: {
+          latitude: params.latitude,
+          longitude: params.longitude,
+          radius: params.radius || 10,
+          page: params.page || 0,
+          size: params.size || 10,
+        },
+      });
+      return response.data;
+    },
+    { defaultMessage: '근처 스터디를 불러오는데 실패했습니다.' }
+  );
+};
+
 // POST /api/studies/:studyId/close - Close study (stop recruiting)
 export const closeStudy = async (studyId: number): Promise<void> => {
   return withErrorHandling(

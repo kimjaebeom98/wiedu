@@ -66,4 +66,14 @@ export type RootStackParamList = {
     studyId: number;
     studyTitle: string;
   };
+  StudyList: {
+    type: 'nearby' | 'popular';
+    title: string;
+    location?: {
+      latitude: number;
+      longitude: number;
+      displayName: string;
+    };
+  };
+  Notifications: undefined;
 };
