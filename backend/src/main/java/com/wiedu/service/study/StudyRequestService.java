@@ -168,6 +168,21 @@ public class StudyRequestService {
     }
 
     /**
+     * 스터디의 모든 가입 신청 목록 (리더용) - PENDING, APPROVED, REJECTED 모두 포함
+     */
+    public Page<StudyRequestResponse> findAllRequestsByStudyId(Long studyId, Long leaderId, Pageable pageable) {
+        Study study = studyService.findStudyEntityById(studyId);
+
+        // 리더 권한 확인
+        if (!study.getLeader().getId().equals(leaderId)) {
+            throw new BusinessException(ErrorCode.NOT_STUDY_LEADER);
+        }
+
+        return studyRequestRepository.findByStudy(study, pageable)
+                .map(StudyRequestResponse::from);
+    }
+
+    /**
      * 사용자의 가입 신청 목록
      */
     public List<StudyRequestResponse> findRequestsByUserId(Long userId) {

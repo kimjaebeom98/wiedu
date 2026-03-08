@@ -19,6 +19,9 @@ public interface StudyRequestRepository extends JpaRepository<StudyRequest, Long
     // 특정 스터디의 신청 목록
     List<StudyRequest> findByStudy(Study study);
 
+    // 특정 스터디의 모든 신청 목록 (페이징)
+    Page<StudyRequest> findByStudy(Study study, Pageable pageable);
+
     // 특정 스터디의 상태별 신청 목록
     List<StudyRequest> findByStudyAndStatus(Study study, RequestStatus status);
 

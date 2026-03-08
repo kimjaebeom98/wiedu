@@ -40,15 +40,15 @@ public class StudyRequestController {
     }
 
     /**
-     * 가입 신청 목록 조회 (리더용)
+     * 가입 신청 목록 조회 (리더용) - 모든 상태 포함 (PENDING, APPROVED, REJECTED)
      * GET /api/studies/{studyId}/requests
      */
     @GetMapping("/api/studies/{studyId}/requests")
-    public ResponseEntity<Page<StudyRequestResponse>> getPendingRequests(
+    public ResponseEntity<Page<StudyRequestResponse>> getAllRequests(
             @PathVariable Long studyId,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 50, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Long userId = SecurityUtils.getCurrentUserId();
-        Page<StudyRequestResponse> response = studyRequestService.findPendingRequestsByStudyId(studyId, userId, pageable);
+        Page<StudyRequestResponse> response = studyRequestService.findAllRequestsByStudyId(studyId, userId, pageable);
         return ResponseEntity.ok(response);
     }
 
