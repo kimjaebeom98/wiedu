@@ -26,9 +26,7 @@ const getBackendCallbackUrl = (): string => {
  * 앱 딥링크 URI 생성
  */
 const getAppRedirectUri = (): string => {
-  const uri = Linking.createURL('oauth/kakao');
-  console.log('[Kakao] App Redirect URI:', uri);
-  return uri;
+  return Linking.createURL('oauth/kakao');
 };
 
 /**
@@ -62,8 +60,6 @@ const pollForTokens = async (
   const baseUrl = getBaseURL();
   const pollUrl = `${baseUrl}/api/auth/kakao/poll/${sessionId}`;
 
-  console.log('[Kakao] Starting to poll for tokens:', pollUrl);
-
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
       const response = await fetch(pollUrl, {
@@ -72,7 +68,6 @@ const pollForTokens = async (
 
       if (response.status === 200) {
         const data = await response.json();
-        console.log('[Kakao] Tokens received via polling!');
         return {
           success: true,
           accessToken: data.accessToken,
@@ -108,20 +103,14 @@ export const startKakaoLogin = async (): Promise<KakaoLoginResult> => {
   const stateData = JSON.stringify({ sessionId, appRedirectUri });
   const state = base64UrlEncode(stateData);
 
-  console.log('[Kakao] Session ID:', sessionId);
-  console.log('[Kakao] State:', state);
-
   // 백엔드에서 인가 URL 가져오기 (API Key 보안)
   let authUrl: string;
   try {
     authUrl = await getAuthorizationUrl(state);
-    console.log('[Kakao] Authorization URL from backend received');
   } catch (error: any) {
     console.error('[Kakao] Failed to get auth URL:', error);
     return { success: false, error: '인가 URL을 가져오는데 실패했습니다.' };
   }
-
-  console.log('[Kakao] Opening auth URL:', authUrl.substring(0, 100) + '...');
 
   return new Promise((resolve) => {
     let resolved = false;
@@ -129,14 +118,11 @@ export const startKakaoLogin = async (): Promise<KakaoLoginResult> => {
 
     // 딥링크 이벤트 리스너 설정
     const handleDeepLink = (event: { url: string }) => {
-      console.log('[Kakao] Deep link received:', event.url);
-
       if (resolved) return;
 
       try {
         // OAuth 콜백 경로 확인
         if (!event.url.includes('oauth/kakao')) {
-          console.log('[Kakao] Not an OAuth callback, ignoring');
           return;
         }
 
@@ -158,7 +144,6 @@ export const startKakaoLogin = async (): Promise<KakaoLoginResult> => {
         }
 
         if (accessToken && refreshToken) {
-          console.log('[Kakao] Login successful via deep link!');
           resolve({
             success: true,
             accessToken,
@@ -192,14 +177,11 @@ export const startKakaoLogin = async (): Promise<KakaoLoginResult> => {
           presentationStyle: WebBrowser.WebBrowserPresentationStyle.FULL_SCREEN,
         });
 
-        console.log('[Kakao] Browser closed with result:', result.type);
-
         // 브라우저가 닫혔을 때
         if (!resolved) {
           // 딥링크가 오지 않았다면 폴링 시작
           if (!pollingStarted) {
             pollingStarted = true;
-            console.log('[Kakao] Browser closed, starting polling...');
 
             // 잠시 대기 후 폴링 시작 (백엔드 처리 시간 고려)
             await new Promise((r) => setTimeout(r, 1000));

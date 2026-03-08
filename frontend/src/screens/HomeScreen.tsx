@@ -267,7 +267,10 @@ export default function HomeScreen() {
             <Feather name="chevron-down" size={20} color="#A1A1AA" />
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.searchBar}>
+          <TouchableOpacity
+            style={styles.searchBar}
+            onPress={() => navigation.navigate('StudySearch')}
+          >
             <Feather name="search" size={20} color="#71717A" />
             <Text style={styles.searchText} numberOfLines={1}>스터디 검색</Text>
           </TouchableOpacity>

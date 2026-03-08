@@ -261,6 +261,40 @@ export interface StudyUpdateRequest {
   rules?: Array<{ ruleOrder: number; content: string }>;
 }
 
+// GET /api/studies/search - Search studies by keyword
+export interface SearchStudiesParams {
+  keyword: string;
+  page?: number;
+  size?: number;
+}
+
+export interface PaginatedStudyResponse {
+  content: StudyListResponse[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+  first: boolean;
+  last: boolean;
+}
+
+export const searchStudies = async (params: SearchStudiesParams): Promise<PaginatedStudyResponse> => {
+  return withErrorHandling(
+    async () => {
+      const client = getPublicClient();
+      const response = await client.get('/api/studies/search', {
+        params: {
+          keyword: params.keyword,
+          page: params.page || 0,
+          size: params.size || 10,
+        },
+      });
+      return response.data;
+    },
+    { defaultMessage: '스터디 검색에 실패했습니다.' }
+  );
+};
+
 // PATCH /api/studies/:studyId - Update study (full update)
 export const updateStudy = async (studyId: number, data: StudyUpdateRequest): Promise<StudyResponse> => {
   return withErrorHandling(

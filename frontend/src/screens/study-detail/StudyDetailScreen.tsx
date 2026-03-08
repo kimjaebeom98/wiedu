@@ -128,9 +128,8 @@ export default function StudyDetailScreen() {
       const requests = await getMyStudyRequests();
       const application = requests.find(r => r.studyId === studyId);
       setMyApplication(application || null);
-    } catch (error) {
+    } catch {
       // 로그인하지 않은 경우 무시
-      console.log('Not logged in or failed to load applications');
     }
   };
 
@@ -139,8 +138,8 @@ export default function StudyDetailScreen() {
     try {
       const data = await getStudyRequests(studyId);
       setApplicants(data);
-    } catch (error) {
-      console.log('Failed to load applicants or not a leader');
+    } catch {
+      // 신청자 목록 로드 실패 (리더가 아닌 경우)
     } finally {
       setApplicantsLoading(false);
     }

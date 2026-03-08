@@ -27,6 +27,7 @@ import ReviewWriteScreen from './src/screens/ReviewWriteScreen';
 import MemberReviewScreen from './src/screens/MemberReviewScreen';
 import ApplicantManagementScreen from './src/screens/applicant-management/ApplicantManagementScreen';
 import StudyMembersScreen from './src/screens/StudyMembersScreen';
+import StudySearchScreen from './src/screens/StudySearchScreen';
 import { getAccessToken } from './src/storage/token';
 import { getMyProfile } from './src/api/profile';
 import { RootStackParamList } from './src/navigation/types';
@@ -136,6 +137,7 @@ export default function App() {
           <Stack.Screen name="EmailVerify" component={EmailVerifyScreen} />
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
           <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="StudySearch" component={StudySearchScreen} />
           <Stack.Screen name="StudyCreate" component={StudyCreateScreen} />
           <Stack.Screen name="StudyDetail" component={StudyDetailScreen} />
           <Stack.Screen name="StudyApply" component={StudyApplyScreen} />
