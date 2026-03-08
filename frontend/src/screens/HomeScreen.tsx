@@ -8,6 +8,7 @@ import {
   StatusBar,
   ActivityIndicator,
   RefreshControl,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -395,9 +396,24 @@ export default function HomeScreen() {
                     <Text style={styles.studySubcategory}>by {study.leaderNickname}</Text>
                   </View>
                   <View style={styles.studyMembers}>
-                    <View style={styles.memberDot} />
-                    <View style={[styles.memberDot, { marginLeft: -8 }]} />
-                    <View style={[styles.memberDot, { marginLeft: -8 }]} />
+                    {study.memberProfileImages && study.memberProfileImages.length > 0 ? (
+                      study.memberProfileImages.slice(0, 3).map((img, idx) => (
+                        <View
+                          key={idx}
+                          style={[styles.memberDot, idx > 0 && { marginLeft: -8 }]}
+                        >
+                          {img ? (
+                            <Image source={{ uri: img }} style={styles.memberDotImg} />
+                          ) : (
+                            <Feather name="user" size={14} color="#71717A" />
+                          )}
+                        </View>
+                      ))
+                    ) : (
+                      <View style={styles.memberDot}>
+                        <Feather name="user" size={14} color="#71717A" />
+                      </View>
+                    )}
                   </View>
                 </View>
                 <View style={styles.studyBottom}>
@@ -482,9 +498,24 @@ export default function HomeScreen() {
                     <Text style={styles.studySubcategory}>by {study.leaderNickname}</Text>
                   </View>
                   <View style={styles.studyMembers}>
-                    <View style={styles.memberDot} />
-                    <View style={[styles.memberDot, { marginLeft: -8 }]} />
-                    <View style={[styles.memberDot, { marginLeft: -8 }]} />
+                    {study.memberProfileImages && study.memberProfileImages.length > 0 ? (
+                      study.memberProfileImages.slice(0, 3).map((img, idx) => (
+                        <View
+                          key={idx}
+                          style={[styles.memberDot, idx > 0 && { marginLeft: -8 }]}
+                        >
+                          {img ? (
+                            <Image source={{ uri: img }} style={styles.memberDotImg} />
+                          ) : (
+                            <Feather name="user" size={14} color="#71717A" />
+                          )}
+                        </View>
+                      ))
+                    ) : (
+                      <View style={styles.memberDot}>
+                        <Feather name="user" size={14} color="#71717A" />
+                      </View>
+                    )}
                   </View>
                 </View>
                 <View style={styles.studyBottom}>
@@ -761,6 +792,16 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     backgroundColor: '#52525B',
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#27272A',
+  },
+  memberDotImg: {
+    width: 28,
+    height: 28,
     borderRadius: 14,
   },
   studyBottom: {

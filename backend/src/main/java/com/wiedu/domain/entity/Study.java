@@ -135,6 +135,11 @@ public class Study {
     @BatchSize(size = 20)
     private List<StudyRule> rules = new ArrayList<>();
 
+    // Members
+    @OneToMany(mappedBy = "study")
+    @BatchSize(size = 10)
+    private List<StudyMember> members = new ArrayList<>();
+
     // Status & Dates
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -215,6 +220,46 @@ public class Study {
     public void updateInfo(String title, String description) {
         this.title = title;
         this.description = description;
+    }
+
+    public void updateFull(String title, String description, StudyCategory category, StudySubcategory subcategory,
+                           String coverImageUrl, String targetAudience, String goals,
+                           StudyMethod studyMethod, String daysOfWeek, String time, DurationType durationType,
+                           String platform, String meetingRegion, String meetingCity,
+                           Double meetingLatitude, Double meetingLongitude,
+                           Integer maxMembers, Integer deposit, String depositRefundPolicy, String requirements) {
+        if (title != null) this.title = title;
+        if (description != null) this.description = description;
+        if (category != null) this.category = category;
+        this.subcategory = subcategory;
+        if (coverImageUrl != null) this.coverImageUrl = coverImageUrl;
+        if (targetAudience != null) this.targetAudience = targetAudience;
+        if (goals != null) this.goals = goals;
+        if (studyMethod != null) this.studyMethod = studyMethod;
+        if (daysOfWeek != null) this.daysOfWeek = daysOfWeek;
+        if (time != null) this.time = time;
+        if (durationType != null) this.durationType = durationType;
+        if (platform != null) this.platform = platform;
+        if (meetingRegion != null) this.meetingRegion = meetingRegion;
+        if (meetingCity != null) this.meetingCity = meetingCity;
+        if (meetingLatitude != null) this.meetingLatitude = meetingLatitude;
+        if (meetingLongitude != null) this.meetingLongitude = meetingLongitude;
+        if (maxMembers != null) this.maxMembers = maxMembers;
+        if (deposit != null) this.deposit = deposit;
+        if (depositRefundPolicy != null) this.depositRefundPolicy = depositRefundPolicy;
+        if (requirements != null) this.requirements = requirements;
+    }
+
+    public void clearTags() {
+        this.tags.clear();
+    }
+
+    public void clearCurriculums() {
+        this.curriculums.clear();
+    }
+
+    public void clearRules() {
+        this.rules.clear();
     }
 
     public void incrementMember() {

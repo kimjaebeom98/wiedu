@@ -108,11 +108,19 @@ export interface LeaderInfo {
   email: string;
   nickname: string;
   profileImage?: string;
+  bio?: string;
   temperature: number;
   status: string;
   emailVerified: boolean;
   lastLoginAt: string;
   createdAt: string;
+}
+
+export interface MemberInfo {
+  id: number;
+  nickname: string;
+  profileImage?: string;
+  role: MemberRole;
 }
 
 // Full study detail response from GET /api/studies/:id
@@ -148,6 +156,8 @@ export interface StudyDetailResponse {
   // 멤버십 정보 (로그인 사용자 기준)
   isMember?: boolean;
   memberRole?: MemberRole;
+  // 멤버 목록 (활성 멤버)
+  members?: MemberInfo[];
 }
 
 // Study response from API (full detail)
@@ -179,4 +189,5 @@ export interface StudyListResponse {
   meetingRegion?: string;
   meetingCity?: string;
   createdAt: string;
+  memberProfileImages?: (string | null)[];
 }
