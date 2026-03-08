@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
+import { CustomAlert, AlertButton } from '../../../components/common';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { getAuthClient } from '../../../api/client';
@@ -8,11 +9,23 @@ import { styles } from '../styles';
 
 export default function Step6Profile({ data, updateData }: StepProps) {
   const [uploading, setUploading] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    title: string;
+    message?: string;
+    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'lock';
+    buttons?: AlertButton[];
+  }>({ title: '' });
+
+  const showAlert = (config: typeof alertConfig) => {
+    setAlertConfig(config);
+    setAlertVisible(true);
+  };
 
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('권한 필요', '사진 접근 권한이 필요합니다.');
+      showAlert({ title: '권한 필요', message: '사진 접근 권한이 필요합니다.', icon: 'lock' });
       return;
     }
 
@@ -54,7 +67,7 @@ export default function Step6Profile({ data, updateData }: StepProps) {
       updateData('profileImage', response.data.imageUrl);
     } catch (err: any) {
       console.error('Failed to upload image:', err);
-      Alert.alert('오류', '이미지 업로드에 실패했어요. 나중에 다시 시도해주세요.');
+      showAlert({ title: '오류', message: '이미지 업로드에 실패했어요. 나중에 다시 시도해주세요.', icon: 'x-circle' });
     } finally {
       setUploading(false);
     }
@@ -108,6 +121,14 @@ export default function Step6Profile({ data, updateData }: StepProps) {
           {uploading ? '업로드 중...' : data.profileImage ? '사진 변경' : '프로필 사진 추가 (선택)'}
         </Text>
       </TouchableOpacity>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        icon={alertConfig.icon}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertVisible(false)}
+      />
     </View>
   );
 }

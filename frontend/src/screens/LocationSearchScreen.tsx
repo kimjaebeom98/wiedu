@@ -8,9 +8,9 @@ import {
   TextInput,
   FlatList,
   ActivityIndicator,
-  Alert,
   ListRenderItem,
 } from 'react-native';
+import { CustomAlert, AlertButton } from '../components/common';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import * as Location from 'expo-location';
@@ -82,6 +82,18 @@ export default function LocationSearchScreen({ onSelect, onBack }: LocationSearc
   const [gettingLocation, setGettingLocation] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<TextInput>(null);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    title: string;
+    message?: string;
+    icon?: 'alert-circle' | 'x-circle' | 'info' | 'lock';
+    buttons?: AlertButton[];
+  }>({ title: '' });
+
+  const showAlert = (config: typeof alertConfig) => {
+    setAlertConfig(config);
+    setAlertVisible(true);
+  };
 
   const performSearch = useCallback(async (searchQuery: string) => {
     if (!searchQuery.trim()) {
@@ -120,7 +132,7 @@ export default function LocationSearchScreen({ onSelect, onBack }: LocationSearc
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('권한 필요', '위치 접근 권한이 필요합니다.');
+        showAlert({ title: '권한 필요', message: '위치 접근 권한이 필요합니다.', icon: 'lock' });
         return;
       }
 
@@ -152,7 +164,7 @@ export default function LocationSearchScreen({ onSelect, onBack }: LocationSearc
       onSelect(locationData);
     } catch (err) {
       console.error('Location error:', err);
-      Alert.alert('오류', '현재 위치를 가져오지 못했어요.');
+      showAlert({ title: '오류', message: '현재 위치를 가져오지 못했어요.', icon: 'x-circle' });
     } finally {
       setGettingLocation(false);
     }
@@ -260,6 +272,14 @@ export default function LocationSearchScreen({ onSelect, onBack }: LocationSearc
             </View>
           ) : null
         }
+      />
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        icon={alertConfig.icon}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertVisible(false)}
       />
     </View>
   );

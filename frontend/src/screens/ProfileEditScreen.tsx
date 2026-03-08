@@ -8,11 +8,11 @@ import {
   StatusBar,
   TextInput,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Image,
 } from 'react-native';
+import { CustomAlert, AlertButton } from '../components/common';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -47,6 +47,18 @@ export default function ProfileEditScreen() {
   const [longitude, setLongitude] = useState<number | null>(null);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [profileImage, setProfileImage] = useState<string | null>(null);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    title: string;
+    message?: string;
+    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'edit-2' | 'lock';
+    buttons?: AlertButton[];
+  }>({ title: '' });
+
+  const showAlert = (config: typeof alertConfig) => {
+    setAlertConfig(config);
+    setAlertVisible(true);
+  };
 
   useEffect(() => {
     loadProfile();
@@ -64,7 +76,7 @@ export default function ProfileEditScreen() {
       setProfileImage(data.profileImage || null);
     } catch (err) {
       console.error('Failed to load profile:', err);
-      Alert.alert('오류', '프로필을 불러오지 못했어요.');
+      showAlert({ title: '오류', message: '프로필을 불러오지 못했어요.', icon: 'x-circle' });
     } finally {
       setLoading(false);
     }
@@ -73,7 +85,7 @@ export default function ProfileEditScreen() {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('권한 필요', '사진 접근 권한이 필요합니다.');
+      showAlert({ title: '권한 필요', message: '사진 접근 권한이 필요합니다.', icon: 'lock' });
       return;
     }
 
@@ -114,10 +126,10 @@ export default function ProfileEditScreen() {
       });
 
       setProfileImage(response.data.imageUrl);
-      Alert.alert('완료', '프로필 사진이 변경되었습니다.');
+      showAlert({ title: '완료', message: '프로필 사진이 변경되었습니다.', icon: 'check-circle' });
     } catch (err: any) {
       console.error('Failed to upload image:', err);
-      Alert.alert('오류', '이미지 업로드에 실패했어요.');
+      showAlert({ title: '오류', message: '이미지 업로드에 실패했어요.', icon: 'x-circle' });
     } finally {
       setUploading(false);
     }
@@ -131,7 +143,7 @@ export default function ProfileEditScreen() {
 
   const handleSave = async () => {
     if (!nickname.trim()) {
-      Alert.alert('오류', '닉네임을 입력해주세요.');
+      showAlert({ title: '오류', message: '닉네임을 입력해주세요.', icon: 'alert-circle' });
       return;
     }
 
@@ -146,13 +158,11 @@ export default function ProfileEditScreen() {
         longitude: region.trim() ? longitude : null,
         interests: selectedInterests,
       });
-      Alert.alert('완료', '프로필이 저장되었습니다.', [
-        { text: '확인', onPress: () => navigation.goBack() },
-      ]);
+      showAlert({ title: '완료', message: '프로필이 저장되었습니다.', icon: 'check-circle', buttons: [{ text: '확인', onPress: () => navigation.goBack() }] });
     } catch (err: any) {
       console.error('Failed to save profile:', err);
       const message = err.response?.data?.message || '프로필 저장에 실패했어요.';
-      Alert.alert('오류', message);
+      showAlert({ title: '오류', message, icon: 'x-circle' });
     } finally {
       setSaving(false);
     }
@@ -315,6 +325,14 @@ export default function ProfileEditScreen() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        icon={alertConfig.icon}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 }

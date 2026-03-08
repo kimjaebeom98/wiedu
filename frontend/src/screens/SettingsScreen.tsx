@@ -7,9 +7,9 @@ import {
   ScrollView,
   StatusBar,
   Switch,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
+import { CustomAlert, AlertButton } from '../components/common';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -33,6 +33,18 @@ export default function SettingsScreen() {
   const [studyEnabled, setStudyEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    title: string;
+    message?: string;
+    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'help-circle' | 'trash-2' | 'log-out';
+    buttons?: AlertButton[];
+  }>({ title: '' });
+
+  const showAlert = (config: typeof alertConfig) => {
+    setAlertConfig(config);
+    setAlertVisible(true);
+  };
 
   useEffect(() => {
     loadNotificationSettings();
@@ -46,7 +58,7 @@ export default function SettingsScreen() {
       setChatEnabled(settings.chat);
       setStudyEnabled(settings.study);
     } catch (error) {
-      Alert.alert('오류', '알림 설정을 불러오지 못했습니다.');
+      showAlert({ title: '오류', message: '알림 설정을 불러오지 못했습니다.', icon: 'x-circle' });
     } finally {
       setLoading(false);
     }
@@ -72,7 +84,7 @@ export default function SettingsScreen() {
       if (key === 'push') setPushEnabled(prev.push);
       if (key === 'chat') setChatEnabled(prev.chat);
       if (key === 'study') setStudyEnabled(prev.study);
-      Alert.alert('오류', '알림 설정을 변경하지 못했습니다.');
+      showAlert({ title: '오류', message: '알림 설정을 변경하지 못했습니다.', icon: 'x-circle' });
     } finally {
       setUpdating(false);
     }
@@ -84,10 +96,11 @@ export default function SettingsScreen() {
   };
 
   const handleWithdraw = () => {
-    Alert.alert(
-      '회원 탈퇴',
-      '정말로 탈퇴하시겠어요? 이 작업은 되돌릴 수 없습니다.',
-      [
+    showAlert({
+      title: '회원 탈퇴',
+      message: '정말로 탈퇴하시겠어요? 이 작업은 되돌릴 수 없습니다.',
+      icon: 'trash-2',
+      buttons: [
         { text: '취소', style: 'cancel' },
         {
           text: '탈퇴',
@@ -97,12 +110,12 @@ export default function SettingsScreen() {
               await withdrawAccount();
               await handleLogout();
             } catch (error) {
-              Alert.alert('오류', '회원 탈퇴에 실패했습니다. 다시 시도해주세요.');
+              showAlert({ title: '오류', message: '회원 탈퇴에 실패했습니다. 다시 시도해주세요.', icon: 'x-circle' });
             }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   return (
@@ -210,6 +223,14 @@ export default function SettingsScreen() {
           <View style={styles.bottomSpacer} />
         </ScrollView>
       )}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        icon={alertConfig.icon}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertVisible(false)}
+      />
     </View>
   );
 }

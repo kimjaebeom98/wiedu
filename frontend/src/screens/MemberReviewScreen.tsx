@@ -7,9 +7,9 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   ActivityIndicator,
 } from 'react-native';
+import { CustomAlert, AlertButton } from '../components/common';
 import { Feather } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -45,6 +45,18 @@ export default function MemberReviewScreen() {
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    title: string;
+    message?: string;
+    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'user-check';
+    buttons?: AlertButton[];
+  }>({ title: '' });
+
+  const showAlert = (config: typeof alertConfig) => {
+    setAlertConfig(config);
+    setAlertVisible(true);
+  };
 
   useEffect(() => {
     loadMembers();
@@ -56,7 +68,7 @@ export default function MemberReviewScreen() {
       setMembers(data);
     } catch (error: any) {
       const message = error.response?.data?.message || '멤버 목록을 불러오는데 실패했습니다.';
-      Alert.alert('오류', message);
+      showAlert({ title: '오류', message, icon: 'x-circle' });
     } finally {
       setLoading(false);
     }
@@ -64,7 +76,7 @@ export default function MemberReviewScreen() {
 
   const handleSubmitReview = async () => {
     if (!selectedMember || !selectedRating) {
-      Alert.alert('알림', '평점을 선택해주세요.');
+      showAlert({ title: '알림', message: '평점을 선택해주세요.', icon: 'alert-circle' });
       return;
     }
 
@@ -89,10 +101,10 @@ export default function MemberReviewScreen() {
       setSelectedRating(null);
       setContent('');
 
-      Alert.alert('완료', '리뷰가 등록되었습니다.');
+      showAlert({ title: '완료', message: '리뷰가 등록되었습니다.', icon: 'check-circle' });
     } catch (error: any) {
       const message = error.response?.data?.message || '리뷰 등록에 실패했습니다.';
-      Alert.alert('오류', message);
+      showAlert({ title: '오류', message, icon: 'x-circle' });
     } finally {
       setIsSubmitting(false);
     }
@@ -229,6 +241,14 @@ export default function MemberReviewScreen() {
           </View>
         )}
       </ScrollView>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        icon={alertConfig.icon}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertVisible(false)}
+      />
     </SafeAreaView>
   );
 }

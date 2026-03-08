@@ -7,11 +7,12 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from 'react-native';
+
+import { CustomAlert, AlertButton } from '../components/common';
 import { Feather } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
@@ -53,6 +54,18 @@ export default function ReviewWriteScreen() {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    title: string;
+    message?: string;
+    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'edit-2';
+    buttons?: AlertButton[];
+  }>({ title: '' });
+
+  const showAlert = (config: typeof alertConfig) => {
+    setAlertConfig(config);
+    setAlertVisible(true);
+  };
 
   const toggleTag = (tagId: string) => {
     setSelectedTags(prev =>
@@ -64,12 +77,12 @@ export default function ReviewWriteScreen() {
 
   const handleSubmit = async () => {
     if (!selectedRating) {
-      Alert.alert('알림', '만족도를 선택해주세요.');
+      showAlert({ title: '알림', message: '만족도를 선택해주세요.', icon: 'alert-circle' });
       return;
     }
 
     if (!content.trim()) {
-      Alert.alert('알림', '리뷰 내용을 작성해주세요.');
+      showAlert({ title: '알림', message: '리뷰 내용을 작성해주세요.', icon: 'alert-circle' });
       return;
     }
 
@@ -88,12 +101,15 @@ export default function ReviewWriteScreen() {
         content: fullContent,
       });
 
-      Alert.alert('완료', '리뷰가 등록되었습니다.', [
-        { text: '확인', onPress: () => navigation.goBack() }
-      ]);
+      showAlert({
+        title: '완료',
+        message: '리뷰가 등록되었습니다.',
+        icon: 'check-circle',
+        buttons: [{ text: '확인', onPress: () => navigation.goBack() }],
+      });
     } catch (error: any) {
       const message = error.response?.data?.message || '리뷰 등록에 실패했습니다.';
-      Alert.alert('오류', message);
+      showAlert({ title: '오류', message, icon: 'x-circle' });
     } finally {
       setIsSubmitting(false);
     }
@@ -238,6 +254,14 @@ export default function ReviewWriteScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        icon={alertConfig.icon}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertVisible(false)}
+      />
     </SafeAreaView>
   );
 }
