@@ -83,6 +83,18 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
             "ORDER BY (s.currentMembers * 1.0 / NULLIF(s.maxMembers, 0)) DESC, s.currentMembers DESC")
     List<Study> findPopularStudies(Pageable pageable);
 
+    // 최신 스터디 (모집중, 생성일 기준 최신순) - 인기 스터디 fallback용
+    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category " +
+            "WHERE s.status = 'RECRUITING' " +
+            "ORDER BY s.createdAt DESC")
+    List<Study> findRecentRecruitingStudies(Pageable pageable);
+
+    // 모집중인 전체 스터디 (생성일 기준 최신순) - 근처 스터디 fallback용
+    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category " +
+            "WHERE s.status = 'RECRUITING' " +
+            "ORDER BY s.createdAt DESC")
+    List<Study> findAllRecruitingStudies(Pageable pageable);
+
     // ID 목록으로 스터디 조회 (리더, 카테고리 포함 - N+1 방지)
     @Query("SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category WHERE s.id IN :ids")
     List<Study> findByIdsWithLeaderAndCategory(@Param("ids") List<Long> ids);

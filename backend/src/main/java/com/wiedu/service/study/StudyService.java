@@ -219,12 +219,18 @@ public class StudyService {
 
     /**
      * 근처 스터디 검색 (위치 기반, N+1 방지)
+     * Fallback: 근처 스터디가 없으면 모집중인 최신 스터디로 대체
      */
     public java.util.List<StudyListResponse> findNearbyStudies(Double latitude, Double longitude, Double radiusKm) {
         // 1. 네이티브 쿼리로 근처 스터디 ID 조회
         java.util.List<Study> nearbyStudies = studyRepository.findNearbyStudies(latitude, longitude, radiusKm);
+
+        // Fallback: 근처 스터디가 없으면 모집중인 최신 스터디로 대체
         if (nearbyStudies.isEmpty()) {
-            return java.util.List.of();
+            return studyRepository.findAllRecruitingStudies(Pageable.ofSize(10))
+                    .stream()
+                    .map(StudyListResponse::from)
+                    .toList();
         }
 
         // 2. ID 목록 추출
@@ -248,10 +254,20 @@ public class StudyService {
 
     /**
      * 인기 스터디 조회 (충원율 높은 순)
+     * Fallback: 인기 스터디가 없으면 최신 모집중 스터디로 대체
      */
     public java.util.List<StudyListResponse> findPopularStudies(int limit) {
-        return studyRepository.findPopularStudies(Pageable.ofSize(limit))
-                .stream()
+        java.util.List<Study> popularStudies = studyRepository.findPopularStudies(Pageable.ofSize(limit));
+
+        // Fallback: 인기 스터디가 없으면 최신 모집중 스터디로 대체
+        if (popularStudies.isEmpty()) {
+            return studyRepository.findRecentRecruitingStudies(Pageable.ofSize(limit))
+                    .stream()
+                    .map(StudyListResponse::from)
+                    .toList();
+        }
+
+        return popularStudies.stream()
                 .map(StudyListResponse::from)
                 .toList();
     }
