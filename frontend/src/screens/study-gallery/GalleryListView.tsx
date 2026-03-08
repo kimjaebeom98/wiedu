@@ -64,8 +64,7 @@ export default function GalleryListView({ studyId }: GalleryListViewProps) {
         const user = JSON.parse(userStr);
         setCurrentUserId(user.id);
       }
-    } catch (error) {
-      console.error('Failed to load current user:', error);
+    } catch {
     }
   };
 
@@ -83,7 +82,6 @@ export default function GalleryListView({ studyId }: GalleryListViewProps) {
       setHasMore(!response.last);
       setPage(pageNum);
     } catch (error) {
-      console.error('Failed to load photos:', error);
       showAlert({ title: '오류', message: '사진을 불러오는데 실패했습니다.', icon: 'x-circle' });
     } finally {
       setLoading(false);
@@ -149,7 +147,6 @@ export default function GalleryListView({ studyId }: GalleryListViewProps) {
       loadPhotos(0, false);
       showAlert({ title: '완료', message: '사진이 업로드되었습니다.', icon: 'check-circle' });
     } catch (error: any) {
-      console.error('Failed to upload photo:', error);
       showAlert({ title: '업로드 실패', message: error.response?.data?.message || '사진 업로드에 실패했습니다.', icon: 'x-circle' });
     } finally {
       setUploading(false);
@@ -173,7 +170,6 @@ export default function GalleryListView({ studyId }: GalleryListViewProps) {
               loadPhotos(0, false);
               showAlert({ title: '완료', message: '사진이 삭제되었습니다.', icon: 'check-circle' });
             } catch (error: any) {
-              console.error('Failed to delete photo:', error);
               showAlert({ title: '삭제 실패', message: error.response?.data?.message || '사진 삭제에 실패했습니다.', icon: 'x-circle' });
             }
           },

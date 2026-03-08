@@ -44,33 +44,25 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
     setLoading(true);
 
     try {
-      console.log('[Login] Starting Kakao login...');
       const result = await startKakaoLogin();
-      console.log('[Login] Kakao login result:', JSON.stringify(result, null, 2));
 
       if (result.success && result.accessToken && result.refreshToken) {
         // 토큰 저장
         await saveTokens(result.accessToken, result.refreshToken);
-        console.log('[Login] Tokens saved, onboardingCompleted:', result.onboardingCompleted);
 
         // 온보딩 완료 여부에 따라 분기
         if (result.onboardingCompleted) {
-          console.log('[Login] Onboarding completed, navigating to Home');
           navigation.replace('Home');
         } else {
-          console.log('[Login] Onboarding not completed, navigating to Onboarding');
           navigation.replace('Onboarding');
         }
       } else if (result.cancelled) {
         // 사용자가 취소함 - 아무것도 하지 않음
-        console.log('[Login] User cancelled');
       } else {
         // 에러 발생
-        console.error('[Login] Kakao login error:', result.error);
         showAlert({ title: '로그인 실패', message: result.error || '카카오 로그인에 실패했습니다.', icon: 'x-circle' });
       }
     } catch (error: any) {
-      console.error('[Login] Unexpected error:', error);
       showAlert({ title: '로그인 실패', message: error.message || '카카오 로그인에 실패했습니다.', icon: 'x-circle' });
     } finally {
       setLoading(false);

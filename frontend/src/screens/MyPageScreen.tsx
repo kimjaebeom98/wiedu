@@ -72,7 +72,6 @@ export default function MyPageScreen() {
       setMyStudies(studiesData);
       setMyApplications(applicationsData);
     } catch (err) {
-      console.error('Failed to load profile:', err);
       setError('프로필을 불러오지 못했어요.');
     } finally {
       setLoading(false);

@@ -1,24 +1,16 @@
 // API Configuration
+import Constants from 'expo-constants';
 
-// Railway URL (배포 후 실제 URL로 변경)
+// Railway URL (production)
 const RAILWAY_URL = 'https://wiedu-production.up.railway.app';
 
-// ngrok URL for local development
-const NGROK_URL = 'https://f72a-121-140-123-64.ngrok-free.app';
+// Development URL from environment variable or fallback to localhost
+const DEV_API_URL = Constants.expoConfig?.extra?.devApiUrl || 'http://localhost:8080';
 
-// Use Railway in production, ngrok/localhost in development
+// Use Railway in production, DEV_API_URL in development
 export const getBaseURL = (): string => {
-  // 에뮬레이터 테스트용 (임시)
-  // return 'http://10.0.2.2:8080';
-
   if (__DEV__ === false) {
     return RAILWAY_URL;
   }
-  // 실기기 테스트: ngrok URL 사용
-  return NGROK_URL;
-  // iOS 시뮬레이터: return 'http://localhost:8080';
-  // Android 에뮬레이터: return 'http://10.0.2.2:8080';
+  return DEV_API_URL;
 };
-
-// Debug: Log the selected URL
-console.log('[API] Base URL:', getBaseURL());

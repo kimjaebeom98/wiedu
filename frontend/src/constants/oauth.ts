@@ -4,8 +4,3 @@
 
 // 레거시 지원용 (향후 제거 예정)
 export const KAKAO_CLIENT_ID = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY || '';
-
-// 디버깅용 로그
-if (__DEV__) {
-  console.log('[OAuth] KAKAO_CLIENT_ID from env:', KAKAO_CLIENT_ID ? 'set' : 'not set (using backend)');
-}

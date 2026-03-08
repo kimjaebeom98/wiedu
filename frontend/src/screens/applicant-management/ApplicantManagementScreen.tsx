@@ -69,7 +69,6 @@ export default function ApplicantManagementScreen() {
       const data = await getStudyRequests(studyId);
       setRequests(data);
     } catch (error) {
-      console.error('Failed to load requests:', error);
       showAlert({
         title: '오류',
         message: '신청 목록을 불러오는데 실패했습니다.',
