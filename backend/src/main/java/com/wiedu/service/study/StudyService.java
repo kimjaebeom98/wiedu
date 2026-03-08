@@ -9,6 +9,7 @@ import com.wiedu.domain.entity.StudySubcategory;
 import com.wiedu.domain.entity.StudyTag;
 import com.wiedu.domain.entity.User;
 import com.wiedu.domain.enums.MemberRole;
+import com.wiedu.domain.enums.MemberStatus;
 import com.wiedu.domain.enums.StudyStatus;
 import com.wiedu.dto.study.CurriculumRequest;
 import com.wiedu.dto.study.RuleRequest;
@@ -42,6 +43,7 @@ public class StudyService {
     private final StudyCategoryRepository studyCategoryRepository;
     private final StudySubcategoryRepository studySubcategoryRepository;
     private final UserService userService;
+    private final jakarta.persistence.EntityManager entityManager;
 
     /**
      * 스터디 생성 (6단계 플로우)
@@ -140,7 +142,9 @@ public class StudyService {
     public StudyResponse findById(Long studyId) {
         Study study = studyRepository.findByIdWithDetails(studyId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
-        return StudyResponse.from(study);
+        // 활성 멤버 목록 조회 (User 포함, N+1 방지)
+        java.util.List<StudyMember> members = studyMemberRepository.findByStudyAndStatusWithUser(study, MemberStatus.ACTIVE);
+        return StudyResponse.from(study, null, null, members);
     }
 
     /**
@@ -150,18 +154,21 @@ public class StudyService {
         Study study = studyRepository.findByIdWithDetails(studyId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
 
+        // 활성 멤버 목록 조회 (User 포함, N+1 방지)
+        java.util.List<StudyMember> members = studyMemberRepository.findByStudyAndStatusWithUser(study, MemberStatus.ACTIVE);
+
         if (userId == null) {
-            return StudyResponse.from(study);
+            return StudyResponse.from(study, null, null, members);
         }
 
         // 멤버십 확인
         User user = userService.findUserEntityById(userId);
         java.util.Optional<StudyMember> membership = studyMemberRepository.findByStudyAndUser(study, user);
 
-        if (membership.isPresent() && membership.get().getStatus() == com.wiedu.domain.enums.MemberStatus.ACTIVE) {
-            return StudyResponse.from(study, true, membership.get().getRole());
+        if (membership.isPresent() && membership.get().getStatus() == MemberStatus.ACTIVE) {
+            return StudyResponse.from(study, true, membership.get().getRole(), members);
         } else {
-            return StudyResponse.from(study, false, null);
+            return StudyResponse.from(study, false, null, members);
         }
     }
 
@@ -250,19 +257,102 @@ public class StudyService {
     }
 
     /**
-     * 스터디 수정 (리더만 가능)
+     * 스터디 수정 (리더만 가능) - 전체 필드 지원
      */
     @Transactional
     public StudyResponse updateStudy(Long studyId, Long userId, StudyUpdateRequest request) {
-        Study study = findStudyEntityById(studyId);
+        Study study = studyRepository.findByIdWithDetails(studyId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
 
         // 리더 권한 확인
         validateLeaderPermission(study, userId);
 
-        study.updateInfo(
-                request.title() != null ? request.title() : study.getTitle(),
-                request.description() != null ? request.description() : study.getDescription()
+        // 카테고리 처리
+        StudyCategory category = null;
+        if (request.categoryId() != null) {
+            category = studyCategoryRepository.findById(request.categoryId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.CATEGORY_NOT_FOUND));
+        }
+
+        StudySubcategory subcategory = null;
+        if (request.subcategoryId() != null) {
+            subcategory = studySubcategoryRepository.findById(request.subcategoryId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.SUBCATEGORY_NOT_FOUND));
+            if (category != null && !subcategory.getCategory().getId().equals(category.getId())) {
+                throw new BusinessException(ErrorCode.SUBCATEGORY_NOT_IN_CATEGORY);
+            }
+        }
+
+        // daysOfWeek 리스트를 콤마 구분 문자열로 변환
+        String daysOfWeekJson = request.daysOfWeek() != null ?
+                String.join(",", request.daysOfWeek()) : null;
+
+        // 전체 필드 업데이트
+        study.updateFull(
+                request.title(),
+                request.description(),
+                category,
+                subcategory,
+                request.coverImageUrl(),
+                request.targetAudience(),
+                request.goals(),
+                request.studyMethod(),
+                daysOfWeekJson,
+                request.time(),
+                request.durationType(),
+                request.platform(),
+                request.meetingRegion(),
+                request.meetingCity(),
+                request.meetingLatitude(),
+                request.meetingLongitude(),
+                request.maxMembers(),
+                request.deposit(),
+                request.depositRefundPolicy(),
+                request.requirements()
         );
+
+        // 태그, 커리큘럼, 규칙 업데이트 (있으면 교체)
+        // orphanRemoval과 unique constraint 충돌 방지를 위해 먼저 clear 후 flush
+        boolean needsFlush = false;
+        if (request.tags() != null) {
+            study.clearTags();
+            needsFlush = true;
+        }
+        if (request.curriculums() != null) {
+            study.clearCurriculums();
+            needsFlush = true;
+        }
+        if (request.rules() != null) {
+            study.clearRules();
+            needsFlush = true;
+        }
+
+        // 삭제를 먼저 실행하여 unique constraint 충돌 방지
+        if (needsFlush) {
+            entityManager.flush();
+        }
+
+        // 새 데이터 추가
+        if (request.tags() != null) {
+            int order = 0;
+            for (String tagName : request.tags()) {
+                StudyTag tag = StudyTag.create(study, tagName, order++);
+                study.addTag(tag);
+            }
+        }
+        if (request.curriculums() != null) {
+            for (CurriculumRequest curr : request.curriculums()) {
+                StudyCurriculum curriculum = StudyCurriculum.create(
+                        study, curr.weekNumber(), curr.title(), curr.content());
+                study.addCurriculum(curriculum);
+            }
+        }
+        if (request.rules() != null) {
+            for (RuleRequest rule : request.rules()) {
+                StudyRule studyRule = StudyRule.create(study, rule.ruleOrder(), rule.content());
+                study.addRule(studyRule);
+            }
+        }
 
         return StudyResponse.from(study);
     }

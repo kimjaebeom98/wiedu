@@ -1,9 +1,11 @@
 package com.wiedu.dto.study;
 
 import com.wiedu.domain.entity.Study;
+import com.wiedu.domain.entity.StudyMember;
 import com.wiedu.domain.entity.StudyRule;
 import com.wiedu.domain.entity.StudyTag;
 import com.wiedu.domain.enums.MemberRole;
+import com.wiedu.domain.enums.MemberStatus;
 import com.wiedu.domain.enums.StudyStatus;
 import com.wiedu.dto.user.UserResponse;
 
@@ -44,15 +46,35 @@ public record StudyResponse(
         LocalDateTime createdAt,
         // 멤버십 정보 (로그인 사용자 기준)
         Boolean isMember,
-        String memberRole
+        String memberRole,
+        // 멤버 목록 (활성 멤버)
+        List<MemberInfo> members
 ) {
     // Entity → DTO 변환 (비로그인 사용자용)
     public static StudyResponse from(Study study) {
-        return from(study, null, null);
+        return from(study, null, null, null);
     }
 
     // Entity → DTO 변환 (로그인 사용자용 - 멤버십 정보 포함)
     public static StudyResponse from(Study study, Boolean isMember, MemberRole memberRole) {
+        return from(study, isMember, memberRole, null);
+    }
+
+    // Entity → DTO 변환 (로그인 사용자용 - 멤버십 정보 + 멤버 목록 포함)
+    public static StudyResponse from(Study study, Boolean isMember, MemberRole memberRole, List<StudyMember> studyMembers) {
+        List<MemberInfo> memberInfoList = null;
+        if (studyMembers != null) {
+            memberInfoList = studyMembers.stream()
+                    .filter(m -> m.getStatus() == MemberStatus.ACTIVE)
+                    .map(m -> new MemberInfo(
+                            m.getUser().getId(),
+                            m.getUser().getNickname(),
+                            m.getUser().getProfileImage(),
+                            m.getRole().name()
+                    ))
+                    .toList();
+        }
+
         return new StudyResponse(
                 study.getId(),
                 study.getTitle(),
@@ -87,10 +109,12 @@ public record StudyResponse(
                 study.getEndDate(),
                 study.getCreatedAt(),
                 isMember,
-                memberRole != null ? memberRole.name() : null
+                memberRole != null ? memberRole.name() : null,
+                memberInfoList
         );
     }
 
     public record CurriculumResponse(Integer weekNumber, String title, String content) {}
     public record RuleResponse(Integer ruleOrder, String content) {}
+    public record MemberInfo(Long id, String nickname, String profileImage, String role) {}
 }
