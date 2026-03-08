@@ -563,6 +563,11 @@ export default function StudyDetailScreen() {
                 <View style={styles.categoryBadge}>
                   <Text style={styles.categoryBadgeText}>{study.categoryName}</Text>
                 </View>
+                {study.subcategoryName && (
+                  <View style={styles.subcategoryBadge}>
+                    <Text style={styles.subcategoryBadgeText}>{study.subcategoryName}</Text>
+                  </View>
+                )}
                 {study.studyMethod && (
                   <View
                     style={[
@@ -815,10 +820,13 @@ export default function StudyDetailScreen() {
             {study.status === 'COMPLETED' && (
               <View style={styles.section}>
                 <View style={styles.reviewButtonsContainer}>
-                  <TouchableOpacity style={styles.writeReviewBtn} onPress={handleWriteReview}>
-                    <Feather name="edit-2" size={16} color="#8B5CF6" />
-                    <Text style={styles.writeReviewBtnText}>스터디장 리뷰</Text>
-                  </TouchableOpacity>
+                  {/* 스터디장은 자기 자신에게 리뷰를 작성할 수 없음 */}
+                  {study.memberRole !== 'LEADER' && (
+                    <TouchableOpacity style={styles.writeReviewBtn} onPress={handleWriteReview}>
+                      <Feather name="edit-2" size={16} color="#8B5CF6" />
+                      <Text style={styles.writeReviewBtnText}>스터디장 리뷰</Text>
+                    </TouchableOpacity>
+                  )}
                   <TouchableOpacity style={styles.writeReviewBtn} onPress={handleMemberReview}>
                     <Feather name="users" size={16} color="#8B5CF6" />
                     <Text style={styles.writeReviewBtnText}>멤버 평가</Text>

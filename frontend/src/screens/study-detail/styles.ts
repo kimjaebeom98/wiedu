@@ -122,6 +122,17 @@ export const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#8B5CF6',
   },
+  subcategoryBadge: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 100,
+    backgroundColor: '#3B82F620',
+  },
+  subcategoryBadgeText: {
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#3B82F6',
+  },
   methodBadge: {
     paddingVertical: 6,
     paddingHorizontal: 12,
