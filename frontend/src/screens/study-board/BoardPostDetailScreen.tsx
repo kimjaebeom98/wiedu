@@ -6,7 +6,6 @@ import {
   TextInput,
   TouchableOpacity,
   RefreshControl,
-  Alert,
   Platform,
   ActivityIndicator,
   Modal,
@@ -14,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Image,
 } from 'react-native';
+import { CustomAlert, AlertButton } from '../../components/common';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Feather } from '@expo/vector-icons';
@@ -48,6 +48,18 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    title: string;
+    message?: string;
+    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'trash-2' | 'edit-2';
+    buttons?: AlertButton[];
+  }>({ title: '' });
+
+  const showAlert = (config: typeof alertConfig) => {
+    setAlertConfig(config);
+    setAlertVisible(true);
+  };
 
   // Edit states
   const [editingPost, setEditingPost] = useState(false);
@@ -80,8 +92,7 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
       setPost(data);
     } catch (error) {
       console.error('Failed to load post:', error);
-      Alert.alert('오류', '게시글을 불러오는데 실패했습니다.');
-      navigation.goBack();
+      showAlert({ title: '게시글을 불러오는데 실패했습니다.', icon: 'x-circle', buttons: [{ text: '확인', onPress: () => navigation.goBack() }] });
     } finally {
       setLoading(false);
     }
@@ -103,7 +114,7 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
 
   const handleSavePost = async () => {
     if (!editPostTitle.trim() || !editPostContent.trim()) {
-      Alert.alert('오류', '제목과 내용을 입력해주세요.');
+      showAlert({ title: '제목과 내용을 입력해주세요.', icon: 'alert-circle' });
       return;
     }
 
@@ -115,20 +126,21 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
       });
       setPost(updated);
       setEditingPost(false);
-      Alert.alert('완료', '게시글이 수정되었습니다.');
+      showAlert({ title: '게시글이 수정되었습니다.', icon: 'check-circle' });
     } catch (error) {
       console.error('Failed to update post:', error);
-      Alert.alert('오류', '게시글 수정에 실패했습니다.');
+      showAlert({ title: '게시글 수정에 실패했습니다.', icon: 'x-circle' });
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeletePost = () => {
-    Alert.alert(
-      '게시글 삭제',
-      '정말 삭제하시겠습니까?',
-      [
+    showAlert({
+      title: '게시글 삭제',
+      message: '정말 삭제하시겠습니까?',
+      icon: 'trash-2',
+      buttons: [
         { text: '취소', style: 'cancel' },
         {
           text: '삭제',
@@ -136,16 +148,15 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
           onPress: async () => {
             try {
               await deleteBoardPost(studyId, postId);
-              Alert.alert('완료', '게시글이 삭제되었습니다.');
-              navigation.goBack();
+              showAlert({ title: '게시글이 삭제되었습니다.', icon: 'check-circle', buttons: [{ text: '확인', onPress: () => navigation.goBack() }] });
             } catch (error) {
               console.error('Failed to delete post:', error);
-              Alert.alert('오류', '게시글 삭제에 실패했습니다.');
+              showAlert({ title: '게시글 삭제에 실패했습니다.', icon: 'x-circle' });
             }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const handleTogglePostLike = async () => {
@@ -185,7 +196,7 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
       setCommentText('');
     } catch (error) {
       console.error('Failed to create comment:', error);
-      Alert.alert('오류', '댓글 작성에 실패했습니다.');
+      showAlert({ title: '댓글 작성에 실패했습니다.', icon: 'x-circle' });
     } finally {
       setSubmitting(false);
     }
@@ -218,7 +229,7 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
       setEditCommentText('');
     } catch (error) {
       console.error('Failed to update comment:', error);
-      Alert.alert('오류', '댓글 수정에 실패했습니다.');
+      showAlert({ title: '댓글 수정에 실패했습니다.', icon: 'x-circle' });
     } finally {
       setSubmitting(false);
     }
@@ -230,10 +241,11 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
   };
 
   const handleDeleteComment = (commentId: number) => {
-    Alert.alert(
-      '댓글 삭제',
-      '정말 삭제하시겠습니까?',
-      [
+    showAlert({
+      title: '댓글 삭제',
+      message: '정말 삭제하시겠습니까?',
+      icon: 'trash-2',
+      buttons: [
         { text: '취소', style: 'cancel' },
         {
           text: '삭제',
@@ -252,12 +264,12 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
               );
             } catch (error) {
               console.error('Failed to delete comment:', error);
-              Alert.alert('오류', '댓글 삭제에 실패했습니다.');
+              showAlert({ title: '댓글 삭제에 실패했습니다.', icon: 'x-circle' });
             }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const handleToggleCommentLike = async (commentId: number) => {
@@ -546,6 +558,15 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        icon={alertConfig.icon}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertVisible(false)}
+      />
 
       {/* Edit Post Modal */}
       <Modal visible={editingPost} animationType="slide" presentationStyle="pageSheet">

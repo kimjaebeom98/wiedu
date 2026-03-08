@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   TextInput,
   ActivityIndicator,
-  Alert,
   Image,
 } from 'react-native';
+import { CustomAlert, AlertButton } from '../../../components/common';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Step1Props } from '../types';
@@ -25,6 +25,19 @@ export default function Step1BasicInfo({
   removeTag,
 }: Step1Props) {
   const selectedCategory = categories.find(c => c.id === data.categoryId);
+
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    title: string;
+    message?: string;
+    icon?: 'alert-circle' | 'lock';
+    buttons?: AlertButton[];
+  }>({ title: '' });
+
+  const showAlert = (config: typeof alertConfig) => {
+    setAlertConfig(config);
+    setAlertVisible(true);
+  };
 
   return (
     <View style={styles.stepInner}>
@@ -100,7 +113,7 @@ export default function Step1BasicInfo({
           onPress={async () => {
             const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
             if (!permissionResult.granted) {
-              Alert.alert('권한 필요', '이미지를 선택하려면 갤러리 접근 권한이 필요합니다.');
+              showAlert({ title: '권한 필요', message: '이미지를 선택하려면 갤러리 접근 권한이 필요합니다.', icon: 'lock' });
               return;
             }
             const result = await ImagePicker.launchImageLibraryAsync({
@@ -169,6 +182,14 @@ export default function Step1BasicInfo({
           </View>
         )}
       </View>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        icon={alertConfig.icon}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertVisible(false)}
+      />
     </View>
   );
 }

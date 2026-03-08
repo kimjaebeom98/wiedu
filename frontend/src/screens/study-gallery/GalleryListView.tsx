@@ -6,12 +6,12 @@ import {
   TouchableOpacity,
   Image,
   ActivityIndicator,
-  Alert,
   Modal,
   Dimensions,
   StyleSheet,
   RefreshControl,
 } from 'react-native';
+import { CustomAlert, AlertButton } from '../../components/common';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import {
@@ -39,6 +39,18 @@ export default function GalleryListView({ studyId }: GalleryListViewProps) {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    title: string;
+    message?: string;
+    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'trash-2' | 'lock';
+    buttons?: AlertButton[];
+  }>({ title: '' });
+
+  const showAlert = (config: typeof alertConfig) => {
+    setAlertConfig(config);
+    setAlertVisible(true);
+  };
 
   useEffect(() => {
     loadCurrentUser();
@@ -72,7 +84,7 @@ export default function GalleryListView({ studyId }: GalleryListViewProps) {
       setPage(pageNum);
     } catch (error) {
       console.error('Failed to load photos:', error);
-      Alert.alert('오류', '사진을 불러오는데 실패했습니다.');
+      showAlert({ title: '오류', message: '사진을 불러오는데 실패했습니다.', icon: 'x-circle' });
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -96,7 +108,7 @@ export default function GalleryListView({ studyId }: GalleryListViewProps) {
       // Request permission
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('권한 필요', '사진을 업로드하려면 갤러리 접근 권한이 필요합니다.');
+        showAlert({ title: '권한 필요', message: '사진을 업로드하려면 갤러리 접근 권한이 필요합니다.', icon: 'lock' });
         return;
       }
 
@@ -113,7 +125,7 @@ export default function GalleryListView({ studyId }: GalleryListViewProps) {
 
       // Check file size (10MB limit)
       if (asset.fileSize && asset.fileSize > 10 * 1024 * 1024) {
-        Alert.alert('파일 크기 초과', '10MB 이하의 이미지만 업로드할 수 있습니다.');
+        showAlert({ title: '파일 크기 초과', message: '10MB 이하의 이미지만 업로드할 수 있습니다.', icon: 'alert-circle' });
         return;
       }
 
@@ -135,20 +147,21 @@ export default function GalleryListView({ studyId }: GalleryListViewProps) {
 
       // Refresh list
       loadPhotos(0, false);
-      Alert.alert('완료', '사진이 업로드되었습니다.');
+      showAlert({ title: '완료', message: '사진이 업로드되었습니다.', icon: 'check-circle' });
     } catch (error: any) {
       console.error('Failed to upload photo:', error);
-      Alert.alert('업로드 실패', error.response?.data?.message || '사진 업로드에 실패했습니다.');
+      showAlert({ title: '업로드 실패', message: error.response?.data?.message || '사진 업로드에 실패했습니다.', icon: 'x-circle' });
     } finally {
       setUploading(false);
     }
   };
 
   const handleDeletePhoto = async (photo: GalleryPhoto) => {
-    Alert.alert(
-      '사진 삭제',
-      '이 사진을 삭제하시겠습니까?',
-      [
+    showAlert({
+      title: '사진 삭제',
+      message: '이 사진을 삭제하시겠습니까?',
+      icon: 'trash-2',
+      buttons: [
         { text: '취소', style: 'cancel' },
         {
           text: '삭제',
@@ -158,15 +171,15 @@ export default function GalleryListView({ studyId }: GalleryListViewProps) {
               await deleteGalleryPhoto(studyId, photo.id);
               setSelectedPhoto(null);
               loadPhotos(0, false);
-              Alert.alert('완료', '사진이 삭제되었습니다.');
+              showAlert({ title: '완료', message: '사진이 삭제되었습니다.', icon: 'check-circle' });
             } catch (error: any) {
               console.error('Failed to delete photo:', error);
-              Alert.alert('삭제 실패', error.response?.data?.message || '사진 삭제에 실패했습니다.');
+              showAlert({ title: '삭제 실패', message: error.response?.data?.message || '사진 삭제에 실패했습니다.', icon: 'x-circle' });
             }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const formatDate = (dateStr: string): string => {
@@ -316,6 +329,15 @@ export default function GalleryListView({ studyId }: GalleryListViewProps) {
           </View>
         </View>
       </Modal>
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        icon={alertConfig.icon}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertVisible(false)}
+      />
     </View>
   );
 }

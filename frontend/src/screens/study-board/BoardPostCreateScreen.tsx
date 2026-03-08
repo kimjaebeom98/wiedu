@@ -6,12 +6,13 @@ import {
   TouchableOpacity,
   StyleSheet,
   SafeAreaView,
-  Alert,
   ScrollView,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+
+import { CustomAlert, AlertButton } from '../../components/common';
 import { Feather } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
@@ -29,6 +30,18 @@ export default function BoardPostCreateScreen({ navigation, route }: Props) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    title: string;
+    message?: string;
+    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'send';
+    buttons?: AlertButton[];
+  }>({ title: '' });
+
+  const showAlert = (config: typeof alertConfig) => {
+    setAlertConfig(config);
+    setAlertVisible(true);
+  };
 
   const categories: PostCategory[] = isLeader
     ? ['NOTICE', 'CHAT', 'QNA']
@@ -40,7 +53,11 @@ export default function BoardPostCreateScreen({ navigation, route }: Props) {
 
   const handleSubmit = async () => {
     if (!isFormValid()) {
-      Alert.alert('알림', '제목과 내용을 모두 입력해주세요.');
+      showAlert({
+        title: '알림',
+        message: '제목과 내용을 모두 입력해주세요.',
+        icon: 'alert-circle',
+      });
       return;
     }
 
@@ -55,20 +72,25 @@ export default function BoardPostCreateScreen({ navigation, route }: Props) {
 
       await createBoardPost(studyId, requestData);
 
-      Alert.alert('성공', '게시글이 작성되었습니다.', [
-        {
-          text: '확인',
-          onPress: () => {
-            navigation.goBack();
+      showAlert({
+        title: '게시글이 작성되었습니다.',
+        icon: 'check-circle',
+        buttons: [
+          {
+            text: '확인',
+            onPress: () => {
+              navigation.goBack();
+            },
           },
-        },
-      ]);
+        ],
+      });
     } catch (error: any) {
       console.error('Failed to create post:', error);
-      Alert.alert(
-        '오류',
-        error.response?.data?.message || '게시글 작성에 실패했습니다.'
-      );
+      showAlert({
+        title: '오류',
+        message: error.response?.data?.message || '게시글 작성에 실패했습니다.',
+        icon: 'x-circle',
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -179,6 +201,14 @@ export default function BoardPostCreateScreen({ navigation, route }: Props) {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        icon={alertConfig.icon}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertVisible(false)}
+      />
     </SafeAreaView>
   );
 }

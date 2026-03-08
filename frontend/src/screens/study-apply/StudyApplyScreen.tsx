@@ -7,11 +7,11 @@ import {
   TextInput,
   StatusBar,
   ActivityIndicator,
-  Alert,
   KeyboardAvoidingView,
   Platform,
   Modal,
 } from 'react-native';
+import { CustomAlert, AlertButton } from '../../components/common';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -38,6 +38,18 @@ export default function StudyApplyScreen() {
   const [loading, setLoading] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    title: string;
+    message?: string;
+    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'send';
+    buttons?: AlertButton[];
+  }>({ title: '' });
+
+  const showAlert = (config: typeof alertConfig) => {
+    setAlertConfig(config);
+    setAlertVisible(true);
+  };
 
   // 보증금이 없거나 환불정책이 없으면 자동 동의 처리
   const hasDepositPolicy = !!depositRefundPolicy;
@@ -45,7 +57,7 @@ export default function StudyApplyScreen() {
 
   const handleSubmit = async () => {
     if (!canSubmit) {
-      Alert.alert('알림', '필수 항목을 모두 입력하고 동의해주세요.');
+      showAlert({ title: '알림', message: '필수 항목을 모두 입력하고 동의해주세요.', icon: 'alert-circle' });
       return;
     }
 
@@ -58,7 +70,7 @@ export default function StudyApplyScreen() {
       navigation.replace('ApplyComplete', { studyId, studyTitle });
     } catch (error: any) {
       const errorMessage = error?.response?.data?.message || '가입 신청에 실패했습니다.';
-      Alert.alert('오류', errorMessage);
+      showAlert({ title: '오류', message: errorMessage, icon: 'x-circle' });
     } finally {
       setLoading(false);
     }
@@ -287,6 +299,14 @@ export default function StudyApplyScreen() {
           </View>
         </View>
       </Modal>
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        icon={alertConfig.icon}
+        buttons={alertConfig.buttons}
+        onClose={() => setAlertVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 }
