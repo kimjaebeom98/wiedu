@@ -728,4 +728,122 @@ export const styles = StyleSheet.create({
     fontWeight: '500',
     textAlign: 'center',
   },
+
+  // Duration Stepper
+  stepperContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#27272A',
+    borderRadius: 12,
+    padding: 6,
+    gap: 8,
+  },
+  stepperBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 10,
+    backgroundColor: '#8B5CF6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  stepperValueContainer: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 2,
+  },
+  stepperValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  stepperHint: {
+    fontSize: 10,
+    color: '#71717A',
+    marginTop: 1,
+  },
+
+  // Duration Modal
+  durationModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  durationModalContent: {
+    width: '100%',
+    maxWidth: 340,
+    backgroundColor: '#27272A',
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  durationModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3F3F46',
+  },
+  durationModalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  durationModalBody: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  durationModalInput: {
+    width: '100%',
+    height: 56,
+    backgroundColor: '#18181B',
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textAlign: 'center',
+  },
+  durationUnitSelector: {
+    flexDirection: 'row',
+    marginTop: 16,
+    gap: 8,
+  },
+  durationUnitBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 100,
+    backgroundColor: '#3F3F46',
+  },
+  durationUnitBtnSelected: {
+    backgroundColor: '#8B5CF6',
+  },
+  durationUnitBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#A1A1AA',
+  },
+  durationUnitBtnTextSelected: {
+    color: '#FFFFFF',
+  },
+  durationModalPreview: {
+    marginTop: 16,
+    fontSize: 14,
+    color: '#71717A',
+  },
+  durationModalApplyBtn: {
+    margin: 20,
+    marginTop: 0,
+    height: 52,
+    borderRadius: 12,
+    backgroundColor: '#8B5CF6',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  durationModalApplyBtnText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
 });

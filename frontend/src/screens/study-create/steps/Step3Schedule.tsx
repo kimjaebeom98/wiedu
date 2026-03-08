@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, TextInput, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  Platform,
+  Modal,
+  ScrollView,
+  KeyboardAvoidingView,
+} from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import Slider from '@react-native-community/slider';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -18,26 +26,66 @@ import {
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+type DurationUnit = 'week' | 'month' | 'year';
+
+const UNIT_LABELS: Record<DurationUnit, string> = {
+  week: '주',
+  month: '개월',
+  year: '년',
+};
+
+// Convert to weeks for backend storage
+const convertToWeeks = (value: number, unit: DurationUnit): number => {
+  switch (unit) {
+    case 'week':
+      return value;
+    case 'month':
+      return value * 4;
+    case 'year':
+      return value * 52;
+    default:
+      return value;
+  }
+};
+
+// Convert weeks to best display unit
+const convertFromWeeks = (weeks: number): { value: number; unit: DurationUnit } => {
+  if (weeks >= 52 && weeks % 52 === 0) {
+    return { value: weeks / 52, unit: 'year' };
+  }
+  if (weeks >= 4 && weeks % 4 === 0) {
+    return { value: weeks / 4, unit: 'month' };
+  }
+  return { value: weeks, unit: 'week' };
+};
+
 export default function Step3Schedule({ data, updateData, toggleDay }: Step3Props) {
   const navigation = useNavigation<NavigationProp>();
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showDurationModal, setShowDurationModal] = useState(false);
   const [selectedTime, setSelectedTime] = useState<Date>(() => {
-    // Parse existing time or default to 8 PM
     const defaultDate = new Date();
     defaultDate.setHours(20, 0, 0, 0);
     return defaultDate;
   });
 
-  // Local slider state for immediate visual feedback
+  // Duration state
   const storedWeeks = getWeeksFromDurationType(data.durationType);
-  const [sliderValue, setSliderValue] = useState(storedWeeks);
+  const initialDisplay = convertFromWeeks(storedWeeks);
+  const [durationValue, setDurationValue] = useState(initialDisplay.value);
+  const [durationUnit, setDurationUnit] = useState<DurationUnit>(initialDisplay.unit);
 
-  // Sync local state when parent data changes
+  // Modal input state
+  const [modalValue, setModalValue] = useState('');
+  const [modalUnit, setModalUnit] = useState<DurationUnit>('week');
+
+  // Sync state when parent data changes
   useEffect(() => {
-    setSliderValue(storedWeeks);
+    const display = convertFromWeeks(storedWeeks);
+    setDurationValue(display.value);
+    setDurationUnit(display.unit);
   }, [storedWeeks]);
 
-  // Handle region selection from RegionPicker
   const handleRegionSelect = (location: { address: string; latitude: number; longitude: number }) => {
     const parts = location.address.split(' ');
     const region = parts[0] || '';
@@ -64,9 +112,74 @@ export default function Step3Schedule({ data, updateData, toggleDay }: Step3Prop
     }
   };
 
-  const getDurationLabel = (weeks: number): string => {
-    if (weeks >= 25) return '장기 (24주+)';
-    return `${weeks}주`;
+  // Update duration and sync to parent
+  const updateDuration = (newValue: number, newUnit: DurationUnit) => {
+    const minValue = 1;
+    const maxWeeks = 260; // ~5 years max
+
+    const weeks = convertToWeeks(newValue, newUnit);
+    if (weeks < minValue || weeks > maxWeeks) return;
+
+    setDurationValue(newValue);
+    setDurationUnit(newUnit);
+
+    const durationType = getDurationTypeFromWeeks(Math.min(weeks, 25));
+    updateData('durationType', durationType);
+  };
+
+  const handleDecrement = () => {
+    if (durationValue > 1) {
+      updateDuration(durationValue - 1, durationUnit);
+    } else if (durationUnit === 'year' && durationValue === 1) {
+      // 1년 -> 6개월로 전환
+      updateDuration(6, 'month');
+    } else if (durationUnit === 'month' && durationValue === 1) {
+      // 1개월 -> 3주로 전환
+      updateDuration(3, 'week');
+    }
+  };
+
+  const handleIncrement = () => {
+    const weeks = convertToWeeks(durationValue + 1, durationUnit);
+    if (weeks <= 260) {
+      updateDuration(durationValue + 1, durationUnit);
+    }
+  };
+
+  const openDurationModal = () => {
+    setModalValue(durationValue.toString());
+    setModalUnit(durationUnit);
+    setShowDurationModal(true);
+  };
+
+  const applyModalDuration = () => {
+    const numValue = parseInt(modalValue, 10);
+    if (!isNaN(numValue) && numValue > 0) {
+      updateDuration(numValue, modalUnit);
+    }
+    setShowDurationModal(false);
+  };
+
+  const getDurationDisplayText = (): string => {
+    const weeks = convertToWeeks(durationValue, durationUnit);
+    const mainText = `${durationValue}${UNIT_LABELS[durationUnit]}`;
+
+    // Show conversion hint
+    if (durationUnit === 'month' && durationValue >= 1) {
+      return `${mainText} (${weeks}주)`;
+    }
+    if (durationUnit === 'year') {
+      return `${mainText} (${durationValue * 12}개월)`;
+    }
+    if (durationUnit === 'week' && durationValue >= 4 && durationValue % 4 === 0) {
+      return `${mainText} (${durationValue / 4}개월)`;
+    }
+
+    if (weeks >= 25) {
+      return `${mainText} (장기)`;
+    }
+
+    return mainText;
   };
 
   return (
@@ -131,7 +244,6 @@ export default function Step3Schedule({ data, updateData, toggleDay }: Step3Prop
           <Feather name="chevron-down" size={18} color="#71717A" />
         </TouchableOpacity>
 
-        {/* iOS: show inline picker, Android: show modal */}
         {showTimePicker && Platform.OS === 'ios' && (
           <View style={styles.timePickerContainer}>
             <View style={styles.timePickerHeader}>
@@ -161,40 +273,34 @@ export default function Step3Schedule({ data, updateData, toggleDay }: Step3Prop
         )}
       </View>
 
-      {/* Duration Slider */}
+      {/* Duration Stepper */}
       <View style={styles.fieldGroup}>
-        <View style={styles.durationHeader}>
-          <Text style={styles.fieldLabel}>기간</Text>
-          <Text style={styles.durationValue}>{getDurationLabel(sliderValue)}</Text>
-        </View>
-        <View style={styles.sliderContainer}>
-          <Text style={styles.sliderMinLabel}>1주</Text>
-          <Slider
-            style={styles.slider}
-            minimumValue={1}
-            maximumValue={25}
-            step={1}
-            value={sliderValue}
-            onValueChange={(value) => {
-              setSliderValue(Math.round(value));
-            }}
-            onSlidingComplete={(value) => {
-              const roundedValue = Math.round(value);
-              setSliderValue(roundedValue);
-              const durationType = getDurationTypeFromWeeks(roundedValue);
-              updateData('durationType', durationType);
-            }}
-            minimumTrackTintColor="#8B5CF6"
-            maximumTrackTintColor="#3F3F46"
-            thumbTintColor="#8B5CF6"
-          />
-          <Text style={styles.sliderMaxLabel}>장기</Text>
-        </View>
-        <View style={styles.sliderTicks}>
-          <Text style={styles.sliderTick}>4주</Text>
-          <Text style={styles.sliderTick}>8주</Text>
-          <Text style={styles.sliderTick}>12주</Text>
-          <Text style={styles.sliderTick}>24주+</Text>
+        <Text style={styles.fieldLabel}>기간</Text>
+        <View style={styles.stepperContainer}>
+          <TouchableOpacity
+            style={styles.stepperBtn}
+            onPress={handleDecrement}
+            activeOpacity={0.7}
+          >
+            <Feather name="minus" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.stepperValueContainer}
+            onPress={openDurationModal}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.stepperValue}>{getDurationDisplayText()}</Text>
+            <Text style={styles.stepperHint}>탭하여 직접 입력</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.stepperBtn}
+            onPress={handleIncrement}
+            activeOpacity={0.7}
+          >
+            <Feather name="plus" size={20} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -250,6 +356,75 @@ export default function Step3Schedule({ data, updateData, toggleDay }: Step3Prop
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Duration Input Modal */}
+      <Modal
+        visible={showDurationModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDurationModal(false)}
+      >
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.durationModalOverlay}
+        >
+          <View style={styles.durationModalContent}>
+            <View style={styles.durationModalHeader}>
+              <Text style={styles.durationModalTitle}>기간 설정</Text>
+              <TouchableOpacity onPress={() => setShowDurationModal(false)}>
+                <Feather name="x" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.durationModalBody}>
+              <TextInput
+                style={styles.durationModalInput}
+                keyboardType="number-pad"
+                value={modalValue}
+                onChangeText={setModalValue}
+                placeholder="숫자 입력"
+                placeholderTextColor="#71717A"
+                autoFocus
+              />
+
+              <View style={styles.durationUnitSelector}>
+                {(['week', 'month', 'year'] as DurationUnit[]).map(unit => (
+                  <TouchableOpacity
+                    key={unit}
+                    style={[
+                      styles.durationUnitBtn,
+                      modalUnit === unit && styles.durationUnitBtnSelected,
+                    ]}
+                    onPress={() => setModalUnit(unit)}
+                  >
+                    <Text
+                      style={[
+                        styles.durationUnitBtnText,
+                        modalUnit === unit && styles.durationUnitBtnTextSelected,
+                      ]}
+                    >
+                      {UNIT_LABELS[unit]}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {modalValue && !isNaN(parseInt(modalValue, 10)) && (
+                <Text style={styles.durationModalPreview}>
+                  = {convertToWeeks(parseInt(modalValue, 10), modalUnit)}주
+                </Text>
+              )}
+            </View>
+
+            <TouchableOpacity
+              style={styles.durationModalApplyBtn}
+              onPress={applyModalDuration}
+            >
+              <Text style={styles.durationModalApplyBtnText}>적용</Text>
+            </TouchableOpacity>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
