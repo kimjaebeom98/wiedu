@@ -289,13 +289,25 @@ export default function HomeScreen() {
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={styles.categoryScrollContent}
             >
-              {displayCategories.map((cat) => (
-                <TouchableOpacity key={cat.id} style={styles.categoryItem}>
-                  <View style={styles.categoryCircle}>
-                    <Feather name={getCategoryIcon(cat.code)} size={22} color="#E4E4E7" />
-                  </View>
-                  <Text style={styles.categoryName}>{cat.name}</Text>
-                </TouchableOpacity>
+              {/* Split into pairs for 2 rows */}
+              {Array.from({ length: Math.ceil(displayCategories.length / 2) }).map((_, colIdx) => (
+                <View key={colIdx} style={styles.categoryColumn}>
+                  {displayCategories.slice(colIdx * 2, colIdx * 2 + 2).map((cat) => (
+                    <TouchableOpacity
+                      key={cat.id}
+                      style={styles.categoryItem}
+                      onPress={() => navigation.navigate('CategoryStudies', {
+                        categoryId: cat.id,
+                        categoryName: cat.name,
+                      })}
+                    >
+                      <View style={styles.categoryCircle}>
+                        <Feather name={getCategoryIcon(cat.code)} size={18} color="#E4E4E7" />
+                      </View>
+                      <Text style={styles.categoryName} numberOfLines={1}>{cat.name}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               ))}
             </ScrollView>
           )}
@@ -619,31 +631,34 @@ const styles = StyleSheet.create({
     color: '#71717A',
   },
   categorySection: {
-    marginTop: 24,
+    marginTop: 20,
     marginHorizontal: -24,
   },
   categoryScrollContent: {
     paddingHorizontal: 24,
-    gap: 12,
+    gap: 8,
+  },
+  categoryColumn: {
+    gap: 8,
   },
   categoryItem: {
-    width: 72,
+    width: 68,
     backgroundColor: '#27272A',
-    borderRadius: 16,
-    paddingVertical: 16,
+    borderRadius: 12,
+    paddingVertical: 10,
     alignItems: 'center',
   },
   categoryCircle: {
-    width: 44,
-    height: 44,
+    width: 36,
+    height: 36,
     backgroundColor: '#3F3F46',
-    borderRadius: 12,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 6,
   },
   categoryName: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: '500',
     color: '#E4E4E7',
   },

@@ -295,6 +295,29 @@ export const searchStudies = async (params: SearchStudiesParams): Promise<Pagina
   );
 };
 
+// GET /api/studies/category/:categoryId - Get studies by category
+export interface CategoryStudiesParams {
+  categoryId: number;
+  page?: number;
+  size?: number;
+}
+
+export const fetchStudiesByCategory = async (params: CategoryStudiesParams): Promise<PaginatedStudyResponse> => {
+  return withErrorHandling(
+    async () => {
+      const client = getPublicClient();
+      const response = await client.get(`/api/studies/category/${params.categoryId}`, {
+        params: {
+          page: params.page || 0,
+          size: params.size || 10,
+        },
+      });
+      return response.data;
+    },
+    { defaultMessage: '카테고리별 스터디를 불러오는데 실패했습니다.' }
+  );
+};
+
 // PATCH /api/studies/:studyId - Update study (full update)
 export const updateStudy = async (studyId: number, data: StudyUpdateRequest): Promise<StudyResponse> => {
   return withErrorHandling(
