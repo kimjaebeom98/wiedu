@@ -93,7 +93,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       <View style={styles.glow2} />
 
       {/* Content */}
-      <View style={[styles.content, { paddingTop: insets.top + 80 }]}>
+      <View style={[styles.content, { paddingTop: insets.top + 80, paddingBottom: Math.max(insets.bottom, 20) + 20 }]}>
         {/* Logo Section */}
         <View style={styles.logoSection}>
           <Text style={styles.headline}>스터디 고민 끝,</Text>
@@ -211,7 +211,6 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingBottom: 40,
     paddingHorizontal: 28,
     justifyContent: 'space-between',
     alignItems: 'center',

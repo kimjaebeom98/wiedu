@@ -89,7 +89,7 @@ export default function SignupScreen({ navigation }: SignupScreenProps) {
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
           <ScrollView
-            contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 20 }]}
+            contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + 20, paddingBottom: Math.max(insets.bottom, 20) + 20 }]}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
@@ -250,7 +250,6 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingHorizontal: 28,
-    paddingBottom: 40,
   },
   header: {
     marginBottom: 32,
