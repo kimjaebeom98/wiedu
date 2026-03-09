@@ -283,26 +283,28 @@ export default function HomeScreen() {
             <Feather name="chevron-down" size={20} color="#A1A1AA" />
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.searchBtn}
-            onPress={() => navigation.navigate('StudySearch')}
-          >
-            <Feather name="search" size={20} color="#FFFFFF" />
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity
+              style={styles.searchBtn}
+              onPress={() => navigation.navigate('StudySearch')}
+            >
+              <Feather name="search" size={20} color="#FFFFFF" />
+            </TouchableOpacity>
 
-          <TouchableOpacity
-            style={styles.notificationBtn}
-            onPress={() => navigation.navigate('Notifications')}
-          >
-            <Feather name="bell" size={22} color="#FFFFFF" />
-            {unreadNotificationCount > 0 && (
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationBadgeText}>
-                  {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
-                </Text>
-              </View>
-            )}
-          </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.notificationBtn}
+              onPress={() => navigation.navigate('Notifications')}
+            >
+              <Feather name="bell" size={22} color="#FFFFFF" />
+              {unreadNotificationCount > 0 && (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationBadgeText}>
+                    {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Category Section */}
@@ -649,18 +651,24 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    justifyContent: 'space-between',
     paddingBottom: 8,
   },
   locationBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+    maxWidth: '60%',
   },
   locationText: {
     fontSize: 18,
     fontWeight: '700',
     color: '#FFFFFF',
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginRight: -8,
   },
   searchBtn: {
     width: 44,
