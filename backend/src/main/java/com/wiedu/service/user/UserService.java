@@ -66,17 +66,11 @@ public class UserService {
 
     /**
      * 사용자 정보 수정
+     * 이름(닉네임)은 중복 허용
      */
     @Transactional
     public UserResponse updateUser(Long userId, UserUpdateRequest request) {
         User user = findUserEntityById(userId);
-
-        // 닉네임 변경 시 중복 체크
-        if (request.nickname() != null && !request.nickname().equals(user.getNickname())) {
-            if (userRepository.existsByNickname(request.nickname())) {
-                throw new BusinessException(ErrorCode.NICKNAME_DUPLICATED);
-            }
-        }
 
         user.updateProfile(
                 request.nickname() != null ? request.nickname() : user.getNickname(),
@@ -91,13 +85,6 @@ public class UserService {
      */
     public boolean isEmailDuplicated(String email) {
         return userRepository.existsByEmail(email);
-    }
-
-    /**
-     * 닉네임 중복 체크
-     */
-    public boolean isNicknameDuplicated(String nickname) {
-        return userRepository.existsByNickname(nickname);
     }
 
     /**

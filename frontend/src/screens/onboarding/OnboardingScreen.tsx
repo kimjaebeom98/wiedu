@@ -103,8 +103,14 @@ export default function OnboardingScreen({ navigation, route }: OnboardingScreen
     }
     if (currentStep === 6) {
       const trimmed = data.nickname.trim();
-      if (trimmed.length < 2) { setError('닉네임은 2자 이상이어야 합니다.'); return; }
-      if (trimmed.length > 20) { setError('닉네임은 20자 이하여야 합니다.'); return; }
+      if (trimmed.length < 2) { setError('이름은 2자 이상이어야 합니다.'); return; }
+      if (trimmed.length > 10) { setError('이름은 10자 이하여야 합니다.'); return; }
+      // 한글만 허용 (공백 제외)
+      const koreanOnly = /^[가-힣]+$/;
+      if (!koreanOnly.test(trimmed.replace(/\s/g, ''))) {
+        setError('이름은 한글만 입력 가능합니다.');
+        return;
+      }
     }
 
     if (currentStep < TOTAL_STEPS) {

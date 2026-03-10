@@ -142,15 +142,9 @@ export default function ProfileEditScreen() {
   };
 
   const handleSave = async () => {
-    if (!nickname.trim()) {
-      showAlert({ title: '오류', message: '닉네임을 입력해주세요.', icon: 'alert-circle' });
-      return;
-    }
-
     setSaving(true);
     try {
       await updateMyProfile({
-        nickname: nickname.trim(),
         bio: bio.trim() || null,
         region: region.trim(),  // 빈 문자열 전송 시 백엔드에서 지역 삭제 처리
         latitude: region.trim() ? latitude : null,
@@ -230,19 +224,16 @@ export default function ProfileEditScreen() {
 
         {/* Form Section */}
         <View style={styles.formSection}>
-          {/* Nickname */}
+          {/* Name - 수정 불가 */}
           <View style={styles.field}>
-            <Text style={styles.fieldLabel}>닉네임</Text>
-            <View style={styles.inputContainer}>
-              <TextInput
-                style={styles.input}
-                value={nickname}
-                onChangeText={setNickname}
-                placeholder="닉네임을 입력해주세요"
-                placeholderTextColor="#52525B"
-                maxLength={20}
-              />
+            <Text style={styles.fieldLabel}>이름</Text>
+            <View style={[styles.inputContainer, { backgroundColor: '#1F1F23' }]}>
+              <Text style={[styles.input, { color: '#71717A' }]}>{nickname}</Text>
+              <Feather name="lock" size={16} color="#52525B" />
             </View>
+            <Text style={{ color: '#52525B', fontSize: 12, marginTop: 4 }}>
+              이름은 변경할 수 없습니다
+            </Text>
           </View>
 
           {/* Bio */}

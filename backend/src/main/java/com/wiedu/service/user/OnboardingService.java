@@ -43,17 +43,20 @@ public class OnboardingService {
 
     /**
      * Step 2: 프로필 설정
+     * 이름(닉네임) 중복 허용, 한글만 허용, 최초 설정 후 변경 불가
      */
     @Transactional
     public void setupProfile(Long userId, ProfileSetupRequest request) {
         User user = userService.findUserEntityById(userId);
 
-        // 닉네임 중복 체크 (자신 제외)
-        if (userRepository.existsByNicknameAndIdNot(request.getNickname(), userId)) {
-            throw new BusinessException(ErrorCode.NICKNAME_DUPLICATED);
+        String nickname = request.getNickname();
+
+        // 한글만 허용 검증 (공백 제외)
+        if (nickname != null && !nickname.replaceAll("\\s", "").matches("^[가-힣]+$")) {
+            throw new BusinessException(ErrorCode.INVALID_INPUT_VALUE, "이름은 한글만 입력 가능합니다.");
         }
 
-        user.updateProfile(request.getNickname(), request.getProfileImage());
+        user.updateProfile(nickname, request.getProfileImage());
     }
 
     /**

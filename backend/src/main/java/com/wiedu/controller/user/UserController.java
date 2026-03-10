@@ -78,15 +78,7 @@ public class UserController {
         return ResponseEntity.ok(Map.of("duplicated", duplicated));
     }
 
-    /**
-     * 닉네임 중복 체크
-     * GET /api/users/check-nickname?nickname=xxx
-     */
-    @GetMapping("/check-nickname")
-    public ResponseEntity<Map<String, Boolean>> checkNicknameDuplicated(@RequestParam String nickname) {
-        boolean duplicated = userService.isNicknameDuplicated(nickname);
-        return ResponseEntity.ok(Map.of("duplicated", duplicated));
-    }
+    // 닉네임(이름) 중복 체크 API 제거됨 - 이름 중복 허용
 
     /**
      * 근처 활동중인 멤버 조회

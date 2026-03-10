@@ -28,8 +28,8 @@ public class User {
     @Comment("이메일 (로그인 ID)")
     private String email;
 
-    @Column(nullable = false, unique = true, length = 50)
-    @Comment("닉네임")
+    @Column(nullable = false, length = 50)
+    @Comment("이름 (실명, 중복 허용)")
     private String nickname;
 
     @Column(length = 500)

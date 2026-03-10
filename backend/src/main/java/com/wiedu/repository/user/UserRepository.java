@@ -18,17 +18,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // 이메일로 사용자 조회 (로그인, 중복 체크)
     Optional<User> findByEmail(String email);
 
-    // 닉네임으로 사용자 조회 (중복 체크)
-    Optional<User> findByNickname(String nickname);
+    // 이름(닉네임)으로 사용자 조회 (중복 허용)
+    List<User> findAllByNickname(String nickname);
 
     // 이메일 존재 여부 확인
     boolean existsByEmail(String email);
-
-    // 닉네임 존재 여부 확인
-    boolean existsByNickname(String nickname);
-
-    // 닉네임 존재 여부 확인 (특정 사용자 제외)
-    boolean existsByNicknameAndIdNot(String nickname, Long id);
 
     // 상태별 사용자 조회
     java.util.List<User> findByStatus(UserStatus status);

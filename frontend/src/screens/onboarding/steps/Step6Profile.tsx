@@ -7,6 +7,11 @@ import { getAuthClient } from '../../../api/client';
 import { StepProps } from '../types';
 import { styles } from '../styles';
 
+// 한글만 허용하는 필터 함수
+const filterKoreanOnly = (text: string): string => {
+  return text.replace(/[^가-힣ㄱ-ㅎㅏ-ㅣ\s]/g, '');
+};
+
 export default function Step6Profile({ data, updateData }: StepProps) {
   const [uploading, setUploading] = useState(false);
   const [alertVisible, setAlertVisible] = useState(false);
@@ -75,21 +80,24 @@ export default function Step6Profile({ data, updateData }: StepProps) {
 
   return (
     <View style={styles.profileContainer}>
-      {/* Nickname - 먼저 표시 */}
+      {/* Name - 먼저 표시 */}
       <View style={styles.inputContainer}>
-        <Text style={styles.inputLabel}>닉네임 (필수)</Text>
+        <Text style={styles.inputLabel}>이름 (필수)</Text>
         <View style={styles.inputWrapper}>
           <TextInput
             style={styles.input}
-            placeholder="닉네임을 입력해주세요"
+            placeholder="한글 이름을 입력해주세요"
             placeholderTextColor="#52525B"
             value={data.nickname}
-            onChangeText={(text) => updateData('nickname', text)}
+            onChangeText={(text) => updateData('nickname', filterKoreanOnly(text))}
             autoCapitalize="none"
             autoCorrect={false}
-            maxLength={20}
+            maxLength={10}
           />
         </View>
+        <Text style={{ color: '#F97316', fontSize: 12, marginTop: 8 }}>
+          ⚠️ 한 번 설정한 이름은 변경할 수 없습니다
+        </Text>
       </View>
 
       {/* Avatar with image picker */}

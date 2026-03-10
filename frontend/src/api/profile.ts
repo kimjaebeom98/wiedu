@@ -25,7 +25,7 @@ export const getMyStudies = async (): Promise<MyStudy[]> => {
 };
 
 export interface UpdateProfileRequest {
-  nickname: string;
+  nickname?: string;  // 이름은 변경 불가 - 온보딩에서만 설정
   bio?: string | null;
   region?: string;
   latitude?: number | null;
@@ -39,11 +39,6 @@ export const updateMyProfile = async (data: UpdateProfileRequest): Promise<void>
       const client = getAuthClient();
       await client.put('/api/users/me', data);
     },
-    {
-      defaultMessage: '프로필 저장에 실패했습니다.',
-      errorMessages: {
-        conflict: '이미 사용 중인 닉네임입니다.',
-      },
-    }
+    { defaultMessage: '프로필 저장에 실패했습니다.' }
   );
 };

@@ -119,14 +119,7 @@ public class ProfileService {
     public void updateProfile(Long userId, ProfileUpdateRequest request) {
         User user = userService.findUserEntityById(userId);
 
-        if (request.nickname() != null && !request.nickname().isBlank()) {
-            // 닉네임 중복 검사 (자신 제외)
-            if (!user.getNickname().equals(request.nickname()) &&
-                userRepository.existsByNickname(request.nickname())) {
-                throw new IllegalArgumentException("이미 사용 중인 닉네임입니다.");
-            }
-            user.updateNickname(request.nickname());
-        }
+        // 이름(닉네임)은 온보딩 이후 변경 불가 - nickname 필드 무시
 
         if (request.bio() != null) {
             user.updateBio(request.bio());

@@ -164,8 +164,8 @@ public class KakaoOAuthService {
             email = "kakao_" + kakaoId + "@wiedu.app";
         }
 
-        // 닉네임이 없거나 중복이면 랜덤 생성
-        if (nickname == null || nickname.isBlank() || userRepository.existsByNickname(nickname)) {
+        // 닉네임(이름)이 없으면 임시 이름 생성 (중복 허용)
+        if (nickname == null || nickname.isBlank()) {
             nickname = "위듀" + UUID.randomUUID().toString().substring(0, 8);
         }
 
