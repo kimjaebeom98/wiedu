@@ -159,7 +159,6 @@ export default function ProfileEditScreen() {
       });
       showAlert({ title: '완료', message: '프로필이 저장되었습니다.', icon: 'check-circle', buttons: [{ text: '확인', onPress: () => navigation.goBack() }] });
     } catch (err: any) {
-      console.error('Failed to save profile:', err);
       showAlert({ title: '오류', message: err.message || '프로필 저장에 실패했어요.', icon: 'x-circle' });
     } finally {
       setSaving(false);
