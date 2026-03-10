@@ -14,6 +14,7 @@ import com.wiedu.exception.ErrorCode;
 import com.wiedu.repository.study.StudyMemberRepository;
 import com.wiedu.repository.study.StudyRepository;
 import com.wiedu.repository.study.StudyRequestRepository;
+import com.wiedu.service.notification.NotificationService;
 import com.wiedu.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -36,6 +37,7 @@ public class StudyRequestService {
     private final StudyRepository studyRepository;
     private final StudyService studyService;
     private final UserService userService;
+    private final NotificationService notificationService;
 
     /**
      * 스터디 가입 신청
@@ -67,6 +69,14 @@ public class StudyRequestService {
                 .build();
 
         StudyRequest savedRequest = studyRequestRepository.save(studyRequest);
+
+        // 스터디장에게 새 신청자 알림 발송
+        notificationService.createNewApplicantNotification(
+                study.getLeader(),
+                study,
+                user.getNickname()
+        );
+
         return StudyRequestResponse.from(savedRequest);
     }
 
@@ -109,6 +119,9 @@ public class StudyRequestService {
                 .role(MemberRole.MEMBER)
                 .build();
         studyMemberRepository.save(newMember);
+
+        // 신청자에게 승인 알림 발송
+        notificationService.createStudyApprovedNotification(request.getUser(), study);
     }
 
     /**
@@ -130,6 +143,9 @@ public class StudyRequestService {
         }
 
         request.reject(rejectReason);
+
+        // 신청자에게 거절 알림 발송
+        notificationService.createStudyRejectedNotification(request.getUser(), request.getStudy());
     }
 
     /**
