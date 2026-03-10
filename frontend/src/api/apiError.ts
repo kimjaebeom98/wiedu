@@ -52,15 +52,16 @@ export const handleApiError = (error: unknown, options: ApiErrorOptions): never 
       const serverMessage = data?.message || data?.error;
 
       // HTTP 상태 코드별 처리
+      // 커스텀 에러 메시지가 정의되어 있으면 우선 사용
       switch (status) {
         case 401:
           throw new Error(messages.unauthorized);
         case 403:
           throw new Error(messages.forbidden);
         case 404:
-          throw new Error(serverMessage || messages.notFound);
+          throw new Error(errorMessages?.notFound || serverMessage || messages.notFound);
         case 409:
-          throw new Error(serverMessage || messages.conflict);
+          throw new Error(errorMessages?.conflict || serverMessage || messages.conflict);
         case 500:
         case 502:
         case 503:

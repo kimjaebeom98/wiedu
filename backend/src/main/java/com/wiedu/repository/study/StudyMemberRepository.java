@@ -5,6 +5,7 @@ import com.wiedu.domain.entity.StudyMember;
 import com.wiedu.domain.entity.User;
 import com.wiedu.domain.enums.MemberRole;
 import com.wiedu.domain.enums.MemberStatus;
+import com.wiedu.domain.enums.StudyStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -52,4 +53,10 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
     @Query("SELECT sm.study FROM StudyMember sm WHERE sm.user = :user AND sm.role = :role AND sm.status = :status")
     List<Study> findStudiesByUserAndRole(@Param("user") User user, @Param("role") MemberRole role,
             @Param("status") MemberStatus status);
+
+    // 사용자가 완료한 스터디 개수 (뱃지 계산용)
+    @Query("SELECT COUNT(sm) FROM StudyMember sm WHERE sm.user = :user AND sm.status = :memberStatus AND sm.study.status = :studyStatus")
+    long countCompletedStudiesByUser(@Param("user") User user,
+            @Param("memberStatus") MemberStatus memberStatus,
+            @Param("studyStatus") StudyStatus studyStatus);
 }

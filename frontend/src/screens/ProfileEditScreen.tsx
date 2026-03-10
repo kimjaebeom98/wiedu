@@ -19,7 +19,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import * as ImagePicker from 'expo-image-picker';
-import { getMyProfile } from '../api/profile';
+import { getMyProfile, updateMyProfile } from '../api/profile';
 import { getAuthClient } from '../api/client';
 import { formatLocationFromAddress } from '../utils/location';
 
@@ -149,8 +149,7 @@ export default function ProfileEditScreen() {
 
     setSaving(true);
     try {
-      const client = getAuthClient();
-      await client.put('/api/users/me', {
+      await updateMyProfile({
         nickname: nickname.trim(),
         bio: bio.trim() || null,
         region: region.trim(),  // 빈 문자열 전송 시 백엔드에서 지역 삭제 처리
@@ -161,8 +160,7 @@ export default function ProfileEditScreen() {
       showAlert({ title: '완료', message: '프로필이 저장되었습니다.', icon: 'check-circle', buttons: [{ text: '확인', onPress: () => navigation.goBack() }] });
     } catch (err: any) {
       console.error('Failed to save profile:', err);
-      const message = err.response?.data?.message || '프로필 저장에 실패했어요.';
-      showAlert({ title: '오류', message, icon: 'x-circle' });
+      showAlert({ title: '오류', message: err.message || '프로필 저장에 실패했어요.', icon: 'x-circle' });
     } finally {
       setSaving(false);
     }

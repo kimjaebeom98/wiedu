@@ -18,7 +18,9 @@ import { RootStackParamList } from '../navigation/types';
 import { fetchCategories, fetchNearbyStudies, fetchPopularStudies } from '../api/study';
 import { getMyProfile } from '../api/profile';
 import { fetchUnreadCount } from '../api/notification';
+import { fetchNearbyMembers } from '../api/user';
 import { StudyListResponse, Category } from '../types/study';
+import { NearbyMember } from '../types/user';
 import { formatLocationFromAddress, formatLocationDisplay } from '../utils/location';
 
 interface SelectedLocation {
@@ -45,14 +47,6 @@ const CATEGORY_ICONS: Record<string, string> = {
   CONTENT: 'video',
 };
 
-// Member data (mock for now - will be replaced with API)
-const MEMBERS = [
-  { id: 1, name: '민수', badge: '🏆', badgeColor: '#F59E0B' },
-  { id: 2, name: '지영', badge: '♥', badgeColor: '#EC4899' },
-  { id: 3, name: '현우', badge: '⭐', badgeColor: '#3B82F6' },
-  { id: 4, name: '서연', badge: '⚡', badgeColor: '#22C55E' },
-];
-
 // Study method labels
 const STUDY_METHOD_LABELS: Record<string, string> = {
   ONLINE: '온라인',
@@ -74,6 +68,8 @@ export default function HomeScreen() {
   const [selectedLocation, setSelectedLocation] = useState<SelectedLocation | null>(null);
   const [displayRegion, setDisplayRegion] = useState<string>('');
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const [nearbyMembers, setNearbyMembers] = useState<NearbyMember[]>([]);
+  const [membersLoading, setMembersLoading] = useState(false);
   const isInitialized = useRef(false);
 
   // 프로필 활동지역 로드 (앱 시작 시 항상 프로필 기준)
@@ -129,6 +125,26 @@ export default function HomeScreen() {
     }
   }, [selectedLocation]);
 
+  // 근처 활동중인 멤버 조회
+  const loadNearbyMembersData = useCallback(async (location?: SelectedLocation | null) => {
+    const loc = location ?? selectedLocation;
+    if (!loc) {
+      setNearbyMembers([]);
+      return;
+    }
+
+    setMembersLoading(true);
+    try {
+      const members = await fetchNearbyMembers(loc.latitude, loc.longitude);
+      setNearbyMembers(members);
+    } catch (error: any) {
+      console.error('Failed to load nearby members:', error);
+      setNearbyMembers([]);
+    } finally {
+      setMembersLoading(false);
+    }
+  }, [selectedLocation]);
+
   const loadData = useCallback(async () => {
     try {
       const [popularData, categoriesData] = await Promise.all([
@@ -156,10 +172,11 @@ export default function HomeScreen() {
       await Promise.all([
         loadData(),
         loadNearbyStudies(location),
+        loadNearbyMembersData(location),
       ]);
     };
     init();
-  }, [loadData, loadInitialLocation, loadNearbyStudies]);
+  }, [loadData, loadInitialLocation, loadNearbyStudies, loadNearbyMembersData]);
 
   // 읽지 않은 알림 수 로드
   const loadUnreadCount = useCallback(async () => {
@@ -228,8 +245,9 @@ export default function HomeScreen() {
     await Promise.all([
       loadData(),
       loadNearbyStudies(),
+      loadNearbyMembersData(),
     ]);
-  }, [loadData, loadNearbyStudies]);
+  }, [loadData, loadNearbyStudies, loadNearbyMembersData]);
 
   const handleLocationPress = useCallback(() => {
     navigation.navigate('RegionPicker', {
@@ -245,11 +263,12 @@ export default function HomeScreen() {
         };
         setSelectedLocation(newLocation);
 
-        // 새 위치로 근처 스터디 로드
+        // 새 위치로 근처 스터디 및 멤버 로드
         loadNearbyStudies(newLocation);
+        loadNearbyMembersData(newLocation);
       },
     });
-  }, [navigation, loadNearbyStudies]);
+  }, [navigation, loadNearbyStudies, loadNearbyMembersData]);
 
   const getCategoryIcon = (code: string): string => {
     return CATEGORY_ICONS[code] || 'folder';
@@ -345,28 +364,44 @@ export default function HomeScreen() {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>근처 활동중인 멤버</Text>
-            <TouchableOpacity>
-              <Text style={styles.sectionMore}>더보기</Text>
-            </TouchableOpacity>
           </View>
 
-          <View style={styles.membersRow}>
-            {MEMBERS.map((member) => (
-              <TouchableOpacity key={member.id} style={styles.memberItem}>
-                <View style={styles.memberAvatar}>
-                  <View
-                    style={[
-                      styles.memberBadge,
-                      { backgroundColor: member.badgeColor },
-                    ]}
-                  >
-                    <Text style={styles.memberBadgeIcon}>{member.badge}</Text>
+          {membersLoading ? (
+            <ActivityIndicator color="#8B5CF6" style={{ marginVertical: 20 }} />
+          ) : !selectedLocation ? (
+            <View style={styles.emptyMembersState}>
+              <Feather name="users" size={32} color="#52525B" />
+              <Text style={styles.emptyMembersText}>위치를 설정하면 근처 멤버를 볼 수 있어요</Text>
+            </View>
+          ) : nearbyMembers.length === 0 ? (
+            <View style={styles.emptyMembersState}>
+              <Feather name="users" size={32} color="#52525B" />
+              <Text style={styles.emptyMembersText}>근처에 활동중인 멤버가 없어요</Text>
+            </View>
+          ) : (
+            <View style={styles.membersRow}>
+              {nearbyMembers.slice(0, 4).map((member) => (
+                <TouchableOpacity key={member.id} style={styles.memberItem}>
+                  <View style={styles.memberAvatar}>
+                    {member.profileImage ? (
+                      <Image source={{ uri: member.profileImage }} style={styles.memberAvatarImage} />
+                    ) : null}
+                    {member.badge && member.badgeColor && (
+                      <View
+                        style={[
+                          styles.memberBadge,
+                          { backgroundColor: member.badgeColor },
+                        ]}
+                      >
+                        <Text style={styles.memberBadgeIcon}>{member.badge}</Text>
+                      </View>
+                    )}
                   </View>
-                </View>
-                <Text style={styles.memberName}>{member.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+                  <Text style={styles.memberName} numberOfLines={1}>{member.nickname}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* Nearby Studies Section */}
@@ -787,6 +822,22 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     color: '#A1A1AA',
+    maxWidth: 52,
+  },
+  memberAvatarImage: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+  },
+  emptyMembersState: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    gap: 8,
+  },
+  emptyMembersText: {
+    fontSize: 13,
+    color: '#71717A',
+    textAlign: 'center',
   },
   emptyState: {
     alignItems: 'center',

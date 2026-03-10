@@ -2,7 +2,7 @@
 
 > **버전**: 1.1
 > **작성일**: 2026-01-28
-> **최종 수정**: 2026-03-08
+> **최종 수정**: 2026-03-10
 > **앱 이름**: wiedu (with you) - "너와 함께"
 
 ---
@@ -38,7 +38,7 @@
 | 비밀번호 찾기 | ❌ 미구현 | 이메일 재설정 링크 없음 |
 | 외부 채팅 연동 | ❌ 미구현 | 카카오톡 링크 저장 안됨 |
 | 실시간 채팅 | ❌ 미구현 | Spring WebSocket + STOMP 구현 예정 |
-| 근처 활동중인 멤버 | ❌ Mock 데이터 | 채팅 기능과 함께 온라인 상태 구현 (Heartbeat) |
+| 근처 활동중인 멤버 | ✅ 완료 | lastLoginAt 3일 기준, Haversine 10km, 뱃지 시스템 포함 |
 | 푸시 알림 | ❌ 미구현 | FCM 미연동 (설정만 저장) |
 | 친구 시스템 | ❌ 미구현 | |
 | 신고/차단 | ❌ 미구현 | |
@@ -1171,6 +1171,7 @@ PUT    /api/users/me            # 프로필 수정
 GET    /api/users/{id}          # 사용자 조회
 GET    /api/users/{id}/studies  # 사용자 스터디 목록
 GET    /api/users/{id}/reviews  # 받은 후기
+GET    /api/users/nearby        # 근처 활동중인 멤버 (lat, lng, radius, limit)
 
 # 스터디
 GET    /api/studies             # 스터디 목록 (필터, 검색)
