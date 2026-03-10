@@ -467,7 +467,7 @@ export default function ApplicantManagementScreen() {
 
             <ScrollView
               style={styles.detailModalBody}
-              contentContainerStyle={styles.detailModalBodyContent}
+              contentContainerStyle={[styles.detailModalBodyContent, { paddingBottom: 24 + insets.bottom }]}
               showsVerticalScrollIndicator={false}
             >
               {selectedRequest && (
