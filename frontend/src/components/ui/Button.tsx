@@ -9,6 +9,7 @@ import {
   TouchableOpacityProps,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { colors } from '../../constants/theme';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -27,13 +28,13 @@ interface ButtonProps extends Omit<TouchableOpacityProps, 'style'> {
 }
 
 const COLORS = {
-  primary: '#8B5CF6',
-  primaryDark: '#7C3AED',
-  surface: '#27272A',
-  surfaceLight: '#3F3F46',
-  border: '#3F3F46',
-  text: '#FFFFFF',
-  textMuted: '#A1A1AA',
+  primary: colors.primary,
+  primaryDark: colors.primaryDark,
+  surface: colors.surface,
+  surfaceLight: colors.surfaceLight,
+  border: colors.border,
+  text: colors.text,
+  textMuted: colors.textSecondary,
 };
 
 export default function Button({

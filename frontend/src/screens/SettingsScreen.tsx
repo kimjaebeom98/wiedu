@@ -14,13 +14,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { RootStackParamList } from '../navigation/types';
 import {
   getNotificationSettings,
   updateNotificationSettings,
   withdrawAccount,
 } from '../api/settings';
+import { logout } from '../api/auth';
+import { getRefreshToken, clearTokens } from '../storage/token';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -91,7 +92,15 @@ export default function SettingsScreen() {
   };
 
   const handleLogout = async () => {
-    await AsyncStorage.removeItem('accessToken');
+    try {
+      const refreshToken = await getRefreshToken();
+      if (refreshToken) {
+        await logout(refreshToken);
+      }
+    } catch (error) {
+      // 서버 로그아웃 실패해도 로컬 토큰은 삭제
+    }
+    await clearTokens();
     navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
   };
 

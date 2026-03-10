@@ -103,4 +103,16 @@ export const verifyEmailCode = async (
   }
 };
 
+/**
+ * 로그아웃 - 서버에 토큰 무효화 요청
+ */
+export const logout = async (refreshToken: string): Promise<void> => {
+  try {
+    await apiClient.post('/api/auth/logout', { refreshToken });
+  } catch (error) {
+    // 로그아웃 실패해도 로컬 토큰은 삭제해야 함
+    console.warn('Server logout failed, clearing local tokens anyway');
+  }
+};
+
 export { apiClient };
