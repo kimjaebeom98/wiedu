@@ -147,6 +147,11 @@ export default function OnboardingScreen({ navigation, route }: OnboardingScreen
           </View>
           <Text style={styles.completeTitle}>가입 완료!</Text>
           <Text style={styles.completeSubtitle}>wiedu와 함께 성장하는 여정을 시작해요</Text>
+          {error ? (
+            <View style={styles.errorBox}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          ) : null}
           <TouchableOpacity style={styles.completeBtn} onPress={handleComplete} disabled={loading} activeOpacity={0.8}>
             {loading ? <ActivityIndicator color="#FFF" size="small" /> : <Text style={styles.completeBtnText}>시작하기</Text>}
           </TouchableOpacity>

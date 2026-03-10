@@ -63,8 +63,8 @@ public class StudyRequestService {
             throw new BusinessException(ErrorCode.ALREADY_REQUESTED);
         }
 
-        // 거절 후 7일 쿨다운 확인
-        LocalDateTime cooldownDate = LocalDateTime.now().minusDays(7);
+        // 거절 후 3일 쿨다운 확인
+        LocalDateTime cooldownDate = LocalDateTime.now().minusDays(3);
         if (studyRequestRepository.existsByStudyAndUserAndStatusAndProcessedAtAfter(
                 study, user, RequestStatus.REJECTED, cooldownDate)) {
             throw new BusinessException(ErrorCode.REAPPLY_COOLDOWN);

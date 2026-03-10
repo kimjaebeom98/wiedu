@@ -49,7 +49,7 @@ public enum ErrorCode {
     ALREADY_REQUESTED(HttpStatus.CONFLICT, "R002", "이미 가입 신청한 스터디입니다."),
     REQUEST_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "R003", "이미 처리된 신청입니다."),
     NOT_REQUEST_OWNER(HttpStatus.FORBIDDEN, "R004", "본인의 신청만 취소할 수 있습니다."),
-    REAPPLY_COOLDOWN(HttpStatus.BAD_REQUEST, "R005", "거절 후 7일이 지나야 재신청할 수 있습니다."),
+    REAPPLY_COOLDOWN(HttpStatus.BAD_REQUEST, "R005", "거절 후 3일이 지나야 재신청할 수 있습니다."),
 
     // Authentication
     AUTH_INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "A001", "이메일 또는 비밀번호가 올바르지 않습니다."),
