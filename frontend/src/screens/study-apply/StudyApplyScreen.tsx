@@ -239,7 +239,7 @@ export default function StudyApplyScreen() {
         animationType="fade"
         onRequestClose={() => setShowRulesModal(false)}
       >
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, { paddingBottom: insets.bottom }]}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>스터디 규칙</Text>
@@ -274,7 +274,7 @@ export default function StudyApplyScreen() {
         animationType="fade"
         onRequestClose={() => setShowPolicyModal(false)}
       >
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, { paddingBottom: insets.bottom }]}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>보증금 환불 정책</Text>

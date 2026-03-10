@@ -980,7 +980,7 @@ export default function StudyDetailScreen() {
         animationType="fade"
         onRequestClose={() => setShowPolicyModal(false)}
       >
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, { paddingBottom: insets.bottom }]}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>보증금 환불 정책</Text>

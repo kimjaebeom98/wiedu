@@ -411,7 +411,7 @@ export default function ApplicantManagementScreen() {
         animationType="fade"
         onRequestClose={() => setShowRejectModal(false)}
       >
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, { paddingBottom: insets.bottom }]}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>거절 사유</Text>
@@ -453,7 +453,7 @@ export default function ApplicantManagementScreen() {
         animationType="fade"
         onRequestClose={() => setShowDetailModal(false)}
       >
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, { paddingBottom: insets.bottom }]}>
           <View style={styles.detailModalContent}>
             {/* Modal Header */}
             <View style={styles.detailModalHeader}>
