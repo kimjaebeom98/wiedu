@@ -22,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -60,6 +61,13 @@ public class StudyRequestService {
         // 이미 신청했는지 확인 (대기 중인 신청)
         if (studyRequestRepository.existsByStudyAndUserAndStatus(study, user, RequestStatus.PENDING)) {
             throw new BusinessException(ErrorCode.ALREADY_REQUESTED);
+        }
+
+        // 거절 후 7일 쿨다운 확인
+        LocalDateTime cooldownDate = LocalDateTime.now().minusDays(7);
+        if (studyRequestRepository.existsByStudyAndUserAndStatusAndProcessedAtAfter(
+                study, user, RequestStatus.REJECTED, cooldownDate)) {
+            throw new BusinessException(ErrorCode.REAPPLY_COOLDOWN);
         }
 
         StudyRequest studyRequest = StudyRequest.builder()

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,4 +49,8 @@ public interface StudyRequestRepository extends JpaRepository<StudyRequest, Long
 
     // 특정 사용자의 대기 중인 신청 수
     long countByUserAndStatus(User user, RequestStatus status);
+
+    // 특정 스터디 + 사용자의 최근 거절된 신청 중 쿨다운 기간 이후 것 확인
+    boolean existsByStudyAndUserAndStatusAndProcessedAtAfter(
+            Study study, User user, RequestStatus status, LocalDateTime processedAfter);
 }

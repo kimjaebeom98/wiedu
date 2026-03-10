@@ -922,6 +922,8 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     color: '#71717A',
     textAlign: 'center',
+    paddingHorizontal: 24,
+    lineHeight: 18,
   },
 
   // Tab Badge
