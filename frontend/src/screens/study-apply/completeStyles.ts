@@ -94,12 +94,9 @@ export const styles = StyleSheet.create({
     color: '#A1A1AA',
   },
   bottomBar: {
-    height: 100,
     backgroundColor: '#18181B',
-    paddingTop: 16,
+    paddingVertical: 16,
     paddingHorizontal: 24,
-    paddingBottom: 32,
-    justifyContent: 'center',
   },
   homeBtn: {
     height: 56,
