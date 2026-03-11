@@ -8,3 +8,4 @@ export { default as Header } from './Header';
 export { default as Input } from './Input';
 export { default as LoadingOverlay } from './LoadingOverlay';
 export { default as LoadingScreen } from './LoadingScreen';
+export { default as SafeImage } from './SafeImage';

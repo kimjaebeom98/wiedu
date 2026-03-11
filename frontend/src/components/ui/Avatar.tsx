@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Image, Text, StyleSheet, ViewStyle, ImageStyle } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 
@@ -45,6 +45,7 @@ export default function Avatar({
   badgeColor = '#22C55E',
   style,
 }: AvatarProps) {
+  const [imageError, setImageError] = useState(false);
   const dimension = SIZE_MAP[size];
   const fontSize = FONT_SIZE_MAP[size];
   const iconSize = ICON_SIZE_MAP[size];
@@ -67,14 +68,16 @@ export default function Avatar({
   };
 
   const badgeSize = Math.max(dimension * 0.25, 8);
+  const showImage = source && !imageError;
 
   return (
     <View style={[styles.container, containerStyle, style]}>
-      {source ? (
+      {showImage ? (
         <Image
           source={{ uri: source }}
           style={[styles.image, imageStyle]}
           accessibilityLabel={name ? `${name}의 프로필 사진` : '프로필 사진'}
+          onError={() => setImageError(true)}
         />
       ) : (
         <View style={[styles.placeholder, containerStyle]}>
