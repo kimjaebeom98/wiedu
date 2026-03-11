@@ -45,3 +45,4 @@ uploads/
 !/.claude/
 frontend/.env.local
 *.apk
+.claude/PROJECT_CONTEXT.md
