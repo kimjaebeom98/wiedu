@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "NOTIFICATIONS", indexes = {
     @Index(name = "idx_notification_recipient", columnList = "recipient_id"),
-    @Index(name = "idx_notification_created_at", columnList = "createdAt DESC")
+    @Index(name = "idx_notification_created_at", columnList = "created_at DESC")
 })
 @Comment("알림 정보")
 @Getter
@@ -24,6 +24,15 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Comment("알림 고유 ID")
     private Long id;
+
+    @Column(nullable = false, updatable = false)
+    @Comment("생성 일시")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipient_id", nullable = false)
@@ -53,15 +62,6 @@ public class Notification {
     @Column(nullable = false)
     @Comment("읽음 여부")
     private boolean isRead = false;
-
-    @Column(nullable = false, updatable = false)
-    @Comment("생성일시")
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
 
     @Builder
     public Notification(User recipient, NotificationType type, String title, String message,

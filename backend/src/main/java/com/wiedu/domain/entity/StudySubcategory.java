@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Comment("스터디 서브카테고리 (중분류)")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class StudySubcategory {
+public class StudySubcategory extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -47,24 +47,6 @@ public class StudySubcategory {
     @Column(nullable = false)
     @Comment("활성화 여부")
     private boolean active = true;
-
-    @Column(nullable = false, updatable = false)
-    @Comment("생성일시")
-    private LocalDateTime createdAt;
-
-    @Comment("수정일시")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 
     @Builder
     public StudySubcategory(StudyCategory category, String code, String name, String icon, Integer sortOrder) {

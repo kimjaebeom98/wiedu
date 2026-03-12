@@ -16,7 +16,7 @@ import java.util.List;
 @Comment("스터디 카테고리 (대분류)")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class StudyCategory {
+public class StudyCategory extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,24 +45,6 @@ public class StudyCategory {
 
     @OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudySubcategory> subcategories = new ArrayList<>();
-
-    @Column(nullable = false, updatable = false)
-    @Comment("생성일시")
-    private LocalDateTime createdAt;
-
-    @Comment("수정일시")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 
     @Builder
     public StudyCategory(String code, String name, String icon, Integer sortOrder) {

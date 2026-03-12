@@ -23,6 +23,15 @@ public class StudyLeaderReview {
     @Comment("리뷰 고유 ID")
     private Long id;
 
+    @Column(nullable = false, updatable = false)
+    @Comment("생성 일시")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reviewer_id", nullable = false)
     @Comment("리뷰 작성자 ID")
@@ -45,15 +54,6 @@ public class StudyLeaderReview {
     @Column(columnDefinition = "TEXT")
     @Comment("리뷰 내용")
     private String content;
-
-    @Column(nullable = false, updatable = false)
-    @Comment("작성일시")
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
 
     @Builder
     public StudyLeaderReview(User reviewer, User leader, Study study, Integer rating, String content) {

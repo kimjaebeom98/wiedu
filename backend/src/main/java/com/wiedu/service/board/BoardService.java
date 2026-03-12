@@ -12,8 +12,8 @@ import com.wiedu.repository.board.BoardCommentRepository;
 import com.wiedu.repository.board.BoardPostLikeRepository;
 import com.wiedu.repository.board.BoardPostRepository;
 import com.wiedu.repository.study.StudyMemberRepository;
-import com.wiedu.repository.study.StudyRepository;
-import com.wiedu.repository.user.UserRepository;
+import com.wiedu.service.study.StudyService;
+import com.wiedu.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,14 +35,14 @@ public class BoardService {
     private final BoardCommentRepository boardCommentRepository;
     private final BoardPostLikeRepository boardPostLikeRepository;
     private final BoardCommentLikeRepository boardCommentLikeRepository;
-    private final StudyRepository studyRepository;
     private final StudyMemberRepository studyMemberRepository;
-    private final UserRepository userRepository;
+    private final StudyService studyService;
+    private final UserService userService;
 
     // 게시글 목록 조회 (검색 지원)
     public Page<BoardPostListResponse> getPosts(Long studyId, PostCategory category, String keyword, Long userId, Pageable pageable) {
-        Study study = findStudyById(studyId);
-        User user = findUserById(userId);
+        Study study = studyService.findStudyEntityById(studyId);
+        User user = userService.findUserEntityById(userId);
         validateMembership(study, userId);
 
         Page<BoardPost> posts;
@@ -75,8 +75,8 @@ public class BoardService {
     // 게시글 상세 조회
     @Transactional
     public BoardPostDetailResponse getPostDetail(Long studyId, Long postId, Long userId) {
-        Study study = findStudyById(studyId);
-        User user = findUserById(userId);
+        Study study = studyService.findStudyEntityById(studyId);
+        User user = userService.findUserEntityById(userId);
         validateMembership(study, userId);
 
         BoardPost post = boardPostRepository.findByIdWithDetails(postId)
@@ -112,8 +112,8 @@ public class BoardService {
     // 게시글 작성
     @Transactional
     public BoardPostDetailResponse createPost(Long studyId, Long userId, BoardPostCreateRequest request) {
-        Study study = findStudyById(studyId);
-        User user = findUserById(userId);
+        Study study = studyService.findStudyEntityById(studyId);
+        User user = userService.findUserEntityById(userId);
         StudyMember member = validateMembershipAndGet(study, user);
 
         // NOTICE는 리더만 작성 가능
@@ -136,8 +136,8 @@ public class BoardService {
     // 게시글 수정
     @Transactional
     public BoardPostDetailResponse updatePost(Long studyId, Long postId, Long userId, BoardPostUpdateRequest request) {
-        Study study = findStudyById(studyId);
-        User user = findUserById(userId);
+        Study study = studyService.findStudyEntityById(studyId);
+        User user = userService.findUserEntityById(userId);
         validateMembership(study, userId);
 
         BoardPost post = boardPostRepository.findByIdWithDetails(postId)
@@ -175,7 +175,7 @@ public class BoardService {
     // 게시글 삭제
     @Transactional
     public void deletePost(Long studyId, Long postId, Long userId) {
-        Study study = findStudyById(studyId);
+        Study study = studyService.findStudyEntityById(studyId);
         validateMembership(study, userId);
 
         BoardPost post = boardPostRepository.findByIdWithDetails(postId)
@@ -196,8 +196,8 @@ public class BoardService {
     // 게시글 좋아요 토글 (Race Condition 방지)
     @Transactional
     public boolean togglePostLike(Long studyId, Long postId, Long userId) {
-        Study study = findStudyById(studyId);
-        User user = findUserById(userId);
+        Study study = studyService.findStudyEntityById(studyId);
+        User user = userService.findUserEntityById(userId);
         validateMembership(study, userId);
 
         BoardPost post = boardPostRepository.findById(postId)
@@ -234,8 +234,8 @@ public class BoardService {
     // 댓글 작성
     @Transactional
     public BoardCommentResponse createComment(Long studyId, Long postId, Long userId, BoardCommentCreateRequest request) {
-        Study study = findStudyById(studyId);
-        User user = findUserById(userId);
+        Study study = studyService.findStudyEntityById(studyId);
+        User user = userService.findUserEntityById(userId);
         validateMembership(study, userId);
 
         BoardPost post = boardPostRepository.findById(postId)
@@ -260,8 +260,8 @@ public class BoardService {
     // 댓글 수정
     @Transactional
     public BoardCommentResponse updateComment(Long studyId, Long postId, Long commentId, Long userId, BoardCommentUpdateRequest request) {
-        Study study = findStudyById(studyId);
-        User user = findUserById(userId);
+        Study study = studyService.findStudyEntityById(studyId);
+        User user = userService.findUserEntityById(userId);
         validateMembership(study, userId);
 
         BoardComment comment = boardCommentRepository.findById(commentId)
@@ -284,7 +284,7 @@ public class BoardService {
     // 댓글 삭제
     @Transactional
     public void deleteComment(Long studyId, Long postId, Long commentId, Long userId) {
-        Study study = findStudyById(studyId);
+        Study study = studyService.findStudyEntityById(studyId);
         validateMembership(study, userId);
 
         BoardComment comment = boardCommentRepository.findById(commentId)
@@ -306,8 +306,8 @@ public class BoardService {
     // 댓글 좋아요 토글 (Race Condition 방지)
     @Transactional
     public boolean toggleCommentLike(Long studyId, Long postId, Long commentId, Long userId) {
-        Study study = findStudyById(studyId);
-        User user = findUserById(userId);
+        Study study = studyService.findStudyEntityById(studyId);
+        User user = userService.findUserEntityById(userId);
         validateMembership(study, userId);
 
         BoardComment comment = boardCommentRepository.findById(commentId)
@@ -342,18 +342,8 @@ public class BoardService {
     }
 
     // Helper methods
-    private Study findStudyById(Long studyId) {
-        return studyRepository.findById(studyId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
-    }
-
-    private User findUserById(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-    }
-
     private void validateMembership(Study study, Long userId) {
-        User user = findUserById(userId);
+        User user = userService.findUserEntityById(userId);
         boolean isMember = studyMemberRepository.existsByStudyAndUserAndStatus(study, user, MemberStatus.ACTIVE);
         if (!isMember) {
             throw new BusinessException(ErrorCode.NOT_STUDY_MEMBER);

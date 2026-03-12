@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @Comment("사용자 정보")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class User {
+public class User extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -68,13 +68,6 @@ public class User {
     @Comment("마지막 로그인 일시")
     private LocalDateTime lastLoginAt;
 
-    @Column(nullable = false, updatable = false)
-    @Comment("가입일시")
-    private LocalDateTime createdAt;
-
-    @Comment("정보 수정일시")
-    private LocalDateTime updatedAt;
-
     // === 약관 동의 ===
     @Comment("약관 동의 일시")
     private LocalDateTime termsAgreedAt;
@@ -115,17 +108,6 @@ public class User {
 
     @Comment("온보딩 완료 일시")
     private LocalDateTime onboardingCompletedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 
     @Builder
     public User(String email, String nickname, String password, String profileImage,

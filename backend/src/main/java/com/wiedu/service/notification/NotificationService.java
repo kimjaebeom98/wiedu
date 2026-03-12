@@ -11,7 +11,7 @@ import com.wiedu.exception.BusinessException;
 import com.wiedu.exception.ErrorCode;
 import com.wiedu.repository.notification.NotificationRepository;
 import com.wiedu.repository.study.StudyMemberRepository;
-import com.wiedu.repository.user.UserRepository;
+import com.wiedu.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -29,13 +29,13 @@ public class NotificationService {
 
     private final NotificationRepository notificationRepository;
     private final StudyMemberRepository studyMemberRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
     /**
      * 사용자의 알림 목록 조회
      */
     public Page<NotificationResponse> getNotifications(Long userId, Pageable pageable) {
-        User user = findUserById(userId);
+        User user = userService.findUserEntityById(userId);
         return notificationRepository.findByRecipient(user, pageable)
             .map(NotificationResponse::from);
     }
@@ -44,7 +44,7 @@ public class NotificationService {
      * 읽지 않은 알림 수 조회
      */
     public long getUnreadCount(Long userId) {
-        User user = findUserById(userId);
+        User user = userService.findUserEntityById(userId);
         return notificationRepository.countUnreadByRecipient(user);
     }
 
@@ -68,7 +68,7 @@ public class NotificationService {
      */
     @Transactional
     public int markAllAsRead(Long userId) {
-        User user = findUserById(userId);
+        User user = userService.findUserEntityById(userId);
         return notificationRepository.markAllAsRead(user);
     }
 
@@ -149,9 +149,4 @@ public class NotificationService {
         log.info("새 지원자 알림 생성: leaderId={}, studyId={}", leader.getId(), study.getId());
     }
 
-    // === Helper ===
-    private User findUserById(Long userId) {
-        return userRepository.findById(userId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-    }
 }

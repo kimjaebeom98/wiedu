@@ -13,8 +13,9 @@ import com.wiedu.exception.BusinessException;
 import com.wiedu.exception.ErrorCode;
 import com.wiedu.repository.review.StudyMemberReviewRepository;
 import com.wiedu.repository.study.StudyMemberRepository;
-import com.wiedu.repository.study.StudyRepository;
 import com.wiedu.repository.user.UserRepository;
+import com.wiedu.service.study.StudyService;
+import com.wiedu.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,16 +31,17 @@ import java.util.List;
 public class MemberReviewService {
 
     private final StudyMemberReviewRepository memberReviewRepository;
-    private final StudyRepository studyRepository;
     private final StudyMemberRepository studyMemberRepository;
     private final UserRepository userRepository;
+    private final StudyService studyService;
+    private final UserService userService;
 
     /**
      * 특정 스터디에서 리뷰 대상 멤버 목록 조회
      */
     public List<StudyMemberToReviewResponse> getMembersToReview(Long studyId, Long reviewerId) {
-        Study study = findStudyById(studyId);
-        User reviewer = findUserById(reviewerId);
+        Study study = studyService.findStudyEntityById(studyId);
+        User reviewer = userService.findUserEntityById(reviewerId);
 
         // 스터디 완료 여부 확인
         if (study.getStatus() != StudyStatus.COMPLETED) {
@@ -74,9 +76,9 @@ public class MemberReviewService {
      */
     @Transactional
     public StudyMemberReviewResponse createMemberReview(Long studyId, Long reviewerId, CreateMemberReviewRequest request) {
-        Study study = findStudyById(studyId);
-        User reviewer = findUserById(reviewerId);
-        User reviewee = findUserById(request.revieweeId());
+        Study study = studyService.findStudyEntityById(studyId);
+        User reviewer = userService.findUserEntityById(reviewerId);
+        User reviewee = userService.findUserEntityById(request.revieweeId());
 
         // 스터디 완료 여부 확인
         if (study.getStatus() != StudyStatus.COMPLETED) {
@@ -130,7 +132,7 @@ public class MemberReviewService {
      * 특정 사용자가 받은 멤버 리뷰 목록 조회
      */
     public List<StudyMemberReviewResponse> getMemberReviews(Long userId) {
-        User user = findUserById(userId);
+        User user = userService.findUserEntityById(userId);
         List<StudyMemberReview> reviews = memberReviewRepository.findByRevieweeWithDetails(user);
         return reviews.stream()
             .map(StudyMemberReviewResponse::from)
@@ -151,15 +153,4 @@ public class MemberReviewService {
         };
     }
 
-    // === Helper Methods ===
-
-    private Study findStudyById(Long studyId) {
-        return studyRepository.findById(studyId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
-    }
-
-    private User findUserById(Long userId) {
-        return userRepository.findById(userId)
-            .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-    }
 }

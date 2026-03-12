@@ -21,6 +21,15 @@ public class GalleryPhoto {
     @Comment("갤러리 사진 ID")
     private Long id;
 
+    @Column(nullable = false, updatable = false)
+    @Comment("생성 일시")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "study_id", nullable = false)
     @Comment("스터디 ID")
@@ -55,10 +64,6 @@ public class GalleryPhoto {
     @Comment("사진 캡션")
     private String caption;
 
-    @Column(nullable = false, updatable = false)
-    @Comment("생성일시")
-    private LocalDateTime createdAt;
-
     @Builder
     public GalleryPhoto(Study study, User uploader, String originalFileName,
                         String storedFileUrl, String thumbnailUrl, String mimeType,
@@ -71,11 +76,6 @@ public class GalleryPhoto {
         this.mimeType = mimeType;
         this.fileSize = fileSize;
         this.caption = caption;
-    }
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
     }
 
     public boolean isOwnedBy(Long userId) {

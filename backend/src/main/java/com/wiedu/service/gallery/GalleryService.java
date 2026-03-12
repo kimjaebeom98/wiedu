@@ -11,9 +11,9 @@ import com.wiedu.exception.BusinessException;
 import com.wiedu.exception.ErrorCode;
 import com.wiedu.repository.gallery.GalleryPhotoRepository;
 import com.wiedu.repository.study.StudyMemberRepository;
-import com.wiedu.repository.study.StudyRepository;
-import com.wiedu.repository.user.UserRepository;
 import com.wiedu.service.file.FileStorageService;
+import com.wiedu.service.study.StudyService;
+import com.wiedu.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -32,10 +32,10 @@ import java.util.List;
 public class GalleryService {
 
     private final GalleryPhotoRepository galleryPhotoRepository;
-    private final StudyRepository studyRepository;
     private final StudyMemberRepository studyMemberRepository;
-    private final UserRepository userRepository;
     private final FileStorageService fileStorageService;
+    private final StudyService studyService;
+    private final UserService userService;
 
     @Value("${file.max-size:10485760}")
     private long maxFileSize;
@@ -47,7 +47,7 @@ public class GalleryService {
      * 갤러리 사진 목록 조회
      */
     public Page<GalleryPhotoResponse> getPhotos(Long studyId, Long userId, Pageable pageable) {
-        Study study = findStudyById(studyId);
+        Study study = studyService.findStudyEntityById(studyId);
         validateMembership(study, userId);
 
         Page<GalleryPhoto> photos = galleryPhotoRepository.findByStudyIdOrderByCreatedAtDesc(studyId, pageable);
@@ -58,7 +58,7 @@ public class GalleryService {
      * 갤러리 사진 상세 조회
      */
     public GalleryPhotoResponse getPhotoDetail(Long studyId, Long photoId, Long userId) {
-        Study study = findStudyById(studyId);
+        Study study = studyService.findStudyEntityById(studyId);
         validateMembership(study, userId);
 
         GalleryPhoto photo = galleryPhotoRepository.findByIdAndStudyId(photoId, studyId)
@@ -72,8 +72,8 @@ public class GalleryService {
      */
     @Transactional
     public GalleryPhotoResponse uploadPhoto(Long studyId, Long userId, MultipartFile file, String caption) {
-        Study study = findStudyById(studyId);
-        User user = findUserById(userId);
+        Study study = studyService.findStudyEntityById(studyId);
+        User user = userService.findUserEntityById(userId);
         validateMembership(study, userId);
 
         // 파일 검증
@@ -111,7 +111,7 @@ public class GalleryService {
      */
     @Transactional
     public GalleryPhotoResponse updatePhoto(Long studyId, Long photoId, Long userId, GalleryPhotoUpdateRequest request) {
-        Study study = findStudyById(studyId);
+        Study study = studyService.findStudyEntityById(studyId);
         validateMembership(study, userId);
 
         GalleryPhoto photo = galleryPhotoRepository.findByIdAndStudyId(photoId, studyId)
@@ -131,8 +131,8 @@ public class GalleryService {
      */
     @Transactional
     public void deletePhoto(Long studyId, Long photoId, Long userId) {
-        Study study = findStudyById(studyId);
-        User user = findUserById(userId);
+        Study study = studyService.findStudyEntityById(studyId);
+        User user = userService.findUserEntityById(userId);
         validateMembership(study, userId);
 
         GalleryPhoto photo = galleryPhotoRepository.findByIdAndStudyId(photoId, studyId)
@@ -161,25 +161,15 @@ public class GalleryService {
      * 갤러리 사진 개수 조회
      */
     public long getPhotoCount(Long studyId, Long userId) {
-        Study study = findStudyById(studyId);
+        Study study = studyService.findStudyEntityById(studyId);
         validateMembership(study, userId);
         return galleryPhotoRepository.countByStudyId(studyId);
     }
 
     // === Helper Methods ===
 
-    private Study findStudyById(Long studyId) {
-        return studyRepository.findById(studyId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
-    }
-
-    private User findUserById(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-    }
-
     private void validateMembership(Study study, Long userId) {
-        User user = findUserById(userId);
+        User user = userService.findUserEntityById(userId);
         boolean isMember = studyMemberRepository.existsByStudyAndUserAndStatus(study, user, MemberStatus.ACTIVE);
         if (!isMember) {
             throw new BusinessException(ErrorCode.NOT_STUDY_MEMBER);

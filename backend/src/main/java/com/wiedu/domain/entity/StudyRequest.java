@@ -25,6 +25,15 @@ public class StudyRequest {
     @Comment("신청 고유 ID")
     private Long id;
 
+    @Column(nullable = false, updatable = false)
+    @Comment("생성 일시")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "study_id", nullable = false)
     @Comment("스터디 ID")
@@ -48,17 +57,8 @@ public class StudyRequest {
     @Comment("거절 사유")
     private String rejectReason;
 
-    @Column(nullable = false, updatable = false)
-    @Comment("신청일시")
-    private LocalDateTime createdAt;
-
     @Comment("처리일시")
     private LocalDateTime processedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-    }
 
     @Builder
     public StudyRequest(Study study, User user, String message) {

@@ -25,6 +25,20 @@ public class UserCategoryTemperature {
     @Comment("고유 ID")
     private Long id;
 
+    @Column(nullable = false)
+    @Comment("수정 일시")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     @Comment("사용자 ID")
@@ -42,19 +56,6 @@ public class UserCategoryTemperature {
     @Column(nullable = false)
     @Comment("해당 분야 스터디 참여 수")
     private Integer studyCount = 0;
-
-    @Comment("마지막 업데이트 일시")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 
     @Builder
     public UserCategoryTemperature(User user, InterestType category) {

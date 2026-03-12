@@ -22,6 +22,15 @@ public class BoardCommentLike {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, updatable = false)
+    @Comment("생성 일시")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "comment_id", nullable = false)
     private BoardComment comment;
@@ -30,17 +39,9 @@ public class BoardCommentLike {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
     @Builder
     public BoardCommentLike(BoardComment comment, User user) {
         this.comment = comment;
         this.user = user;
-    }
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
     }
 }

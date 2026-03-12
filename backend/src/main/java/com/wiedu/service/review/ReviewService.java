@@ -14,8 +14,9 @@ import com.wiedu.exception.BusinessException;
 import com.wiedu.exception.ErrorCode;
 import com.wiedu.repository.review.StudyLeaderReviewRepository;
 import com.wiedu.repository.study.StudyMemberRepository;
-import com.wiedu.repository.study.StudyRepository;
 import com.wiedu.repository.user.UserRepository;
+import com.wiedu.service.study.StudyService;
+import com.wiedu.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,15 +29,16 @@ import java.util.List;
 public class ReviewService {
 
     private final StudyLeaderReviewRepository reviewRepository;
-    private final StudyRepository studyRepository;
     private final StudyMemberRepository studyMemberRepository;
     private final UserRepository userRepository;
+    private final StudyService studyService;
+    private final UserService userService;
 
     /**
      * 스터디장이 받은 리뷰 목록 조회
      */
     public StudyLeaderReviewsResponse getLeaderReviews(Long leaderId) {
-        User leader = findUserById(leaderId);
+        User leader = userService.findUserEntityById(leaderId);
 
         List<StudyLeaderReview> reviews = reviewRepository.findByLeaderWithDetails(leader);
         List<StudyLeaderReviewResponse> reviewResponses = reviews.stream()
@@ -54,8 +56,8 @@ public class ReviewService {
      */
     @Transactional
     public StudyLeaderReviewResponse createReview(Long studyId, Long reviewerId, CreateReviewRequest request) {
-        Study study = findStudyById(studyId);
-        User reviewer = findUserById(reviewerId);
+        Study study = studyService.findStudyEntityById(studyId);
+        User reviewer = userService.findUserEntityById(reviewerId);
 
         // 스터디 완료 여부 확인
         if (study.getStatus() != StudyStatus.COMPLETED) {
@@ -108,15 +110,4 @@ public class ReviewService {
         };
     }
 
-    // === Helper Methods ===
-
-    private Study findStudyById(Long studyId) {
-        return studyRepository.findById(studyId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
-    }
-
-    private User findUserById(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
-    }
 }

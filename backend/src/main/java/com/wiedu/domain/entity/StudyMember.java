@@ -3,6 +3,8 @@ package com.wiedu.domain.entity;
 import com.wiedu.domain.enums.MemberRole;
 import com.wiedu.domain.enums.MemberStatus;
 import jakarta.persistence.*;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -24,6 +26,21 @@ public class StudyMember {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Comment("스터디 멤버 고유 ID")
     private Long id;
+
+    @Column(nullable = false)
+    @Comment("수정 일시")
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.updatedAt = LocalDateTime.now();
+        this.joinedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "study_id", nullable = false)
@@ -51,20 +68,6 @@ public class StudyMember {
 
     @Comment("탈퇴일시")
     private LocalDateTime withdrawnAt;
-
-    @Comment("수정일시")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.joinedAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 
     @Builder
     public StudyMember(Study study, User user, MemberRole role) {

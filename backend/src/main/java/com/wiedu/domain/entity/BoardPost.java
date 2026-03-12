@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @Comment("스터디 게시글")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class BoardPost {
+public class BoardPost extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -57,14 +57,6 @@ public class BoardPost {
     @Comment("좋아요 수")
     private Integer likeCount = 0;
 
-    @Column(nullable = false, updatable = false)
-    @Comment("생성일시")
-    private LocalDateTime createdAt;
-
-    @Column(nullable = false)
-    @Comment("수정일시")
-    private LocalDateTime updatedAt;
-
     @Builder
     public BoardPost(Study study, User author, PostCategory category, String title, String content) {
         this.study = study;
@@ -75,17 +67,6 @@ public class BoardPost {
         this.viewCount = 0;
         this.commentCount = 0;
         this.likeCount = 0;
-    }
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
     }
 
     public void incrementViewCount() {

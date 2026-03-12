@@ -20,7 +20,7 @@ import java.util.List;
 @Comment("스터디 그룹 정보")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Study {
+public class Study extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -151,24 +151,6 @@ public class Study {
 
     @Comment("스터디 종료 예정일")
     private LocalDateTime endDate;
-
-    @Column(nullable = false, updatable = false)
-    @Comment("생성일시")
-    private LocalDateTime createdAt;
-
-    @Comment("수정일시")
-    private LocalDateTime updatedAt;
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    @PreUpdate
-    protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
 
     @Builder
     public Study(String title, String description, StudyCategory category, StudySubcategory subcategory,

@@ -20,6 +20,15 @@ public class EmailVerificationCode {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, updatable = false)
+    @Comment("생성 일시")
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    protected void onCreate() {
+        this.createdAt = LocalDateTime.now();
+    }
+
     @Column(nullable = false, length = 100)
     @Comment("이메일 주소")
     private String email;
@@ -36,21 +45,12 @@ public class EmailVerificationCode {
     @Comment("인증 완료 여부")
     private boolean verified = false;
 
-    @Column(nullable = false, updatable = false)
-    @Comment("생성 시간")
-    private LocalDateTime createdAt;
-
     @Builder
     public EmailVerificationCode(String email, String code, int expirationMinutes) {
         this.email = email;
         this.code = code;
         this.expiresAt = LocalDateTime.now().plusMinutes(expirationMinutes);
         this.verified = false;
-    }
-
-    @PrePersist
-    protected void onCreate() {
-        this.createdAt = LocalDateTime.now();
     }
 
     public boolean isExpired() {
