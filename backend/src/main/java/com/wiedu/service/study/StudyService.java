@@ -389,15 +389,12 @@ public class StudyService {
                 request.requirements()
         );
 
-        // 태그, 커리큘럼, 규칙 업데이트 (있으면 교체)
+        // 태그, 규칙 업데이트 (있으면 교체)
+        // 커리큘럼은 회차 정보가 연결되어 있으므로 별도 API로만 관리
         // orphanRemoval과 unique constraint 충돌 방지를 위해 먼저 clear 후 flush
         boolean needsFlush = false;
         if (request.tags() != null) {
             study.clearTags();
-            needsFlush = true;
-        }
-        if (request.curriculums() != null) {
-            study.clearCurriculums();
             needsFlush = true;
         }
         if (request.rules() != null) {
@@ -418,13 +415,7 @@ public class StudyService {
                 study.addTag(tag);
             }
         }
-        if (request.curriculums() != null) {
-            for (CurriculumRequest curr : request.curriculums()) {
-                StudyCurriculum curriculum = StudyCurriculum.create(
-                        study, curr.weekNumber(), curr.title(), curr.content());
-                study.addCurriculum(curriculum);
-            }
-        }
+        // 커리큘럼은 CurriculumService를 통해 별도 관리 (회차 보존)
         if (request.rules() != null) {
             for (RuleRequest rule : request.rules()) {
                 StudyRule studyRule = StudyRule.create(study, rule.ruleOrder(), rule.content());
