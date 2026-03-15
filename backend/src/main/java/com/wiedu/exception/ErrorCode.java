@@ -39,6 +39,7 @@ public enum ErrorCode {
     // StudyMember
     ALREADY_MEMBER(HttpStatus.CONFLICT, "M001", "이미 가입된 스터디입니다."),
     NOT_MEMBER(HttpStatus.BAD_REQUEST, "M002", "스터디 멤버가 아닙니다."),
+    STUDY_LIMIT_EXCEEDED(HttpStatus.BAD_REQUEST, "M007", "스터디는 최대 3개까지만 참여할 수 있습니다."),
     LEADER_CANNOT_WITHDRAW(HttpStatus.BAD_REQUEST, "M003", "리더는 탈퇴할 수 없습니다."),
     CANNOT_KICK_SELF(HttpStatus.BAD_REQUEST, "M004", "자기 자신은 강제 탈퇴할 수 없습니다."),
     CANNOT_DELEGATE_TO_WITHDRAWN(HttpStatus.BAD_REQUEST, "M005", "탈퇴한 멤버에게 리더를 위임할 수 없습니다."),

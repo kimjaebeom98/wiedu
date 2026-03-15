@@ -40,6 +40,8 @@ public class StudyRequestService {
     private final UserService userService;
     private final NotificationService notificationService;
 
+    private static final int MAX_STUDY_MEMBERSHIPS = 3;
+
     /**
      * 스터디 가입 신청
      */
@@ -62,6 +64,12 @@ public class StudyRequestService {
         // 이미 멤버인지 확인
         if (studyMemberRepository.existsByStudyAndUserAndStatus(study, user, MemberStatus.ACTIVE)) {
             throw new BusinessException(ErrorCode.ALREADY_MEMBER);
+        }
+
+        // 스터디 가입 개수 제한 확인 (최대 3개)
+        long userStudyCount = studyMemberRepository.findByUserAndStatus(user, MemberStatus.ACTIVE).size();
+        if (userStudyCount >= MAX_STUDY_MEMBERSHIPS) {
+            throw new BusinessException(ErrorCode.STUDY_LIMIT_EXCEEDED);
         }
 
         // 이미 신청했는지 확인 (대기 중인 신청)
@@ -115,6 +123,13 @@ public class StudyRequestService {
         // 정원 초과 확인
         if (study.isFull()) {
             throw new BusinessException(ErrorCode.STUDY_FULL);
+        }
+
+        // 신청자의 스터디 가입 개수 제한 확인 (최대 3개)
+        User applicant = request.getUser();
+        long userStudyCount = studyMemberRepository.findByUserAndStatus(applicant, MemberStatus.ACTIVE).size();
+        if (userStudyCount >= MAX_STUDY_MEMBERSHIPS) {
+            throw new BusinessException(ErrorCode.STUDY_LIMIT_EXCEEDED);
         }
 
         // 신청 승인
