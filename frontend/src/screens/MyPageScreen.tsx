@@ -70,7 +70,17 @@ export default function MyPageScreen() {
       ]);
       setProfile(profileData);
       setMyStudies(studiesData);
-      setMyApplications(applicationsData);
+
+      // 3일 이내의 신청만 표시 (PENDING은 항상, APPROVED/REJECTED는 processedAt 기준 3일)
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+
+      const filteredApplications = applicationsData.filter(app => {
+        if (app.status === 'PENDING') return true;
+        if (!app.processedAt) return false;
+        return new Date(app.processedAt) >= threeDaysAgo;
+      });
+      setMyApplications(filteredApplications);
     } catch (err) {
       console.error('Failed to load profile:', err);
       setError('프로필을 불러오지 못했어요.');
