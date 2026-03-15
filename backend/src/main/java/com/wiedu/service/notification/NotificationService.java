@@ -149,4 +149,32 @@ public class NotificationService {
         log.info("새 지원자 알림 생성: leaderId={}, studyId={}", leader.getId(), study.getId());
     }
 
+    /**
+     * 새 회차 등록 알림 생성 (스터디 멤버들에게 - 리더 제외)
+     */
+    @Transactional
+    public void createSessionCreatedNotifications(Study study, int weekNumber, int sessionNumber, String sessionTitle) {
+        List<StudyMember> members = studyMemberRepository.findByStudyAndStatus(study, MemberStatus.ACTIVE);
+
+        for (StudyMember member : members) {
+            // 리더는 제외 (본인이 등록한 것이므로)
+            if (member.getUser().getId().equals(study.getLeader().getId())) {
+                continue;
+            }
+
+            Notification notification = Notification.builder()
+                .recipient(member.getUser())
+                .type(NotificationType.SESSION_CREATED)
+                .title("새 회차가 등록되었어요!")
+                .message("'" + study.getTitle() + "' " + weekNumber + "주차 " + sessionNumber + "회차: " + sessionTitle)
+                .targetId(study.getId())
+                .targetType("STUDY")
+                .build();
+
+            notificationRepository.save(notification);
+        }
+
+        log.info("회차 등록 알림 생성 완료: studyId={}, week={}, session={}", study.getId(), weekNumber, sessionNumber);
+    }
+
 }

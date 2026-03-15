@@ -12,5 +12,8 @@ public enum NotificationType {
 
     // 리뷰 관련
     REVIEW_REQUEST,      // 리뷰 작성 요청
-    NEW_REVIEW           // 새 리뷰가 등록됨
+    NEW_REVIEW,          // 새 리뷰가 등록됨
+
+    // 커리큘럼/회차 관련
+    SESSION_CREATED      // 새 회차 등록됨
 }
