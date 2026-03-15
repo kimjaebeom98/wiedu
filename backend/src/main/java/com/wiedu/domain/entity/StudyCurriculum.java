@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "STUDY_CURRICULUMS")
 @Comment("스터디 커리큘럼")
@@ -21,6 +24,9 @@ public class StudyCurriculum {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "study_id", nullable = false)
     private Study study;
+
+    @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CurriculumSession> sessions = new ArrayList<>();
 
     @Column(nullable = false)
     @Comment("주차 번호")

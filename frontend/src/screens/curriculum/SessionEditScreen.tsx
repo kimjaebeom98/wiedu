@@ -9,6 +9,7 @@ import {
   TextInput,
   Alert,
   Platform,
+  Modal,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -19,6 +20,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { getSession, addSession, updateSession } from '../../api/curriculum';
 import { SessionMode, SessionRequest } from '../../types/curriculum';
 import { styles } from './styles';
+import LocationMapPickerScreen, { LocationResult } from '../LocationMapPickerScreen';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type SessionEditRouteProp = RouteProp<RootStackParamList, 'SessionEdit'>;
@@ -40,10 +42,22 @@ export default function SessionEditScreen() {
   const [sessionMode, setSessionMode] = useState<SessionMode>('ONLINE');
   const [meetingLink, setMeetingLink] = useState('');
   const [meetingLocation, setMeetingLocation] = useState('');
+  const [meetingLatitude, setMeetingLatitude] = useState<number | null>(null);
+  const [meetingLongitude, setMeetingLongitude] = useState<number | null>(null);
+  const [meetingPlaceName, setMeetingPlaceName] = useState('');
 
   // Date/Time picker state
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showLocationPicker, setShowLocationPicker] = useState(false);
+
+  // Temp values for picker
+  const [tempDate, setTempDate] = useState<Date>(new Date());
+  const [tempTime, setTempTime] = useState<Date>(() => {
+    const d = new Date();
+    d.setHours(20, 0, 0, 0);
+    return d;
+  });
 
   useEffect(() => {
     if (!isNew && sessionId) {
@@ -57,17 +71,23 @@ export default function SessionEditScreen() {
       setTitle(session.title || '');
       setContent(session.content || '');
       if (session.sessionDate) {
-        setSessionDate(new Date(session.sessionDate));
+        const date = new Date(session.sessionDate);
+        setSessionDate(date);
+        setTempDate(date);
       }
       if (session.sessionTime) {
         const [hours, minutes] = session.sessionTime.split(':');
         const time = new Date();
         time.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0);
         setSessionTime(time);
+        setTempTime(time);
       }
       setSessionMode(session.sessionMode || 'ONLINE');
       setMeetingLink(session.meetingLink || '');
       setMeetingLocation(session.meetingLocation || '');
+      setMeetingLatitude(session.meetingLatitude || null);
+      setMeetingLongitude(session.meetingLongitude || null);
+      setMeetingPlaceName(session.meetingPlaceName || '');
     } catch (error) {
       console.error('Failed to load session:', error);
       Alert.alert('오류', '회차 정보를 불러오는데 실패했습니다.');
@@ -77,13 +97,22 @@ export default function SessionEditScreen() {
   };
 
   const formatDate = (date: Date | null): string => {
-    if (!date) return '날짜 선택';
-    return `${date.getFullYear()}.${String(date.getMonth() + 1).padStart(2, '0')}.${String(date.getDate()).padStart(2, '0')}`;
+    if (!date) return '날짜를 선택해주세요';
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    const weekDays = ['일', '월', '화', '수', '목', '금', '토'];
+    const weekDay = weekDays[date.getDay()];
+    return `${year}년 ${month}월 ${day}일 (${weekDay})`;
   };
 
   const formatTime = (time: Date | null): string => {
-    if (!time) return '시간';
-    return `${String(time.getHours()).padStart(2, '0')}:${String(time.getMinutes()).padStart(2, '0')}`;
+    if (!time) return '시간을 선택해주세요';
+    const hours = time.getHours();
+    const minutes = time.getMinutes();
+    const period = hours >= 12 ? '오후' : '오전';
+    const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+    return `${period} ${displayHours}:${minutes.toString().padStart(2, '0')}`;
   };
 
   const handleSave = async () => {
@@ -105,6 +134,9 @@ export default function SessionEditScreen() {
         sessionMode,
         meetingLink: sessionMode === 'ONLINE' ? meetingLink.trim() || null : null,
         meetingLocation: sessionMode === 'OFFLINE' ? meetingLocation.trim() || null : null,
+        meetingLatitude: sessionMode === 'OFFLINE' ? meetingLatitude : null,
+        meetingLongitude: sessionMode === 'OFFLINE' ? meetingLongitude : null,
+        meetingPlaceName: sessionMode === 'OFFLINE' ? meetingPlaceName.trim() || null : null,
       };
 
       if (isNew) {
@@ -122,17 +154,37 @@ export default function SessionEditScreen() {
   };
 
   const handleDateChange = (_event: any, selectedDate?: Date) => {
-    setShowDatePicker(Platform.OS === 'ios');
-    if (selectedDate) {
-      setSessionDate(selectedDate);
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+      if (selectedDate) {
+        setSessionDate(selectedDate);
+        setTempDate(selectedDate);
+      }
+    } else if (selectedDate) {
+      setTempDate(selectedDate);
     }
   };
 
   const handleTimeChange = (_event: any, selectedTime?: Date) => {
-    setShowTimePicker(Platform.OS === 'ios');
-    if (selectedTime) {
-      setSessionTime(selectedTime);
+    if (Platform.OS === 'android') {
+      setShowTimePicker(false);
+      if (selectedTime) {
+        setSessionTime(selectedTime);
+        setTempTime(selectedTime);
+      }
+    } else if (selectedTime) {
+      setTempTime(selectedTime);
     }
+  };
+
+  const confirmDate = () => {
+    setSessionDate(tempDate);
+    setShowDatePicker(false);
+  };
+
+  const confirmTime = () => {
+    setSessionTime(tempTime);
+    setShowTimePicker(false);
   };
 
   if (loading) {
@@ -199,28 +251,76 @@ export default function SessionEditScreen() {
           </View>
         </View>
 
-        {/* Date & Time Section */}
+        {/* Date Section */}
         <View style={styles.formSection}>
-          <Text style={styles.formLabel}>날짜 & 시간</Text>
-          <View style={styles.dateTimeRow}>
-            <TouchableOpacity
-              style={[styles.inputContainer, styles.dateInput]}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={[styles.inputText, !sessionDate && styles.placeholderText]}>
-                {formatDate(sessionDate)}
-              </Text>
-              <Feather name="calendar" size={18} color="#71717A" />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.inputContainer, styles.timeInput]}
-              onPress={() => setShowTimePicker(true)}
-            >
-              <Text style={[styles.inputText, !sessionTime && styles.placeholderText]}>
-                {formatTime(sessionTime)}
-              </Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.formLabel}>날짜</Text>
+          <TouchableOpacity
+            style={styles.pickerBtn}
+            onPress={() => setShowDatePicker(true)}
+            activeOpacity={0.7}
+          >
+            <Feather name="calendar" size={18} color="#8B5CF6" />
+            <Text style={[styles.pickerBtnText, !sessionDate && styles.pickerBtnPlaceholder]}>
+              {formatDate(sessionDate)}
+            </Text>
+            <Feather name="chevron-down" size={18} color="#71717A" />
+          </TouchableOpacity>
+
+          {/* iOS Date Picker Inline */}
+          {showDatePicker && Platform.OS === 'ios' && (
+            <View style={styles.pickerContainer}>
+              <View style={styles.pickerHeader}>
+                <TouchableOpacity onPress={confirmDate}>
+                  <Text style={styles.pickerDone}>완료</Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={tempDate}
+                mode="date"
+                display="spinner"
+                onChange={handleDateChange}
+                minimumDate={new Date()}
+                locale="ko-KR"
+                textColor="#FFFFFF"
+              />
+            </View>
+          )}
+        </View>
+
+        {/* Time Section */}
+        <View style={styles.formSection}>
+          <Text style={styles.formLabel}>시간</Text>
+          <TouchableOpacity
+            style={styles.pickerBtn}
+            onPress={() => setShowTimePicker(true)}
+            activeOpacity={0.7}
+          >
+            <Feather name="clock" size={18} color="#8B5CF6" />
+            <Text style={[styles.pickerBtnText, !sessionTime && styles.pickerBtnPlaceholder]}>
+              {formatTime(sessionTime)}
+            </Text>
+            <Feather name="chevron-down" size={18} color="#71717A" />
+          </TouchableOpacity>
+
+          {/* iOS Time Picker Inline */}
+          {showTimePicker && Platform.OS === 'ios' && (
+            <View style={styles.pickerContainer}>
+              <View style={styles.pickerHeader}>
+                <TouchableOpacity onPress={confirmTime}>
+                  <Text style={styles.pickerDone}>완료</Text>
+                </TouchableOpacity>
+              </View>
+              <DateTimePicker
+                value={tempTime}
+                mode="time"
+                display="spinner"
+                onChange={handleTimeChange}
+                minuteInterval={5}
+                locale="ko-KR"
+                textColor="#FFFFFF"
+              />
+            </View>
+          )}
         </View>
 
         {/* Mode Toggle Section */}
@@ -270,16 +370,33 @@ export default function SessionEditScreen() {
         ) : (
           <View style={styles.formSection}>
             <Text style={styles.formLabel}>장소</Text>
-            <View style={styles.inputContainer}>
-              <Feather name="map-pin" size={18} color="#71717A" style={styles.inputIcon} />
-              <TextInput
-                style={[styles.textInput, styles.inputWithIcon]}
-                value={meetingLocation}
-                onChangeText={setMeetingLocation}
-                placeholder="오프라인 장소를 입력하세요"
-                placeholderTextColor="#71717A"
-              />
-            </View>
+            <TouchableOpacity
+              style={[
+                styles.inputContainer,
+                meetingPlaceName && { height: 'auto', minHeight: 56, paddingVertical: 12 },
+              ]}
+              onPress={() => setShowLocationPicker(true)}
+              activeOpacity={0.7}
+            >
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#8B5CF620', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+                <Feather name="map-pin" size={18} color="#8B5CF6" />
+              </View>
+              <View style={{ flex: 1 }}>
+                {meetingPlaceName ? (
+                  <>
+                    <Text style={{ fontSize: 15, fontWeight: '600', color: '#FFFFFF' }} numberOfLines={1}>
+                      {meetingPlaceName}
+                    </Text>
+                    <Text style={{ fontSize: 13, color: '#A1A1AA', marginTop: 4 }} numberOfLines={2}>
+                      {meetingLocation}
+                    </Text>
+                  </>
+                ) : (
+                  <Text style={{ fontSize: 15, color: '#71717A' }}>장소를 선택하세요</Text>
+                )}
+              </View>
+              <Feather name="chevron-right" size={20} color="#71717A" />
+            </TouchableOpacity>
           </View>
         )}
 
@@ -294,27 +411,50 @@ export default function SessionEditScreen() {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Date Picker */}
-      {showDatePicker && (
+      {/* Android Date Picker */}
+      {showDatePicker && Platform.OS === 'android' && (
         <DateTimePicker
-          value={sessionDate || new Date()}
+          value={tempDate}
           mode="date"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          display="spinner"
           onChange={handleDateChange}
           minimumDate={new Date()}
         />
       )}
 
-      {/* Time Picker */}
-      {showTimePicker && (
+      {/* Android Time Picker */}
+      {showTimePicker && Platform.OS === 'android' && (
         <DateTimePicker
-          value={sessionTime || new Date()}
+          value={tempTime}
           mode="time"
-          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          display="spinner"
           onChange={handleTimeChange}
-          is24Hour
+          minuteInterval={5}
         />
       )}
+
+      {/* Location Picker Modal */}
+      <Modal
+        visible={showLocationPicker}
+        animationType="slide"
+        presentationStyle="fullScreen"
+      >
+        <LocationMapPickerScreen
+          onSelect={(location: LocationResult) => {
+            setMeetingPlaceName(location.name);
+            setMeetingLocation(location.address);
+            setMeetingLatitude(location.latitude);
+            setMeetingLongitude(location.longitude);
+            setShowLocationPicker(false);
+          }}
+          onBack={() => setShowLocationPicker(false)}
+          initialLocation={
+            meetingLatitude && meetingLongitude
+              ? { latitude: meetingLatitude, longitude: meetingLongitude }
+              : undefined
+          }
+        />
+      </Modal>
     </View>
   );
 }

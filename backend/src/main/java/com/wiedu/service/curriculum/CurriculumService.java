@@ -1,13 +1,17 @@
 package com.wiedu.service.curriculum;
 
 import com.wiedu.domain.entity.CurriculumSession;
+import com.wiedu.domain.entity.SessionAttendance;
 import com.wiedu.domain.entity.Study;
 import com.wiedu.domain.entity.StudyCurriculum;
+import com.wiedu.domain.entity.User;
 import com.wiedu.dto.curriculum.*;
 import com.wiedu.exception.BusinessException;
 import com.wiedu.exception.ErrorCode;
+import com.wiedu.domain.enums.AttendanceStatus;
 import com.wiedu.domain.enums.MemberStatus;
 import com.wiedu.repository.study.CurriculumSessionRepository;
+import com.wiedu.repository.study.SessionAttendanceRepository;
 import com.wiedu.repository.study.StudyCurriculumRepository;
 import com.wiedu.repository.study.StudyMemberRepository;
 import com.wiedu.repository.user.UserRepository;
@@ -28,6 +32,7 @@ public class CurriculumService {
 
     private final StudyCurriculumRepository curriculumRepository;
     private final CurriculumSessionRepository sessionRepository;
+    private final SessionAttendanceRepository attendanceRepository;
     private final StudyMemberRepository studyMemberRepository;
     private final UserRepository userRepository;
     private final StudyService studyService;
@@ -94,18 +99,19 @@ public class CurriculumService {
 
     /**
      * 커리큘럼 삭제
+     * cascade 설정으로 세션 및 출석 정보 자동 삭제
      */
     @Transactional
     public void deleteCurriculum(Long curriculumId, Long userId) {
         StudyCurriculum curriculum = findCurriculumById(curriculumId);
         validateStudyLeader(curriculum.getStudy(), userId);
 
-        // 세션 먼저 삭제
-        sessionRepository.deleteAllByCurriculumId(curriculumId);
+        Long studyId = curriculum.getStudy().getId();
+        // cascade로 세션과 출석 정보가 자동 삭제됨
         curriculumRepository.delete(curriculum);
 
         // 남은 커리큘럼 주차 번호 재정렬
-        List<StudyCurriculum> remainingCurriculums = curriculumRepository.findByStudyIdOrderByWeekNumber(curriculum.getStudy().getId());
+        List<StudyCurriculum> remainingCurriculums = curriculumRepository.findByStudyIdOrderByWeekNumber(studyId);
         for (int i = 0; i < remainingCurriculums.size(); i++) {
             remainingCurriculums.get(i).updateWeekNumber(i + 1);
         }
@@ -155,10 +161,23 @@ public class CurriculumService {
             .sessionMode(request.sessionMode())
             .meetingLink(request.meetingLink())
             .meetingLocation(request.meetingLocation())
+            .meetingLatitude(request.meetingLatitude())
+            .meetingLongitude(request.meetingLongitude())
+            .meetingPlaceName(request.meetingPlaceName())
             .build();
 
         CurriculumSession saved = sessionRepository.save(session);
         log.info("세션 추가: curriculumId={}, sessionNumber={}", curriculumId, request.sessionNumber());
+
+        // 스터디장을 자동으로 참석으로 등록
+        User leader = curriculum.getStudy().getLeader();
+        SessionAttendance leaderAttendance = SessionAttendance.builder()
+            .session(saved)
+            .user(leader)
+            .status(AttendanceStatus.ATTENDING)
+            .build();
+        attendanceRepository.save(leaderAttendance);
+        log.info("스터디장 자동 참석 등록: sessionId={}, leaderId={}", saved.getId(), leader.getId());
 
         // 스터디 멤버들에게 알림 발송
         notificationService.createSessionCreatedNotifications(
@@ -186,7 +205,10 @@ public class CurriculumService {
             request.sessionTime(),
             request.sessionMode(),
             request.meetingLink(),
-            request.meetingLocation()
+            request.meetingLocation(),
+            request.meetingLatitude(),
+            request.meetingLongitude(),
+            request.meetingPlaceName()
         );
 
         if (!session.getSessionNumber().equals(request.sessionNumber())) {

@@ -40,6 +40,7 @@ export default function CurriculumEditScreen() {
   const [expandedWeeks, setExpandedWeeks] = useState<Set<number>>(new Set());
   const [editingCurriculum, setEditingCurriculum] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
 
   const loadCurriculums = useCallback(async () => {
     try {
@@ -101,6 +102,11 @@ export default function CurriculumEditScreen() {
     try {
       const newCurriculum = await addCurriculum(studyId);
       setCurriculums((prev) => [...prev, newCurriculum]);
+      // 새로 추가된 주차를 자동으로 펼치고 편집 모드로
+      setExpandedWeeks((prev) => new Set(prev).add(newCurriculum.id));
+      setEditingCurriculum(newCurriculum.id);
+      setEditTitle(newCurriculum.title);
+      setEditContent(newCurriculum.content || '');
     } catch (error: any) {
       Alert.alert('오류', error.message || '주차 추가에 실패했습니다.');
     } finally {
@@ -130,24 +136,23 @@ export default function CurriculumEditScreen() {
     );
   };
 
-  const handleSaveCurriculumTitle = async (curriculumId: number) => {
+  const handleSaveCurriculum = async (curriculumId: number) => {
     if (!editTitle.trim()) {
       setEditingCurriculum(null);
       return;
     }
     try {
-      const curriculum = curriculums.find((c) => c.id === curriculumId);
-      if (curriculum) {
-        await updateCurriculum(curriculumId, {
-          title: editTitle.trim(),
-          content: curriculum.content || '',
-        });
-        setCurriculums((prev) =>
-          prev.map((c) =>
-            c.id === curriculumId ? { ...c, title: editTitle.trim() } : c
-          )
-        );
-      }
+      await updateCurriculum(curriculumId, {
+        title: editTitle.trim(),
+        content: editContent.trim(),
+      });
+      setCurriculums((prev) =>
+        prev.map((c) =>
+          c.id === curriculumId
+            ? { ...c, title: editTitle.trim(), content: editContent.trim() }
+            : c
+        )
+      );
     } catch (error: any) {
       Alert.alert('오류', error.message || '주차 수정에 실패했습니다.');
     } finally {
@@ -251,27 +256,22 @@ export default function CurriculumEditScreen() {
                 >
                   <Text style={styles.weekBadgeText}>{curriculum.weekNumber}</Text>
                 </View>
-                {editingCurriculum === curriculum.id ? (
-                  <TextInput
-                    style={styles.weekTitleInput}
-                    value={editTitle}
-                    onChangeText={setEditTitle}
-                    onBlur={() => handleSaveCurriculumTitle(curriculum.id)}
-                    onSubmitEditing={() => handleSaveCurriculumTitle(curriculum.id)}
-                    autoFocus
-                    placeholder="주차 제목"
-                    placeholderTextColor="#71717A"
-                  />
-                ) : (
-                  <TouchableOpacity
-                    onPress={() => {
+                <TouchableOpacity
+                  style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                  onPress={() => {
+                    if (editingCurriculum !== curriculum.id) {
                       setEditingCurriculum(curriculum.id);
                       setEditTitle(curriculum.title);
-                    }}
-                  >
-                    <Text style={styles.weekTitle}>{curriculum.title}</Text>
-                  </TouchableOpacity>
-                )}
+                      setEditContent(curriculum.content || '');
+                      if (!expandedWeeks.has(curriculum.id)) {
+                        toggleWeekExpand(curriculum.id);
+                      }
+                    }
+                  }}
+                >
+                  <Text style={styles.weekTitle}>{curriculum.title}</Text>
+                  <Feather name="edit-2" size={14} color="#71717A" />
+                </TouchableOpacity>
               </View>
               <View style={styles.weekRight}>
                 <Text style={styles.weekCount}>{curriculum.sessionCount}회차</Text>
@@ -282,6 +282,36 @@ export default function CurriculumEditScreen() {
                 />
               </View>
             </TouchableOpacity>
+
+            {/* Curriculum Edit Form */}
+            {editingCurriculum === curriculum.id && (
+              <View style={styles.curriculumEditForm}>
+                <TextInput
+                  style={styles.curriculumTitleInput}
+                  value={editTitle}
+                  onChangeText={setEditTitle}
+                  placeholder="주제 입력"
+                  placeholderTextColor="#52525B"
+                  autoFocus
+                />
+                <TextInput
+                  style={[styles.curriculumTitleInput, styles.curriculumContentInput]}
+                  value={editContent}
+                  onChangeText={setEditContent}
+                  placeholder="내용 입력 (선택)"
+                  placeholderTextColor="#52525B"
+                  multiline
+                  numberOfLines={2}
+                  textAlignVertical="top"
+                />
+                <TouchableOpacity
+                  style={styles.saveCurriculumBtn}
+                  onPress={() => handleSaveCurriculum(curriculum.id)}
+                >
+                  <Text style={styles.saveCurriculumText}>저장</Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             {/* Expanded Sessions */}
             {expandedWeeks.has(curriculum.id) && (

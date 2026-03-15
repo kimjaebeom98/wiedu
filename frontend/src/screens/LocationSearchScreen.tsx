@@ -143,7 +143,6 @@ export default function LocationSearchScreen({ onSelect, onBack }: LocationSearc
       const geocode = await Location.reverseGeocodeAsync({ latitude, longitude });
       const place = geocode[0];
 
-      const name = place?.name || '현재 위치';
       const address = [
         place?.city,
         place?.district,
@@ -152,6 +151,10 @@ export default function LocationSearchScreen({ onSelect, onBack }: LocationSearc
       ]
         .filter(Boolean)
         .join(' ');
+
+      // place.name이 숫자로만 이루어진 경우(번지수) 또는 없는 경우 "현재 위치" 사용
+      const isOnlyNumber = place?.name && /^\d+(-\d+)?$/.test(place.name);
+      const name = (!place?.name || isOnlyNumber) ? '현재 위치' : place.name;
 
       const locationData: LocationData = {
         id: 'current',

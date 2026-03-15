@@ -30,5 +30,12 @@ public record SessionRequest(
     String meetingLink,
 
     @Size(max = 200, message = "장소는 200자 이하여야 합니다")
-    String meetingLocation
+    String meetingLocation,
+
+    Double meetingLatitude,
+
+    Double meetingLongitude,
+
+    @Size(max = 100, message = "장소명은 100자 이하여야 합니다")
+    String meetingPlaceName
 ) {}

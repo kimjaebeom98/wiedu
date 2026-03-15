@@ -8,6 +8,8 @@ import {
   ActivityIndicator,
   Image,
   Modal,
+  Platform,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -505,13 +507,19 @@ export default function StudyDetailScreen() {
         {(() => {
           const isLeader = study.leader.id === currentUserId;
           const showApplicantsTab = isLeader && study.status === 'RECRUITING';
-          const tabs: TabType[] = showApplicantsTab
-            ? ['intro', 'board', 'gallery', 'applicants']
-            : ['intro', 'board', 'gallery'];
+          const showCalendarTab = study.isMember;
+          let tabs: TabType[] = ['intro', 'board', 'gallery'];
+          if (showCalendarTab) {
+            tabs = ['intro', 'board', 'gallery', 'calendar'];
+          }
+          if (showApplicantsTab) {
+            tabs = [...tabs, 'applicants'];
+          }
           const labels: Record<TabType, string> = {
             intro: '소개',
             board: '게시판',
             gallery: '사진첩',
+            calendar: '캘린더',
             applicants: '가입관리',
           };
           const pendingCount = applicants.filter(a => a.status === 'PENDING').length;
@@ -526,6 +534,13 @@ export default function StudyDetailScreen() {
                   navigation.navigate('ApplicantManagement', {
                     studyId: study.id,
                     studyTitle: study.title,
+                  });
+                } else if (tab === 'calendar') {
+                  // 캘린더 화면으로 이동
+                  navigation.navigate('StudyCalendar', {
+                    studyId: study.id,
+                    studyTitle: study.title,
+                    isLeader: study.leader.id === currentUserId,
                   });
                 } else {
                   setActiveTab(tab);
@@ -946,19 +961,42 @@ export default function StudyDetailScreen() {
 
                                   {/* 장소 (오프라인) */}
                                   {session.sessionMode === 'OFFLINE' && session.meetingLocation && (
-                                    <View style={{
-                                      flexDirection: 'row',
-                                      alignItems: 'center',
-                                      backgroundColor: '#F59E0B10',
-                                      borderRadius: 8,
-                                      padding: 10,
-                                      marginTop: 6,
-                                    }}>
+                                    <TouchableOpacity
+                                      style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        backgroundColor: '#F59E0B10',
+                                        borderRadius: 8,
+                                        padding: 10,
+                                        marginTop: 6,
+                                      }}
+                                      onPress={() => {
+                                        if (session.meetingLatitude && session.meetingLongitude) {
+                                          const placeName = encodeURIComponent(session.meetingPlaceName || session.meetingLocation || '');
+                                          const url = Platform.select({
+                                            ios: `maps:?q=${placeName}&ll=${session.meetingLatitude},${session.meetingLongitude}`,
+                                            android: `geo:0,0?q=${session.meetingLatitude},${session.meetingLongitude}(${placeName})`,
+                                          });
+                                          if (url) Linking.openURL(url);
+                                        }
+                                      }}
+                                      activeOpacity={session.meetingLatitude ? 0.7 : 1}
+                                    >
                                       <Feather name="map-pin" size={14} color="#F59E0B" style={{ marginRight: 8 }} />
-                                      <Text style={{ fontSize: 13, color: '#F59E0B', flex: 1 }}>
-                                        {session.meetingLocation}
-                                      </Text>
-                                    </View>
+                                      <View style={{ flex: 1 }}>
+                                        {session.meetingPlaceName && (
+                                          <Text style={{ fontSize: 13, color: '#F59E0B', fontWeight: '600' }}>
+                                            {session.meetingPlaceName}
+                                          </Text>
+                                        )}
+                                        <Text style={{ fontSize: 12, color: '#F59E0B', opacity: 0.8 }}>
+                                          {session.meetingLocation}
+                                        </Text>
+                                      </View>
+                                      {session.meetingLatitude && (
+                                        <Feather name="external-link" size={14} color="#F59E0B" style={{ marginLeft: 8 }} />
+                                      )}
+                                    </TouchableOpacity>
                                   )}
                                 </View>
                               ))

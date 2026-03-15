@@ -110,6 +110,37 @@ export const styles = StyleSheet.create({
     color: '#71717A',
   },
 
+  // Curriculum Edit Form
+  curriculumEditForm: {
+    padding: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#3F3F46',
+    gap: 12,
+  },
+  curriculumTitleInput: {
+    backgroundColor: '#1F1F23',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: '#FFFFFF',
+  },
+  curriculumContentInput: {
+    minHeight: 60,
+    textAlignVertical: 'top',
+  },
+  saveCurriculumBtn: {
+    backgroundColor: '#8B5CF6',
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: 'center',
+  },
+  saveCurriculumText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+
   // Sessions Container
   sessionsContainer: {
     borderTopWidth: 1,
@@ -331,5 +362,43 @@ export const styles = StyleSheet.create({
     fontSize: 13,
     color: '#A1A1AA',
     lineHeight: 20,
+  },
+
+  // Picker Button (Date/Time)
+  pickerBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: 52,
+    backgroundColor: '#27272A',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    gap: 12,
+  },
+  pickerBtnText: {
+    flex: 1,
+    fontSize: 15,
+    color: '#FFFFFF',
+  },
+  pickerBtnPlaceholder: {
+    color: '#71717A',
+  },
+  pickerContainer: {
+    backgroundColor: '#27272A',
+    borderRadius: 12,
+    marginTop: 8,
+    overflow: 'hidden',
+  },
+  pickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3F3F46',
+  },
+  pickerDone: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#8B5CF6',
   },
 });

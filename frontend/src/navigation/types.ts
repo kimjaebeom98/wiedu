@@ -87,4 +87,15 @@ export type RootStackParamList = {
     sessionNumber: number;
     isNew: boolean;
   };
+  StudyCalendar: {
+    studyId: number;
+    studyTitle: string;
+    isLeader: boolean;
+  };
+  SessionAttendance: {
+    sessionId: number;
+    sessionTitle: string;
+    studyId: number;
+    isLeader: boolean;
+  };
 };
