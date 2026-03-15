@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Clipboard from 'expo-clipboard';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -26,8 +27,10 @@ import {
   StudyRequestResponse,
 } from '../../api/study';
 import { getLeaderReviews } from '../../api/review';
+import { getCurriculums, getCurriculumDetail } from '../../api/curriculum';
 import { StudyDetailResponse } from '../../types/study';
 import { StudyLeaderReviewsResponse } from '../../types/review';
+import { CurriculumResponse, SessionResponse } from '../../types/curriculum';
 import { formatLocationDisplay } from '../../utils/location';
 import { CustomAlert, AlertButton } from '../../components/common';
 import { styles } from './styles';
@@ -94,9 +97,14 @@ export default function StudyDetailScreen() {
   const [applicantsLoading, setApplicantsLoading] = useState(false);
   const [expandedCurriculums, setExpandedCurriculums] = useState<Set<number>>(new Set());
   const [showPolicyModal, setShowPolicyModal] = useState(false);
+  const [curriculumData, setCurriculumData] = useState<CurriculumResponse[]>([]);
+  const [curriculumLoading, setCurriculumLoading] = useState<Set<number>>(new Set());
+  const [curriculumAccessDenied, setCurriculumAccessDenied] = useState<Set<number>>(new Set());
 
-  // Toggle curriculum expansion
-  const toggleCurriculum = (index: number) => {
+  // Toggle curriculum expansion and load sessions
+  const toggleCurriculum = async (index: number, curriculumId?: number) => {
+    const isExpanded = expandedCurriculums.has(index);
+
     setExpandedCurriculums(prev => {
       const next = new Set(prev);
       if (next.has(index)) {
@@ -106,7 +114,52 @@ export default function StudyDetailScreen() {
       }
       return next;
     });
+
+    // Load sessions if expanding and curriculumId is provided
+    if (!isExpanded && curriculumId) {
+      // Check if already loaded
+      const existing = curriculumData.find(c => c.id === curriculumId);
+      if (existing?.sessions) return;
+
+      setCurriculumLoading(prev => new Set(prev).add(curriculumId));
+      try {
+        const detail = await getCurriculumDetail(curriculumId);
+        setCurriculumData(prev => {
+          const filtered = prev.filter(c => c.id !== curriculumId);
+          return [...filtered, detail].sort((a, b) => a.weekNumber - b.weekNumber);
+        });
+        // 성공 시 접근 거부 상태 해제
+        setCurriculumAccessDenied(prev => {
+          const next = new Set(prev);
+          next.delete(curriculumId);
+          return next;
+        });
+      } catch (error: any) {
+        // 403 에러 (권한 없음) 처리 - 에러 메시지로 판단
+        const errorMessage = error?.message || '';
+        if (errorMessage.includes('권한') || errorMessage.includes('멤버')) {
+          setCurriculumAccessDenied(prev => new Set(prev).add(curriculumId));
+        }
+        // 권한 에러가 아닌 경우만 콘솔에 출력 (토스트는 표시하지 않음)
+      } finally {
+        setCurriculumLoading(prev => {
+          const next = new Set(prev);
+          next.delete(curriculumId);
+          return next;
+        });
+      }
+    }
   };
+
+  // Load curriculums data
+  const loadCurriculumData = useCallback(async () => {
+    try {
+      const data = await getCurriculums(studyId);
+      setCurriculumData(data);
+    } catch (error) {
+      console.error('Failed to load curriculums:', error);
+    }
+  }, [studyId]);
 
   // Custom Alert State
   const [alertVisible, setAlertVisible] = useState(false);
@@ -149,16 +202,18 @@ export default function StudyDetailScreen() {
     loadStudyDetail();
     loadCurrentUser();
     loadMyApplication();
+    loadCurriculumData();
   }, [studyId]);
 
   // Reload study data when screen gains focus (e.g., returning from edit)
   useFocusEffect(
     useCallback(() => {
       loadStudyDetail();
+      loadCurriculumData();
       if (study?.leader?.id === currentUserId && study?.status === 'RECRUITING') {
         loadApplicants();
       }
-    }, [study?.leader?.id, study?.status, currentUserId, loadApplicants])
+    }, [study?.leader?.id, study?.status, currentUserId, loadApplicants, loadCurriculumData])
   );
 
   const handleApproveApplicant = async (requestId: number) => {
@@ -734,36 +789,196 @@ export default function StudyDetailScreen() {
             )}
 
             {/* Curriculum Section */}
-            {study.curriculums && study.curriculums.length > 0 && (
+            {curriculumData.length > 0 || study.leader.id === currentUserId ? (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>커리큘럼</Text>
-                {study.curriculums.map((item, idx) => (
-                  <TouchableOpacity
-                    key={idx}
-                    style={styles.curriculumItem}
-                    onPress={() => toggleCurriculum(idx)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.curriculumHeader}>
-                      <View style={[styles.weekBadge, idx === 0 ? styles.weekBadgeActive : styles.weekBadgeInactive]}>
-                        <Text style={styles.weekBadgeText}>{item.weekNumber}</Text>
+                <View style={styles.sectionHeader}>
+                  <Text style={styles.sectionTitle}>커리큘럼</Text>
+                  {study.leader.id === currentUserId && (
+                    <TouchableOpacity
+                      onPress={() => navigation.navigate('CurriculumEdit', {
+                        studyId: study.id,
+                        studyTitle: study.title,
+                      })}
+                    >
+                      <Text style={styles.viewMoreLink}>수정하기</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+                {curriculumData.length > 0 ? (
+                  curriculumData.map((curriculum, idx) => {
+                    const sessions = curriculum.sessions || [];
+                    const isExpanded = expandedCurriculums.has(idx);
+                    const isLoading = curriculumLoading.has(curriculum.id);
+                    const isAccessDenied = curriculumAccessDenied.has(curriculum.id);
+
+                    return (
+                      <View key={curriculum.id} style={styles.curriculumItem}>
+                        <TouchableOpacity
+                          onPress={() => toggleCurriculum(idx, curriculum.id)}
+                          activeOpacity={0.7}
+                        >
+                          <View style={styles.curriculumHeader}>
+                            <View style={[styles.weekBadge, idx === 0 ? styles.weekBadgeActive : styles.weekBadgeInactive]}>
+                              <Text style={styles.weekBadgeText}>{curriculum.weekNumber}</Text>
+                            </View>
+                            <View style={{ flex: 1 }}>
+                              <Text style={styles.curriculumText}>{curriculum.title}</Text>
+                              <Text style={{ fontSize: 12, color: '#71717A', marginTop: 2 }}>
+                                {curriculum.sessionCount}회차
+                              </Text>
+                            </View>
+                            <Feather
+                              name={isExpanded ? 'chevron-up' : 'chevron-down'}
+                              size={18}
+                              color="#A1A1AA"
+                            />
+                          </View>
+                        </TouchableOpacity>
+                        {isExpanded && (
+                          <View style={styles.curriculumContent}>
+                            {curriculum.content ? (
+                              <Text style={[styles.curriculumContentText, { marginBottom: 12 }]}>
+                                {curriculum.content}
+                              </Text>
+                            ) : null}
+                            {isLoading ? (
+                              <ActivityIndicator size="small" color="#8B5CF6" style={{ marginVertical: 12 }} />
+                            ) : isAccessDenied ? (
+                              <View style={{
+                                backgroundColor: '#3F3F4620',
+                                borderRadius: 8,
+                                padding: 16,
+                                alignItems: 'center',
+                              }}>
+                                <Feather name="lock" size={20} color="#71717A" style={{ marginBottom: 8 }} />
+                                <Text style={{ fontSize: 13, color: '#71717A', textAlign: 'center' }}>
+                                  스터디 멤버만 회차 정보를 볼 수 있습니다
+                                </Text>
+                              </View>
+                            ) : sessions.length > 0 ? (
+                              sessions.map((session) => (
+                                <View key={session.id} style={{
+                                  backgroundColor: '#1F1F23',
+                                  borderRadius: 12,
+                                  padding: 14,
+                                  marginTop: 8,
+                                }}>
+                                  {/* 헤더: 회차 번호, 제목, 온/오프라인 배지 */}
+                                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                    <View style={{
+                                      width: 28,
+                                      height: 28,
+                                      borderRadius: 14,
+                                      backgroundColor: session.sessionMode === 'ONLINE' ? '#22C55E20' : '#F59E0B20',
+                                      justifyContent: 'center',
+                                      alignItems: 'center',
+                                      marginRight: 10,
+                                    }}>
+                                      <Feather
+                                        name={session.sessionMode === 'ONLINE' ? 'video' : 'map-pin'}
+                                        size={14}
+                                        color={session.sessionMode === 'ONLINE' ? '#22C55E' : '#F59E0B'}
+                                      />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                      <Text style={{ fontSize: 15, color: '#FFFFFF', fontWeight: '600' }}>
+                                        {session.sessionNumber}회차: {session.title || '제목 없음'}
+                                      </Text>
+                                    </View>
+                                    <View style={{
+                                      backgroundColor: session.sessionMode === 'ONLINE' ? '#22C55E20' : '#F59E0B20',
+                                      paddingHorizontal: 8,
+                                      paddingVertical: 4,
+                                      borderRadius: 6,
+                                    }}>
+                                      <Text style={{
+                                        fontSize: 11,
+                                        fontWeight: '600',
+                                        color: session.sessionMode === 'ONLINE' ? '#22C55E' : '#F59E0B',
+                                      }}>
+                                        {session.sessionMode === 'ONLINE' ? '온라인' : '오프라인'}
+                                      </Text>
+                                    </View>
+                                  </View>
+
+                                  {/* 일시 */}
+                                  {session.sessionDate && (
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
+                                      <Feather name="calendar" size={12} color="#71717A" style={{ marginRight: 6 }} />
+                                      <Text style={{ fontSize: 13, color: '#A1A1AA' }}>
+                                        {session.sessionDate} {session.sessionTime || ''}
+                                      </Text>
+                                    </View>
+                                  )}
+
+                                  {/* 내용 */}
+                                  {session.content && (
+                                    <View style={{ marginBottom: 6 }}>
+                                      <Text style={{ fontSize: 13, color: '#E4E4E7', lineHeight: 20 }}>
+                                        {session.content}
+                                      </Text>
+                                    </View>
+                                  )}
+
+                                  {/* 회의 링크 (온라인) */}
+                                  {session.sessionMode === 'ONLINE' && session.meetingLink && (
+                                    <TouchableOpacity
+                                      onPress={() => {
+                                        Clipboard.setStringAsync(session.meetingLink!);
+                                      }}
+                                      activeOpacity={0.7}
+                                      style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        backgroundColor: '#22C55E10',
+                                        borderRadius: 8,
+                                        padding: 10,
+                                        marginTop: 6,
+                                      }}
+                                    >
+                                      <Feather name="link" size={14} color="#22C55E" style={{ marginRight: 8 }} />
+                                      <Text style={{ fontSize: 13, color: '#22C55E', flex: 1 }} numberOfLines={1}>
+                                        {session.meetingLink}
+                                      </Text>
+                                      <Feather name="copy" size={14} color="#22C55E" style={{ marginLeft: 8 }} />
+                                    </TouchableOpacity>
+                                  )}
+
+                                  {/* 장소 (오프라인) */}
+                                  {session.sessionMode === 'OFFLINE' && session.meetingLocation && (
+                                    <View style={{
+                                      flexDirection: 'row',
+                                      alignItems: 'center',
+                                      backgroundColor: '#F59E0B10',
+                                      borderRadius: 8,
+                                      padding: 10,
+                                      marginTop: 6,
+                                    }}>
+                                      <Feather name="map-pin" size={14} color="#F59E0B" style={{ marginRight: 8 }} />
+                                      <Text style={{ fontSize: 13, color: '#F59E0B', flex: 1 }}>
+                                        {session.meetingLocation}
+                                      </Text>
+                                    </View>
+                                  )}
+                                </View>
+                              ))
+                            ) : (
+                              <Text style={{ fontSize: 13, color: '#71717A', textAlign: 'center', paddingVertical: 8 }}>
+                                등록된 회차가 없습니다
+                              </Text>
+                            )}
+                          </View>
+                        )}
                       </View>
-                      <Text style={styles.curriculumText}>{item.title}</Text>
-                      <Feather
-                        name={expandedCurriculums.has(idx) ? 'chevron-up' : 'chevron-down'}
-                        size={18}
-                        color="#A1A1AA"
-                      />
-                    </View>
-                    {expandedCurriculums.has(idx) && item.content && (
-                      <View style={styles.curriculumContent}>
-                        <Text style={styles.curriculumContentText}>{item.content}</Text>
-                      </View>
-                    )}
-                  </TouchableOpacity>
-                ))}
+                    );
+                  })
+                ) : (
+                  <View style={styles.curriculumItem}>
+                    <Text style={styles.curriculumContentText}>등록된 커리큘럼이 없습니다</Text>
+                  </View>
+                )}
               </View>
-            )}
+            ) : null}
 
             {/* Rules Section */}
             {study.rules && study.rules.length > 0 && (
