@@ -151,6 +151,15 @@ export default function NotificationScreen() {
           // 지원자 관리 화면으로 이동 (studyTitle은 알림에서 추출)
           navigation.navigate('StudyDetail', { studyId: notification.targetId });
           break;
+        case 'ABSENCE_REQUEST':
+          // 불참 신청 알림 - 스터디 상세의 캘린더 탭으로 이동
+          navigation.navigate('StudyDetail', { studyId: notification.targetId, initialTab: 'calendar' });
+          break;
+        case 'ABSENCE_APPROVED':
+        case 'ABSENCE_REJECTED':
+          // 불참 승인/거절 알림 - 스터디 상세로 이동
+          navigation.navigate('StudyDetail', { studyId: notification.targetId });
+          break;
         default:
           navigation.navigate('StudyDetail', { studyId: notification.targetId });
       }

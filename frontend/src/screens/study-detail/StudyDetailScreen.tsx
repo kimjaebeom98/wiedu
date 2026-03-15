@@ -86,7 +86,7 @@ const MEMBER_AVATAR_COLORS = ['#6366F1', '#8B5CF6', '#A78BFA', '#C4B5FD'];
 export default function StudyDetailScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<StudyDetailRouteProp>();
-  const { studyId } = route.params;
+  const { studyId, initialTab } = route.params;
   const insets = useSafeAreaInsets();
 
   const [study, setStudy] = useState<StudyDetailResponse | null>(null);
@@ -209,6 +209,18 @@ export default function StudyDetailScreen() {
     loadMyApplication();
     loadCurriculumData();
   }, [studyId]);
+
+  // Handle initialTab when provided (e.g., from notification)
+  useEffect(() => {
+    if (initialTab && study) {
+      // calendar tab is only available for members (memberRole is LEADER or MEMBER)
+      if (initialTab === 'calendar' && study.memberRole) {
+        setActiveTab(initialTab);
+      } else if (initialTab !== 'calendar') {
+        setActiveTab(initialTab);
+      }
+    }
+  }, [initialTab, study]);
 
   // Reload study data when screen gains focus (e.g., returning from edit)
   useFocusEffect(

@@ -12,7 +12,7 @@ export type RootStackParamList = {
     categoryName: string;
   };
   StudyCreate: { studyId?: number } | undefined;
-  StudyDetail: { studyId: number };
+  StudyDetail: { studyId: number; initialTab?: 'intro' | 'calendar' | 'board' | 'gallery' };
   StudyApply: {
     studyId: number;
     studyTitle: string;

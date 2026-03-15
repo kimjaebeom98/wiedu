@@ -4,7 +4,10 @@ export type NotificationType =
   | 'STUDY_COMPLETED'
   | 'NEW_APPLICANT'
   | 'REVIEW_REQUEST'
-  | 'NEW_REVIEW';
+  | 'NEW_REVIEW'
+  | 'ABSENCE_REQUEST'
+  | 'ABSENCE_APPROVED'
+  | 'ABSENCE_REJECTED';
 
 export interface Notification {
   id: number;
@@ -67,5 +70,20 @@ export const NOTIFICATION_STYLES: Record<NotificationType, {
     icon: 'message-circle',
     color: '#6366F1',
     bgColor: '#6366F120',
+  },
+  ABSENCE_REQUEST: {
+    icon: 'user-minus',
+    color: '#F59E0B',
+    bgColor: '#F59E0B20',
+  },
+  ABSENCE_APPROVED: {
+    icon: 'check-circle',
+    color: '#22C55E',
+    bgColor: '#22C55E20',
+  },
+  ABSENCE_REJECTED: {
+    icon: 'x-circle',
+    color: '#EF4444',
+    bgColor: '#EF444420',
   },
 };

@@ -331,8 +331,8 @@ export default function MyPageScreen() {
         {/* Expanded Section - Leading Studies */}
         {expandedSection === 'leading' && (
           <View style={styles.expandedSection}>
-            {myStudies.filter(s => s.isLeader).length > 0 ? (
-              myStudies.filter(s => s.isLeader).slice(0, 3).map((study) => (
+            {myStudies.filter(s => s.myRole === 'LEADER').length > 0 ? (
+              myStudies.filter(s => s.myRole === 'LEADER').slice(0, 3).map((study) => (
                 <TouchableOpacity
                   key={study.studyId}
                   style={styles.studyCard}

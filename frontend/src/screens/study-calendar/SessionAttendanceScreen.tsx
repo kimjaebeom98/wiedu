@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Image,
   TextInput,
-  Alert,
   StyleSheet,
   Modal,
 } from 'react-native';
@@ -31,6 +30,7 @@ import {
   AttendanceStatus,
 } from '../../types/attendance';
 import { SessionResponse } from '../../types/curriculum';
+import CustomAlert, { AlertButton } from '../../components/common/CustomAlert';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type SessionAttendanceRouteProp = RouteProp<RootStackParamList, 'SessionAttendance'>;
@@ -60,6 +60,21 @@ export default function SessionAttendanceScreen() {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
 
+  // Custom Alert State
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertConfig, setAlertConfig] = useState<{
+    title: string;
+    message?: string;
+    buttons?: AlertButton[];
+    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info';
+    iconColor?: string;
+  }>({ title: '' });
+
+  const showAlert = (config: typeof alertConfig) => {
+    setAlertConfig(config);
+    setAlertVisible(true);
+  };
+
   useFocusEffect(
     useCallback(() => {
       loadData();
@@ -88,10 +103,18 @@ export default function SessionAttendanceScreen() {
     try {
       setSubmitting(true);
       await respondAttendance(sessionId, { attending: true });
-      Alert.alert('완료', '참석으로 응답했습니다.');
+      showAlert({
+        title: '완료',
+        message: '참석으로 응답했습니다.',
+        icon: 'check-circle',
+      });
       loadData();
     } catch (error: any) {
-      Alert.alert('오류', error.message || '응답에 실패했습니다.');
+      showAlert({
+        title: '오류',
+        message: error.message || '응답에 실패했습니다.',
+        icon: 'x-circle',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -99,7 +122,11 @@ export default function SessionAttendanceScreen() {
 
   const handleAbsence = async () => {
     if (!absenceReason.trim()) {
-      Alert.alert('알림', '불참 사유를 입력해주세요.');
+      showAlert({
+        title: '알림',
+        message: '불참 사유를 입력해주세요.',
+        icon: 'alert-circle',
+      });
       return;
     }
 
@@ -111,10 +138,18 @@ export default function SessionAttendanceScreen() {
       });
       setShowAbsenceModal(false);
       setAbsenceReason('');
-      Alert.alert('완료', '불참 신청이 접수되었습니다. 스터디장의 승인을 기다려주세요.');
+      showAlert({
+        title: '완료',
+        message: '불참 신청이 접수되었습니다. 스터디장의 승인을 기다려주세요.',
+        icon: 'check-circle',
+      });
       loadData();
     } catch (error: any) {
-      Alert.alert('오류', error.message || '응답에 실패했습니다.');
+      showAlert({
+        title: '오류',
+        message: error.message || '응답에 실패했습니다.',
+        icon: 'x-circle',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -132,10 +167,18 @@ export default function SessionAttendanceScreen() {
       setShowApprovalModal(false);
       setSelectedAttendance(null);
       setApprovalComment('');
-      Alert.alert('완료', approved ? '불참을 승인했습니다.' : '불참을 거절했습니다.');
+      showAlert({
+        title: '완료',
+        message: approved ? '불참을 승인했습니다.' : '불참을 거절했습니다.',
+        icon: approved ? 'check-circle' : 'x-circle',
+      });
       loadData();
     } catch (error: any) {
-      Alert.alert('오류', error.message || '처리에 실패했습니다.');
+      showAlert({
+        title: '오류',
+        message: error.message || '처리에 실패했습니다.',
+        icon: 'x-circle',
+      });
     } finally {
       setSubmitting(false);
     }
@@ -143,14 +186,19 @@ export default function SessionAttendanceScreen() {
 
   const handleCancelSession = async () => {
     if (!cancelReason.trim()) {
-      Alert.alert('알림', '취소 사유를 입력해주세요.');
+      showAlert({
+        title: '알림',
+        message: '취소 사유를 입력해주세요.',
+        icon: 'alert-circle',
+      });
       return;
     }
 
-    Alert.alert(
-      '회차 취소',
-      '정말로 이 회차를 취소하시겠습니까?\n취소하면 모든 스터디원에게 알림이 발송됩니다.',
-      [
+    showAlert({
+      title: '회차 취소',
+      message: '정말로 이 회차를 취소하시겠습니까?\n취소하면 모든 스터디원에게 알림이 발송됩니다.',
+      icon: 'alert-circle',
+      buttons: [
         { text: '아니오', style: 'cancel' },
         {
           text: '취소하기',
@@ -161,18 +209,25 @@ export default function SessionAttendanceScreen() {
               await cancelSession(sessionId, cancelReason.trim());
               setShowCancelModal(false);
               setCancelReason('');
-              Alert.alert('완료', '회차가 취소되었습니다.', [
-                { text: '확인', onPress: () => navigation.goBack() },
-              ]);
+              showAlert({
+                title: '완료',
+                message: '회차가 취소되었습니다.',
+                icon: 'check-circle',
+                buttons: [{ text: '확인', onPress: () => navigation.goBack() }],
+              });
             } catch (error: any) {
-              Alert.alert('오류', error.message || '취소에 실패했습니다.');
+              showAlert({
+                title: '오류',
+                message: error.message || '취소에 실패했습니다.',
+                icon: 'x-circle',
+              });
             } finally {
               setSubmitting(false);
             }
           },
         },
-      ]
-    );
+      ],
+    });
   };
 
   const getStatusLabel = (status: AttendanceStatus) => {
@@ -530,6 +585,17 @@ export default function SessionAttendanceScreen() {
           </View>
         </View>
       </Modal>
+
+      {/* Custom Alert */}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertConfig.title}
+        message={alertConfig.message}
+        buttons={alertConfig.buttons}
+        icon={alertConfig.icon}
+        iconColor={alertConfig.iconColor}
+        onClose={() => setAlertVisible(false)}
+      />
     </View>
   );
 }

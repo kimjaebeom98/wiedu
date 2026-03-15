@@ -210,7 +210,16 @@ export default function StudyCalendarScreen() {
         <TouchableOpacity
           style={styles.pendingBanner}
           onPress={() => {
-            // Navigate to pending absences management
+            // Navigate to first pending absence session
+            const firstPending = pendingAbsences[0];
+            if (firstPending) {
+              navigation.navigate('SessionAttendance', {
+                sessionId: firstPending.sessionId,
+                sessionTitle: '불참 신청 관리',
+                studyId,
+                isLeader: true,
+              });
+            }
           }}
         >
           <Feather name="alert-circle" size={18} color="#F59E0B" />
@@ -272,21 +281,23 @@ export default function StudyCalendarScreen() {
             ) : attendances.length === 0 ? (
               <Text style={styles.emptyText}>해당 날짜에 회차가 없습니다.</Text>
             ) : (
-              attendances.map((summary) => (
+              attendances.map((summary, index) => (
                 <TouchableOpacity
                   key={summary.sessionId}
                   style={styles.sessionCard}
                   onPress={() =>
                     navigation.navigate('SessionAttendance', {
                       sessionId: summary.sessionId,
-                      sessionTitle: `${selectedDate} 회차`,
+                      sessionTitle: `${selectedDate.replace(/-/g, '.')} ${attendances.length > 1 ? `${index + 1}회차` : '회차'}`,
                       studyId,
                       isLeader,
                     })
                   }
                 >
                   <View style={styles.sessionCardHeader}>
-                    <Text style={styles.sessionCardTitle}>회차 #{summary.sessionId}</Text>
+                    <Text style={styles.sessionCardTitle}>
+                      {attendances.length > 1 ? `${index + 1}회차` : '출석 현황'}
+                    </Text>
                     <Feather name="chevron-right" size={18} color="#71717A" />
                   </View>
 
