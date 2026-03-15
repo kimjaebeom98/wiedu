@@ -1,5 +1,6 @@
 package com.wiedu.service.notification;
 
+import com.wiedu.domain.entity.CurriculumSession;
 import com.wiedu.domain.entity.Notification;
 import com.wiedu.domain.entity.Study;
 import com.wiedu.domain.entity.StudyMember;
@@ -175,6 +176,101 @@ public class NotificationService {
         }
 
         log.info("회차 등록 알림 생성 완료: studyId={}, week={}, session={}", study.getId(), weekNumber, sessionNumber);
+    }
+
+    /**
+     * 불참 신청 알림 생성 (리더에게)
+     */
+    @Transactional
+    public void createAbsenceRequestNotification(User leader, User applicant, String sessionTitle, Long sessionId) {
+        Notification notification = Notification.builder()
+            .recipient(leader)
+            .type(NotificationType.ABSENCE_REQUEST)
+            .title("불참 신청이 있어요")
+            .message(applicant.getNickname() + "님이 '" + sessionTitle + "' 회차에 불참 신청을 했습니다.")
+            .targetId(sessionId)
+            .targetType("SESSION")
+            .build();
+
+        notificationRepository.save(notification);
+        log.info("불참 신청 알림 생성: leaderId={}, sessionId={}", leader.getId(), sessionId);
+    }
+
+    /**
+     * 불참 승인 알림 생성
+     */
+    @Transactional
+    public void createAbsenceApprovedNotification(User recipient, String sessionTitle, Long sessionId) {
+        Notification notification = Notification.builder()
+            .recipient(recipient)
+            .type(NotificationType.ABSENCE_APPROVED)
+            .title("불참 승인")
+            .message("'" + sessionTitle + "' 회차의 불참 신청이 승인되었습니다.")
+            .targetId(sessionId)
+            .targetType("SESSION")
+            .build();
+
+        notificationRepository.save(notification);
+        log.info("불참 승인 알림 생성: userId={}, sessionId={}", recipient.getId(), sessionId);
+    }
+
+    /**
+     * 불참 거절 알림 생성
+     */
+    @Transactional
+    public void createAbsenceRejectedNotification(User recipient, String sessionTitle, Long sessionId, String comment) {
+        String message = "'" + sessionTitle + "' 회차의 불참 신청이 거절되었습니다.";
+        if (comment != null && !comment.isBlank()) {
+            message += " 사유: " + comment;
+        }
+
+        Notification notification = Notification.builder()
+            .recipient(recipient)
+            .type(NotificationType.ABSENCE_REJECTED)
+            .title("불참 거절")
+            .message(message)
+            .targetId(sessionId)
+            .targetType("SESSION")
+            .build();
+
+        notificationRepository.save(notification);
+        log.info("불참 거절 알림 생성: userId={}, sessionId={}", recipient.getId(), sessionId);
+    }
+
+    /**
+     * 회차 취소 알림 생성 (스터디 멤버들에게 - 리더 제외)
+     */
+    @Transactional
+    public void createSessionCancelledNotifications(Study study, CurriculumSession session, String cancellationReason) {
+        List<StudyMember> members = studyMemberRepository.findByStudyAndStatus(study, MemberStatus.ACTIVE);
+
+        int weekNumber = session.getCurriculum().getWeekNumber();
+        int sessionNumber = session.getSessionNumber();
+
+        for (StudyMember member : members) {
+            // 리더는 제외 (본인이 취소한 것이므로)
+            if (member.getUser().getId().equals(study.getLeader().getId())) {
+                continue;
+            }
+
+            String message = "'" + study.getTitle() + "' " + weekNumber + "주차 " + sessionNumber + "회차: " + session.getTitle() + "이(가) 취소되었습니다.";
+            if (cancellationReason != null && !cancellationReason.isBlank()) {
+                message += " 사유: " + cancellationReason;
+            }
+
+            Notification notification = Notification.builder()
+                .recipient(member.getUser())
+                .type(NotificationType.SESSION_CANCELLED)
+                .title("회차가 취소되었어요")
+                .message(message)
+                .targetId(study.getId())
+                .targetType("STUDY")
+                .build();
+
+            notificationRepository.save(notification);
+        }
+
+        log.info("회차 취소 알림 생성 완료: studyId={}, sessionId={}", study.getId(), session.getId());
     }
 
 }

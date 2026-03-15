@@ -11,6 +11,8 @@ import org.hibernate.annotations.Comment;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "CURRICULUM_SESSIONS")
@@ -28,6 +30,9 @@ public class CurriculumSession {
     @JoinColumn(name = "curriculum_id", nullable = false)
     @Comment("커리큘럼 ID")
     private StudyCurriculum curriculum;
+
+    @OneToMany(mappedBy = "session", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SessionAttendance> attendances = new ArrayList<>();
 
     @Column(nullable = false)
     @Comment("회차 번호")
@@ -62,6 +67,30 @@ public class CurriculumSession {
     @Comment("장소 (오프라인)")
     private String meetingLocation;
 
+    @Column
+    @Comment("위도 (오프라인)")
+    private Double meetingLatitude;
+
+    @Column
+    @Comment("경도 (오프라인)")
+    private Double meetingLongitude;
+
+    @Column(length = 100)
+    @Comment("장소명 (오프라인)")
+    private String meetingPlaceName;
+
+    @Column(nullable = false)
+    @Comment("취소 여부")
+    private Boolean cancelled = false;
+
+    @Column(length = 500)
+    @Comment("취소 사유")
+    private String cancellationReason;
+
+    @Column
+    @Comment("취소 일시")
+    private LocalDateTime cancelledAt;
+
     @Column(nullable = false, updatable = false)
     @Comment("생성 일시")
     private LocalDateTime createdAt;
@@ -84,7 +113,8 @@ public class CurriculumSession {
     @Builder
     public CurriculumSession(StudyCurriculum curriculum, Integer sessionNumber, String title,
                              String content, LocalDate sessionDate, LocalTime sessionTime,
-                             SessionMode sessionMode, String meetingLink, String meetingLocation) {
+                             SessionMode sessionMode, String meetingLink, String meetingLocation,
+                             Double meetingLatitude, Double meetingLongitude, String meetingPlaceName) {
         this.curriculum = curriculum;
         this.sessionNumber = sessionNumber;
         this.title = title;
@@ -94,10 +124,14 @@ public class CurriculumSession {
         this.sessionMode = sessionMode != null ? sessionMode : SessionMode.ONLINE;
         this.meetingLink = meetingLink;
         this.meetingLocation = meetingLocation;
+        this.meetingLatitude = meetingLatitude;
+        this.meetingLongitude = meetingLongitude;
+        this.meetingPlaceName = meetingPlaceName;
     }
 
     public void update(String title, String content, LocalDate sessionDate, LocalTime sessionTime,
-                       SessionMode sessionMode, String meetingLink, String meetingLocation) {
+                       SessionMode sessionMode, String meetingLink, String meetingLocation,
+                       Double meetingLatitude, Double meetingLongitude, String meetingPlaceName) {
         this.title = title;
         this.content = content;
         this.sessionDate = sessionDate;
@@ -105,9 +139,22 @@ public class CurriculumSession {
         this.sessionMode = sessionMode;
         this.meetingLink = meetingLink;
         this.meetingLocation = meetingLocation;
+        this.meetingLatitude = meetingLatitude;
+        this.meetingLongitude = meetingLongitude;
+        this.meetingPlaceName = meetingPlaceName;
     }
 
     public void updateSessionNumber(Integer sessionNumber) {
         this.sessionNumber = sessionNumber;
+    }
+
+    public void cancel(String reason) {
+        this.cancelled = true;
+        this.cancellationReason = reason;
+        this.cancelledAt = LocalDateTime.now();
+    }
+
+    public boolean isCancelled() {
+        return Boolean.TRUE.equals(this.cancelled);
     }
 }

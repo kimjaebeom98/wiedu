@@ -98,6 +98,15 @@ public enum ErrorCode {
     // Notification
     NOTIFICATION_NOT_FOUND(HttpStatus.NOT_FOUND, "N001", "알림을 찾을 수 없습니다."),
 
+    // Session & Attendance
+    SESSION_NOT_FOUND(HttpStatus.NOT_FOUND, "SA001", "회차를 찾을 수 없습니다."),
+    ATTENDANCE_NOT_FOUND(HttpStatus.NOT_FOUND, "SA002", "참석 정보를 찾을 수 없습니다."),
+    ATTENDANCE_DEADLINE_PASSED(HttpStatus.BAD_REQUEST, "SA003", "참석 응답 마감일이 지났습니다."),
+    ABSENCE_REASON_REQUIRED(HttpStatus.BAD_REQUEST, "SA004", "불참 사유를 입력해주세요."),
+    INVALID_ATTENDANCE_STATUS(HttpStatus.BAD_REQUEST, "SA005", "유효하지 않은 참석 상태입니다."),
+    SESSION_ALREADY_CANCELLED(HttpStatus.BAD_REQUEST, "SA006", "이미 취소된 회차입니다."),
+    CANCELLATION_REASON_REQUIRED(HttpStatus.BAD_REQUEST, "SA007", "취소 사유를 입력해주세요."),
+
     // Common Authorization
     FORBIDDEN(HttpStatus.FORBIDDEN, "C006", "접근 권한이 없습니다.");
 

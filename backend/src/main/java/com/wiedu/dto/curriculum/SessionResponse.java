@@ -4,6 +4,7 @@ import com.wiedu.domain.entity.CurriculumSession;
 import com.wiedu.domain.enums.SessionMode;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 public record SessionResponse(
@@ -16,7 +17,13 @@ public record SessionResponse(
     LocalTime sessionTime,
     SessionMode sessionMode,
     String meetingLink,
-    String meetingLocation
+    String meetingLocation,
+    Double meetingLatitude,
+    Double meetingLongitude,
+    String meetingPlaceName,
+    Boolean cancelled,
+    String cancellationReason,
+    LocalDateTime cancelledAt
 ) {
     public static SessionResponse from(CurriculumSession session) {
         return new SessionResponse(
@@ -29,7 +36,13 @@ public record SessionResponse(
             session.getSessionTime(),
             session.getSessionMode(),
             session.getMeetingLink(),
-            session.getMeetingLocation()
+            session.getMeetingLocation(),
+            session.getMeetingLatitude(),
+            session.getMeetingLongitude(),
+            session.getMeetingPlaceName(),
+            session.isCancelled(),
+            session.getCancellationReason(),
+            session.getCancelledAt()
         );
     }
 }

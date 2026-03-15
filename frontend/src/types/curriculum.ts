@@ -13,6 +13,12 @@ export interface SessionResponse {
   sessionMode: SessionMode;
   meetingLink: string | null;
   meetingLocation: string | null;
+  meetingLatitude: number | null;
+  meetingLongitude: number | null;
+  meetingPlaceName: string | null;
+  cancelled: boolean;
+  cancellationReason: string | null;
+  cancelledAt: string | null;
 }
 
 // Session request for create/update
@@ -25,6 +31,17 @@ export interface SessionRequest {
   sessionMode: SessionMode;
   meetingLink: string | null;
   meetingLocation: string | null;
+  meetingLatitude: number | null;
+  meetingLongitude: number | null;
+  meetingPlaceName: string | null;
+}
+
+// Location data for offline meetings
+export interface LocationData {
+  address: string;
+  placeName: string;
+  latitude: number;
+  longitude: number;
 }
 
 // Curriculum response from API

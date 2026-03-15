@@ -15,5 +15,11 @@ public enum NotificationType {
     NEW_REVIEW,          // 새 리뷰가 등록됨
 
     // 커리큘럼/회차 관련
-    SESSION_CREATED      // 새 회차 등록됨
+    SESSION_CREATED,     // 새 회차 등록됨
+    SESSION_CANCELLED,   // 회차 취소됨
+
+    // 참석 관련
+    ABSENCE_REQUEST,     // 불참 신청 (리더에게)
+    ABSENCE_APPROVED,    // 불참 승인됨
+    ABSENCE_REJECTED     // 불참 거절됨
 }
