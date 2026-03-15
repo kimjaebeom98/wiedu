@@ -107,6 +107,10 @@ public enum ErrorCode {
     SESSION_ALREADY_CANCELLED(HttpStatus.BAD_REQUEST, "SA006", "이미 취소된 회차입니다."),
     CANCELLATION_REASON_REQUIRED(HttpStatus.BAD_REQUEST, "SA007", "취소 사유를 입력해주세요."),
 
+    // Bookmark
+    ALREADY_BOOKMARKED(HttpStatus.CONFLICT, "BM001", "이미 북마크한 스터디입니다."),
+    BOOKMARK_NOT_FOUND(HttpStatus.NOT_FOUND, "BM002", "북마크를 찾을 수 없습니다."),
+
     // Common Authorization
     FORBIDDEN(HttpStatus.FORBIDDEN, "C006", "접근 권한이 없습니다.");
 

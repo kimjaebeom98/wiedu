@@ -98,4 +98,5 @@ export type RootStackParamList = {
     studyId: number;
     isLeader: boolean;
   };
+  BookmarkedStudies: undefined;
 };

@@ -16,7 +16,9 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { getMyProfile, getMyStudies } from '../api/profile';
 import { getMyStudyRequests, StudyRequestResponse } from '../api/study';
+import { getMyBookmarks } from '../api/bookmark';
 import { MyProfile, MyStudy } from '../types/profile';
+import { StudyListResponse } from '../types/study';
 import { clearTokens } from '../storage/token';
 import { formatLocationFromAddress } from '../utils/location';
 import {
@@ -57,19 +59,22 @@ export default function MyPageScreen() {
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [myStudies, setMyStudies] = useState<MyStudy[]>([]);
   const [myApplications, setMyApplications] = useState<StudyRequestResponse[]>([]);
+  const [myBookmarks, setMyBookmarks] = useState<StudyListResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadProfile = useCallback(async () => {
     try {
       setError(null);
-      const [profileData, studiesData, applicationsData] = await Promise.all([
+      const [profileData, studiesData, applicationsData, bookmarksData] = await Promise.all([
         getMyProfile(),
         getMyStudies().catch(() => []),
         getMyStudyRequests().catch(() => []),
+        getMyBookmarks(0, 5).catch(() => ({ content: [] })),
       ]);
       setProfile(profileData);
       setMyStudies(studiesData);
+      setMyBookmarks(bookmarksData.content);
 
       // 3일 이내의 신청만 표시 (PENDING은 항상, APPROVED/REJECTED는 processedAt 기준 3일)
       const threeDaysAgo = new Date();
@@ -349,6 +354,41 @@ export default function MyPageScreen() {
                     {APPLICATION_STATUS_LABELS[application.status as ApplicationStatus]}
                   </Text>
                 </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
+
+        {/* Bookmarked Studies Section */}
+        {myBookmarks.length > 0 && (
+          <View style={styles.myStudySection}>
+            <View style={styles.myStudyHeader}>
+              <Text style={styles.myStudyTitle}>찜한 스터디</Text>
+              <TouchableOpacity onPress={() => navigation.navigate('BookmarkedStudies')}>
+                <Text style={styles.myStudyMore}>전체보기</Text>
+              </TouchableOpacity>
+            </View>
+            {myBookmarks.slice(0, 3).map((study) => (
+              <TouchableOpacity
+                key={study.id}
+                style={styles.studyCard}
+                onPress={() => navigation.navigate('StudyDetail', { studyId: study.id })}
+              >
+                <View style={styles.studyThumbPlaceholder}>
+                  <Feather name="bookmark" size={24} color="#8B5CF6" />
+                </View>
+                <View style={styles.studyInfo}>
+                  <Text style={styles.studyName} numberOfLines={1}>{study.title}</Text>
+                  <View style={styles.studyMeta}>
+                    <Text style={[styles.studyTag, { color: '#8B5CF6' }]}>
+                      {study.categoryName}
+                    </Text>
+                    <Text style={styles.studyMembers}>
+                      {study.currentMembers}/{study.maxMembers}명
+                    </Text>
+                  </View>
+                </View>
+                <Feather name="chevron-right" size={20} color="#71717A" />
               </TouchableOpacity>
             ))}
           </View>

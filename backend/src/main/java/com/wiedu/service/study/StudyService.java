@@ -19,6 +19,7 @@ import com.wiedu.dto.study.StudyListResponse;
 import com.wiedu.dto.study.StudyResponse;
 import com.wiedu.exception.BusinessException;
 import com.wiedu.exception.ErrorCode;
+import com.wiedu.repository.study.StudyBookmarkRepository;
 import com.wiedu.repository.study.StudyCategoryRepository;
 import com.wiedu.repository.study.StudyMemberRepository;
 import com.wiedu.repository.study.StudyRepository;
@@ -41,6 +42,7 @@ public class StudyService {
 
     private final StudyRepository studyRepository;
     private final StudyMemberRepository studyMemberRepository;
+    private final StudyBookmarkRepository studyBookmarkRepository;
     private final StudyCategoryRepository studyCategoryRepository;
     private final StudySubcategoryRepository studySubcategoryRepository;
     private final UserService userService;
@@ -146,11 +148,11 @@ public class StudyService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
         // 활성 멤버 목록 조회 (User 포함, N+1 방지)
         java.util.List<StudyMember> members = studyMemberRepository.findByStudyAndStatusWithUser(study, MemberStatus.ACTIVE);
-        return StudyResponse.from(study, null, null, members);
+        return StudyResponse.from(study, null, null, members, null);
     }
 
     /**
-     * 스터디 상세 조회 (N+1 방지) - 로그인 사용자용 (멤버십 정보 포함)
+     * 스터디 상세 조회 (N+1 방지) - 로그인 사용자용 (멤버십 정보 + 북마크 포함)
      */
     public StudyResponse findById(Long studyId, Long userId) {
         Study study = studyRepository.findByIdWithDetails(studyId)
@@ -160,17 +162,20 @@ public class StudyService {
         java.util.List<StudyMember> members = studyMemberRepository.findByStudyAndStatusWithUser(study, MemberStatus.ACTIVE);
 
         if (userId == null) {
-            return StudyResponse.from(study, null, null, members);
+            return StudyResponse.from(study, null, null, members, null);
         }
 
         // 멤버십 확인
         User user = userService.findUserEntityById(userId);
         java.util.Optional<StudyMember> membership = studyMemberRepository.findByStudyAndUser(study, user);
 
+        // 북마크 여부 확인
+        boolean isBookmarked = studyBookmarkRepository.existsByUserIdAndStudyId(userId, studyId);
+
         if (membership.isPresent() && membership.get().getStatus() == MemberStatus.ACTIVE) {
-            return StudyResponse.from(study, true, membership.get().getRole(), members);
+            return StudyResponse.from(study, true, membership.get().getRole(), members, isBookmarked);
         } else {
-            return StudyResponse.from(study, false, null, members);
+            return StudyResponse.from(study, false, null, members, isBookmarked);
         }
     }
 

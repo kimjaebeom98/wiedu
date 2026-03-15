@@ -30,6 +30,7 @@ import {
 } from '../../api/study';
 import { getLeaderReviews } from '../../api/review';
 import { getCurriculums, getCurriculumDetail } from '../../api/curriculum';
+import { toggleBookmark as toggleBookmarkApi } from '../../api/bookmark';
 import { StudyDetailResponse } from '../../types/study';
 import { StudyLeaderReviewsResponse } from '../../types/review';
 import { CurriculumResponse, SessionResponse } from '../../types/curriculum';
@@ -102,6 +103,8 @@ export default function StudyDetailScreen() {
   const [curriculumData, setCurriculumData] = useState<CurriculumResponse[]>([]);
   const [curriculumLoading, setCurriculumLoading] = useState<Set<number>>(new Set());
   const [curriculumAccessDenied, setCurriculumAccessDenied] = useState<Set<number>>(new Set());
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [bookmarkProcessing, setBookmarkProcessing] = useState(false);
 
   // Toggle curriculum expansion and load sessions
   const toggleCurriculum = async (index: number, curriculumId?: number) => {
@@ -299,10 +302,24 @@ export default function StudyDetailScreen() {
     }
   };
 
+  const handleToggleBookmark = async () => {
+    if (bookmarkProcessing || !currentUserId) return;
+    setBookmarkProcessing(true);
+    try {
+      const result = await toggleBookmarkApi(studyId);
+      setIsBookmarked(result);
+    } catch (error) {
+      console.error('Failed to toggle bookmark:', error);
+    } finally {
+      setBookmarkProcessing(false);
+    }
+  };
+
   const loadStudyDetail = async () => {
     try {
       const data = await getStudyDetail(studyId);
       setStudy(data);
+      setIsBookmarked(data.isBookmarked ?? false);
       // Load leader reviews after getting study detail
       if (data.leader?.id) {
         loadLeaderReviews(data.leader.id);
@@ -496,8 +513,8 @@ export default function StudyDetailScreen() {
           <TouchableOpacity>
             <Feather name="share-2" size={22} color="#A1A1AA" />
           </TouchableOpacity>
-          <TouchableOpacity>
-            <Feather name="bookmark" size={22} color="#A1A1AA" />
+          <TouchableOpacity onPress={handleToggleBookmark} disabled={bookmarkProcessing || !currentUserId}>
+            <Feather name="bookmark" size={22} color={isBookmarked ? '#8B5CF6' : '#A1A1AA'} />
           </TouchableOpacity>
         </View>
       </View>

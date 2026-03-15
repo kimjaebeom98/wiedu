@@ -48,20 +48,27 @@ public record StudyResponse(
         Boolean isMember,
         String memberRole,
         // 멤버 목록 (활성 멤버)
-        List<MemberInfo> members
+        List<MemberInfo> members,
+        // 북마크 여부
+        Boolean isBookmarked
 ) {
     // Entity → DTO 변환 (비로그인 사용자용)
     public static StudyResponse from(Study study) {
-        return from(study, null, null, null);
+        return from(study, null, null, null, null);
     }
 
     // Entity → DTO 변환 (로그인 사용자용 - 멤버십 정보 포함)
     public static StudyResponse from(Study study, Boolean isMember, MemberRole memberRole) {
-        return from(study, isMember, memberRole, null);
+        return from(study, isMember, memberRole, null, null);
     }
 
     // Entity → DTO 변환 (로그인 사용자용 - 멤버십 정보 + 멤버 목록 포함)
     public static StudyResponse from(Study study, Boolean isMember, MemberRole memberRole, List<StudyMember> studyMembers) {
+        return from(study, isMember, memberRole, studyMembers, null);
+    }
+
+    // Entity → DTO 변환 (로그인 사용자용 - 멤버십 정보 + 멤버 목록 + 북마크 포함)
+    public static StudyResponse from(Study study, Boolean isMember, MemberRole memberRole, List<StudyMember> studyMembers, Boolean isBookmarked) {
         List<MemberInfo> memberInfoList = null;
         if (studyMembers != null) {
             memberInfoList = studyMembers.stream()
@@ -110,7 +117,8 @@ public record StudyResponse(
                 study.getCreatedAt(),
                 isMember,
                 memberRole != null ? memberRole.name() : null,
-                memberInfoList
+                memberInfoList,
+                isBookmarked
         );
     }
 

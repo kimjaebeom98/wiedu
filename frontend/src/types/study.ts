@@ -158,6 +158,8 @@ export interface StudyDetailResponse {
   memberRole?: MemberRole;
   // 멤버 목록 (활성 멤버)
   members?: MemberInfo[];
+  // 북마크 여부
+  isBookmarked?: boolean;
 }
 
 // Study response from API (full detail)
