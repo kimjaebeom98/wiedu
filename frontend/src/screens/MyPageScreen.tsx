@@ -53,6 +53,8 @@ const UNLOCK_THRESHOLD = 40;
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
+type ExpandedSection = 'participating' | 'leading' | 'bookmarked' | null;
+
 export default function MyPageScreen() {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
@@ -62,6 +64,7 @@ export default function MyPageScreen() {
   const [myBookmarks, setMyBookmarks] = useState<StudyListResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null);
 
   const loadProfile = useCallback(async () => {
     try {
@@ -224,25 +227,194 @@ export default function MyPageScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Stats Section */}
+        {/* Stats Section - Clickable Cards */}
         <View style={styles.statsCard}>
-          <View style={styles.statItem}>
+          <TouchableOpacity
+            style={styles.statItem}
+            onPress={() => setExpandedSection(expandedSection === 'participating' ? null : 'participating')}
+            activeOpacity={0.7}
+          >
             <Text style={styles.statNumber}>
               {profile.stats.activeStudyCount + profile.stats.completedStudyCount}
             </Text>
-            <Text style={styles.statLabel}>참여 스터디</Text>
-          </View>
+            <View style={styles.statLabelRow}>
+              <Text style={styles.statLabel}>참여 스터디</Text>
+              <Feather
+                name={expandedSection === 'participating' ? 'chevron-up' : 'chevron-down'}
+                size={14}
+                color="#71717A"
+              />
+            </View>
+          </TouchableOpacity>
           <View style={styles.statDivider} />
-          <View style={styles.statItem}>
+          <TouchableOpacity
+            style={styles.statItem}
+            onPress={() => setExpandedSection(expandedSection === 'leading' ? null : 'leading')}
+            activeOpacity={0.7}
+          >
             <Text style={styles.statNumber}>{profile.stats.leadingStudyCount}</Text>
-            <Text style={styles.statLabel}>운영 스터디</Text>
-          </View>
+            <View style={styles.statLabelRow}>
+              <Text style={styles.statLabel}>운영 스터디</Text>
+              <Feather
+                name={expandedSection === 'leading' ? 'chevron-up' : 'chevron-down'}
+                size={14}
+                color="#71717A"
+              />
+            </View>
+          </TouchableOpacity>
           <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{profile.stats.attendanceRate}%</Text>
-            <Text style={styles.statLabel}>출석률</Text>
-          </View>
+          <TouchableOpacity
+            style={styles.statItem}
+            onPress={() => setExpandedSection(expandedSection === 'bookmarked' ? null : 'bookmarked')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.statNumber}>{myBookmarks.length}</Text>
+            <View style={styles.statLabelRow}>
+              <Text style={styles.statLabel}>찜한 스터디</Text>
+              <Feather
+                name={expandedSection === 'bookmarked' ? 'chevron-up' : 'chevron-down'}
+                size={14}
+                color="#71717A"
+              />
+            </View>
+          </TouchableOpacity>
         </View>
+
+        {/* Expanded Section - Participating Studies */}
+        {expandedSection === 'participating' && myStudies.length > 0 && (
+          <View style={styles.expandedSection}>
+            {myStudies.slice(0, 3).map((study) => (
+              <TouchableOpacity
+                key={study.studyId}
+                style={styles.studyCard}
+                onPress={() => navigation.navigate('StudyDetail', { studyId: study.studyId })}
+              >
+                {study.thumbnailImage ? (
+                  <Image source={{ uri: study.thumbnailImage }} style={styles.studyThumb} />
+                ) : (
+                  <View style={styles.studyThumbPlaceholder}>
+                    <Feather name="book-open" size={24} color="#71717A" />
+                  </View>
+                )}
+                <View style={styles.studyInfo}>
+                  <Text style={styles.studyName} numberOfLines={1}>{study.title}</Text>
+                  <View style={styles.studyMeta}>
+                    {study.category && (
+                      <Text style={[
+                        styles.studyTag,
+                        { color: CATEGORY_COLORS[study.category] || '#8B5CF6' }
+                      ]}>
+                        {CATEGORY_LABELS[study.category] || study.category}
+                      </Text>
+                    )}
+                    <Text style={styles.studyMembers}>멤버 {study.currentMembers}명</Text>
+                  </View>
+                </View>
+                <Feather name="chevron-right" size={20} color="#71717A" />
+              </TouchableOpacity>
+            ))}
+            {myStudies.length === 0 && (
+              <View style={styles.emptyExpanded}>
+                <Text style={styles.emptyExpandedText}>참여중인 스터디가 없어요</Text>
+              </View>
+            )}
+          </View>
+        )}
+        {expandedSection === 'participating' && myStudies.length === 0 && (
+          <View style={styles.expandedSection}>
+            <View style={styles.emptyExpanded}>
+              <Text style={styles.emptyExpandedText}>참여중인 스터디가 없어요</Text>
+            </View>
+          </View>
+        )}
+
+        {/* Expanded Section - Leading Studies */}
+        {expandedSection === 'leading' && (
+          <View style={styles.expandedSection}>
+            {myStudies.filter(s => s.isLeader).length > 0 ? (
+              myStudies.filter(s => s.isLeader).slice(0, 3).map((study) => (
+                <TouchableOpacity
+                  key={study.studyId}
+                  style={styles.studyCard}
+                  onPress={() => navigation.navigate('StudyDetail', { studyId: study.studyId })}
+                >
+                  {study.thumbnailImage ? (
+                    <Image source={{ uri: study.thumbnailImage }} style={styles.studyThumb} />
+                  ) : (
+                    <View style={styles.studyThumbPlaceholder}>
+                      <Feather name="users" size={24} color="#8B5CF6" />
+                    </View>
+                  )}
+                  <View style={styles.studyInfo}>
+                    <Text style={styles.studyName} numberOfLines={1}>{study.title}</Text>
+                    <View style={styles.studyMeta}>
+                      {study.category && (
+                        <Text style={[
+                          styles.studyTag,
+                          { color: CATEGORY_COLORS[study.category] || '#8B5CF6' }
+                        ]}>
+                          {CATEGORY_LABELS[study.category] || study.category}
+                        </Text>
+                      )}
+                      <Text style={styles.studyMembers}>멤버 {study.currentMembers}명</Text>
+                    </View>
+                  </View>
+                  <Feather name="chevron-right" size={20} color="#71717A" />
+                </TouchableOpacity>
+              ))
+            ) : (
+              <View style={styles.emptyExpanded}>
+                <Text style={styles.emptyExpandedText}>운영중인 스터디가 없어요</Text>
+              </View>
+            )}
+          </View>
+        )}
+
+        {/* Expanded Section - Bookmarked Studies */}
+        {expandedSection === 'bookmarked' && (
+          <View style={styles.expandedSection}>
+            {myBookmarks.length > 0 ? (
+              <>
+                {myBookmarks.slice(0, 3).map((study) => (
+                  <TouchableOpacity
+                    key={study.id}
+                    style={styles.studyCard}
+                    onPress={() => navigation.navigate('StudyDetail', { studyId: study.id })}
+                  >
+                    <View style={styles.studyThumbPlaceholder}>
+                      <Feather name="bookmark" size={24} color="#8B5CF6" />
+                    </View>
+                    <View style={styles.studyInfo}>
+                      <Text style={styles.studyName} numberOfLines={1}>{study.title}</Text>
+                      <View style={styles.studyMeta}>
+                        <Text style={[styles.studyTag, { color: '#8B5CF6' }]}>
+                          {study.categoryName}
+                        </Text>
+                        <Text style={styles.studyMembers}>
+                          {study.currentMembers}/{study.maxMembers}명
+                        </Text>
+                      </View>
+                    </View>
+                    <Feather name="chevron-right" size={20} color="#71717A" />
+                  </TouchableOpacity>
+                ))}
+                {myBookmarks.length > 3 && (
+                  <TouchableOpacity
+                    style={styles.viewAllButton}
+                    onPress={() => navigation.navigate('BookmarkedStudies')}
+                  >
+                    <Text style={styles.viewAllText}>전체보기</Text>
+                    <Feather name="chevron-right" size={16} color="#8B5CF6" />
+                  </TouchableOpacity>
+                )}
+              </>
+            ) : (
+              <View style={styles.emptyExpanded}>
+                <Text style={styles.emptyExpandedText}>찜한 스터디가 없어요</Text>
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Lock Section */}
         {!isUnlocked ? (
@@ -279,47 +451,6 @@ export default function MyPageScreen() {
           </TouchableOpacity>
         )}
 
-        {/* Participating Studies Section */}
-        {myStudies.length > 0 && (
-          <View style={styles.myStudySection}>
-            <View style={styles.myStudyHeader}>
-              <Text style={styles.myStudyTitle}>참여중인 스터디</Text>
-              <TouchableOpacity>
-                <Text style={styles.myStudyMore}>전체보기</Text>
-              </TouchableOpacity>
-            </View>
-            {myStudies.slice(0, 3).map((study) => (
-              <TouchableOpacity
-                key={study.studyId}
-                style={styles.studyCard}
-                onPress={() => navigation.navigate('StudyDetail', { studyId: study.studyId })}
-              >
-                {study.thumbnailImage ? (
-                  <Image source={{ uri: study.thumbnailImage }} style={styles.studyThumb} />
-                ) : (
-                  <View style={styles.studyThumbPlaceholder}>
-                    <Feather name="book-open" size={24} color="#71717A" />
-                  </View>
-                )}
-                <View style={styles.studyInfo}>
-                  <Text style={styles.studyName} numberOfLines={1}>{study.title}</Text>
-                  <View style={styles.studyMeta}>
-                    {study.category && (
-                      <Text style={[
-                        styles.studyTag,
-                        { color: CATEGORY_COLORS[study.category] || '#8B5CF6' }
-                      ]}>
-                        {CATEGORY_LABELS[study.category] || study.category}
-                      </Text>
-                    )}
-                    <Text style={styles.studyMembers}>멤버 {study.currentMembers}명</Text>
-                  </View>
-                </View>
-                <Feather name="chevron-right" size={20} color="#71717A" />
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
 
         {/* My Applications Section */}
         {myApplications.length > 0 && (
@@ -359,40 +490,6 @@ export default function MyPageScreen() {
           </View>
         )}
 
-        {/* Bookmarked Studies Section */}
-        {myBookmarks.length > 0 && (
-          <View style={styles.myStudySection}>
-            <View style={styles.myStudyHeader}>
-              <Text style={styles.myStudyTitle}>찜한 스터디</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('BookmarkedStudies')}>
-                <Text style={styles.myStudyMore}>전체보기</Text>
-              </TouchableOpacity>
-            </View>
-            {myBookmarks.slice(0, 3).map((study) => (
-              <TouchableOpacity
-                key={study.id}
-                style={styles.studyCard}
-                onPress={() => navigation.navigate('StudyDetail', { studyId: study.id })}
-              >
-                <View style={styles.studyThumbPlaceholder}>
-                  <Feather name="bookmark" size={24} color="#8B5CF6" />
-                </View>
-                <View style={styles.studyInfo}>
-                  <Text style={styles.studyName} numberOfLines={1}>{study.title}</Text>
-                  <View style={styles.studyMeta}>
-                    <Text style={[styles.studyTag, { color: '#8B5CF6' }]}>
-                      {study.categoryName}
-                    </Text>
-                    <Text style={styles.studyMembers}>
-                      {study.currentMembers}/{study.maxMembers}명
-                    </Text>
-                  </View>
-                </View>
-                <Feather name="chevron-right" size={20} color="#71717A" />
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
@@ -587,6 +684,11 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: '#71717A',
   },
+  statLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
   statDivider: {
     width: 1,
     height: 36,
@@ -762,5 +864,32 @@ const styles = StyleSheet.create({
   applicationStatusText: {
     fontSize: 12,
     fontWeight: '600',
+  },
+  expandedSection: {
+    backgroundColor: '#27272A',
+    borderRadius: 16,
+    padding: 12,
+    marginTop: 8,
+    gap: 8,
+  },
+  emptyExpanded: {
+    padding: 24,
+    alignItems: 'center',
+  },
+  emptyExpandedText: {
+    fontSize: 14,
+    color: '#71717A',
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    gap: 4,
+  },
+  viewAllText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#8B5CF6',
   },
 });

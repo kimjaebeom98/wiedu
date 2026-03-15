@@ -510,9 +510,6 @@ export default function StudyDetailScreen() {
               <Feather name="edit-2" size={22} color="#8B5CF6" />
             </TouchableOpacity>
           )}
-          <TouchableOpacity>
-            <Feather name="share-2" size={22} color="#A1A1AA" />
-          </TouchableOpacity>
           <TouchableOpacity onPress={handleToggleBookmark} disabled={bookmarkProcessing || !currentUserId}>
             <Feather name="bookmark" size={22} color={isBookmarked ? '#8B5CF6' : '#A1A1AA'} />
           </TouchableOpacity>
