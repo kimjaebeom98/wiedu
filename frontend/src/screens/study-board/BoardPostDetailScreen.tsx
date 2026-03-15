@@ -531,32 +531,34 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
         </View>
       </ScrollView>
 
-        {/* Comment Input - inside KeyboardAvoidingView */}
-        <View style={[styles.commentInputContainer, { paddingBottom: Math.max(12, insets.bottom) }]}>
-          <TextInput
-            style={styles.commentInput}
-            placeholder="댓글을 입력하세요"
-            placeholderTextColor="#71717A"
-            value={commentText}
-            onChangeText={setCommentText}
-            multiline
-            maxLength={500}
-          />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              (!commentText.trim() || submitting) && styles.sendButtonDisabled,
-            ]}
-            onPress={handleSubmitComment}
-            disabled={!commentText.trim() || submitting}
-          >
-            {submitting ? (
-              <ActivityIndicator size="small" color="#FFFFFF" />
-            ) : (
-              <Feather name="send" size={20} color="#FFFFFF" />
-            )}
-          </TouchableOpacity>
-        </View>
+        {/* Comment Input - hide when editing a comment */}
+        {!editingCommentId && (
+          <View style={[styles.commentInputContainer, { paddingBottom: Math.max(12, insets.bottom) }]}>
+            <TextInput
+              style={styles.commentInput}
+              placeholder="댓글을 입력하세요"
+              placeholderTextColor="#71717A"
+              value={commentText}
+              onChangeText={setCommentText}
+              multiline
+              maxLength={500}
+            />
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                (!commentText.trim() || submitting) && styles.sendButtonDisabled,
+              ]}
+              onPress={handleSubmitComment}
+              disabled={!commentText.trim() || submitting}
+            >
+              {submitting ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Feather name="send" size={20} color="#FFFFFF" />
+              )}
+            </TouchableOpacity>
+          </View>
+        )}
       </KeyboardAvoidingView>
 
       <CustomAlert

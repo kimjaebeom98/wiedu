@@ -26,9 +26,19 @@ public class BoardCommentLike {
     @Comment("생성 일시")
     private LocalDateTime createdAt;
 
+    @Column(nullable = false)
+    @Comment("수정 일시")
+    private LocalDateTime updatedAt;
+
     @PrePersist
     protected void onCreate() {
         this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
     }
 
     @ManyToOne(fetch = FetchType.LAZY)
