@@ -50,4 +50,13 @@ public class StudyCurriculum {
                 .content(content)
                 .build();
     }
+
+    public void update(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
+
+    public void updateWeekNumber(Integer weekNumber) {
+        this.weekNumber = weekNumber;
+    }
 }

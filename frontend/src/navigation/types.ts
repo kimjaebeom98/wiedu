@@ -76,4 +76,15 @@ export type RootStackParamList = {
     };
   };
   Notifications: undefined;
+  CurriculumEdit: {
+    studyId: number;
+    studyTitle: string;
+  };
+  SessionEdit: {
+    curriculumId: number;
+    weekNumber: number;
+    sessionId?: number;
+    sessionNumber: number;
+    isNew: boolean;
+  };
 };

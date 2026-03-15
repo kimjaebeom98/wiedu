@@ -31,6 +31,7 @@ import StudySearchScreen from './src/screens/StudySearchScreen';
 import CategoryStudiesScreen from './src/screens/CategoryStudiesScreen';
 import StudyListScreen from './src/screens/StudyListScreen';
 import NotificationScreen from './src/screens/NotificationScreen';
+import { CurriculumEditScreen, SessionEditScreen } from './src/screens/curriculum';
 import { getAccessToken } from './src/storage/token';
 import { getMyProfile } from './src/api/profile';
 import { RootStackParamList } from './src/navigation/types';
@@ -160,6 +161,8 @@ export default function App() {
           <Stack.Screen name="ApplicantManagement" component={ApplicantManagementScreen} />
           <Stack.Screen name="StudyMembers" component={StudyMembersScreen} />
           <Stack.Screen name="Notifications" component={NotificationScreen} />
+          <Stack.Screen name="CurriculumEdit" component={CurriculumEditScreen} />
+          <Stack.Screen name="SessionEdit" component={SessionEditScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </>
