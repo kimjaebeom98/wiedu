@@ -59,4 +59,16 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
     long countCompletedStudiesByUser(@Param("user") User user,
             @Param("memberStatus") MemberStatus memberStatus,
             @Param("studyStatus") StudyStatus studyStatus);
+
+    // 스터디 ID로 활성 멤버 수 조회
+    @Query("SELECT COUNT(sm) FROM StudyMember sm WHERE sm.study.id = :studyId AND sm.status = :status")
+    int countByStudyIdAndStatus(@Param("studyId") Long studyId, @Param("status") MemberStatus status);
+
+    // 스터디 ID로 멤버 목록 조회
+    @Query("SELECT sm FROM StudyMember sm WHERE sm.study.id = :studyId AND sm.status = :status")
+    List<StudyMember> findByStudyIdAndStatus(@Param("studyId") Long studyId, @Param("status") MemberStatus status);
+
+    // 스터디 ID + 사용자 ID로 멤버 여부 확인
+    @Query("SELECT CASE WHEN COUNT(sm) > 0 THEN true ELSE false END FROM StudyMember sm WHERE sm.study.id = :studyId AND sm.user.id = :userId AND sm.status = :status")
+    boolean existsByStudyIdAndUserIdAndStatus(@Param("studyId") Long studyId, @Param("userId") Long userId, @Param("status") MemberStatus status);
 }

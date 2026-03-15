@@ -53,6 +53,12 @@ public class StudyRequestService {
             throw new BusinessException(ErrorCode.STUDY_NOT_RECRUITING);
         }
 
+        // 인원이 꽉 찼는지 확인
+        long currentMemberCount = studyMemberRepository.countByStudyAndStatus(study, MemberStatus.ACTIVE);
+        if (study.getMaxMembers() != null && currentMemberCount >= study.getMaxMembers()) {
+            throw new BusinessException(ErrorCode.STUDY_FULL);
+        }
+
         // 이미 멤버인지 확인
         if (studyMemberRepository.existsByStudyAndUserAndStatus(study, user, MemberStatus.ACTIVE)) {
             throw new BusinessException(ErrorCode.ALREADY_MEMBER);
