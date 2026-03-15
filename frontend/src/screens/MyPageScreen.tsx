@@ -381,13 +381,17 @@ export default function MyPageScreen() {
                     style={styles.studyCard}
                     onPress={() => navigation.navigate('StudyDetail', { studyId: study.id })}
                   >
-                    <View style={styles.studyThumbPlaceholder}>
-                      <Feather name="bookmark" size={24} color="#8B5CF6" />
-                    </View>
+                    {study.coverImageUrl ? (
+                      <Image source={{ uri: study.coverImageUrl }} style={styles.studyThumb} />
+                    ) : (
+                      <View style={styles.studyThumbPlaceholder}>
+                        <Feather name="bookmark" size={24} color="#8B5CF6" />
+                      </View>
+                    )}
                     <View style={styles.studyInfo}>
                       <Text style={styles.studyName} numberOfLines={1}>{study.title}</Text>
                       <View style={styles.studyMeta}>
-                        <Text style={[styles.studyTag, { color: '#8B5CF6' }]}>
+                        <Text style={[styles.studyTag, { color: CATEGORY_COLORS[study.categoryName] || '#8B5CF6' }]}>
                           {study.categoryName}
                         </Text>
                         <Text style={styles.studyMembers}>

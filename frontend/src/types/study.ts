@@ -183,6 +183,7 @@ export interface StudyListResponse {
   id: number;
   title: string;
   categoryName: string;
+  coverImageUrl?: string;
   leaderNickname: string;
   maxMembers: number;
   currentMembers: number;
