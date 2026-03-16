@@ -69,6 +69,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/study-categories/**").permitAll()
                         // Static resources (uploads) - public access
                         .requestMatchers("/uploads/**").permitAll()
+                        // Map HTML for WebView (public)
+                        .requestMatchers("/api/map/**").permitAll()
                         // All other requests require authentication
                         .anyRequest().authenticated()
                 )

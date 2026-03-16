@@ -14,8 +14,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { WebView } from 'react-native-webview';
 import * as Location from 'expo-location';
+import { getBaseURL } from '../config/api';
 
-const KAKAO_JAVASCRIPT_KEY = process.env.EXPO_PUBLIC_KAKAO_JAVASCRIPT_KEY;
 const KAKAO_REST_API_KEY = process.env.EXPO_PUBLIC_KAKAO_REST_API_KEY;
 
 export interface LocationResult {
@@ -95,6 +95,9 @@ export default function LocationMapPickerScreen({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const defaultCenter = initialLocation || { latitude: 37.5665, longitude: 126.978 };
+
+  // Build map URL from backend
+  const mapUrl = `${getBaseURL()}/api/map/kakao?lat=${defaultCenter.latitude}&lng=${defaultCenter.longitude}&level=3`;
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -183,60 +186,6 @@ export default function LocationMapPickerScreen({
     }
   }, [selectedLocation, onSelect]);
 
-  const mapHtml = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; }
-    #map { width: 100%; height: 100%; }
-  </style>
-</head>
-<body>
-  <div id="map"></div>
-  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_JAVASCRIPT_KEY}&autoload=false"></script>
-  <script>
-    let map, marker;
-
-    kakao.maps.load(function() {
-      const container = document.getElementById('map');
-      const options = {
-        center: new kakao.maps.LatLng(${defaultCenter.latitude}, ${defaultCenter.longitude}),
-        level: 3
-      };
-      map = new kakao.maps.Map(container, options);
-
-      marker = new kakao.maps.Marker({
-        position: map.getCenter(),
-        map: map
-      });
-
-      kakao.maps.event.addListener(map, 'click', function(mouseEvent) {
-        const latlng = mouseEvent.latLng;
-        marker.setPosition(latlng);
-        window.ReactNativeWebView.postMessage(JSON.stringify({
-          type: 'locationSelected',
-          latitude: latlng.getLat(),
-          longitude: latlng.getLng()
-        }));
-      });
-
-      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'mapReady' }));
-    });
-
-    function moveToLocation(lat, lng) {
-      const position = new kakao.maps.LatLng(lat, lng);
-      map.setCenter(position);
-      marker.setPosition(position);
-    }
-  </script>
-</body>
-</html>
-  `;
-
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
       <StatusBar barStyle="light-content" backgroundColor="#18181B" />
@@ -287,7 +236,7 @@ export default function LocationMapPickerScreen({
       <View style={styles.mapContainer}>
         <WebView
           ref={webViewRef}
-          source={{ html: mapHtml }}
+          source={{ uri: mapUrl }}
           style={styles.map}
           onMessage={handleMapMessage}
           javaScriptEnabled

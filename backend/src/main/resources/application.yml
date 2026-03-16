@@ -49,6 +49,7 @@ jwt:
 kakao:
   client-id: ${KAKAO_CLIENT_ID}
   redirect-uri: ${KAKAO_REDIRECT_URI}
+  javascript-key: ${KAKAO_JAVASCRIPT_KEY}
 
 # File Upload Configuration
 file:
