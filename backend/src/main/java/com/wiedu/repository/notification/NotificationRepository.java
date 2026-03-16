@@ -31,4 +31,16 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
     @Modifying
     @Query("UPDATE Notification n SET n.isRead = true WHERE n.recipient = :recipient AND n.isRead = false")
     int markAllAsRead(@Param("recipient") User recipient);
+
+    /**
+     * 특정 타입의 알림 삭제 (targetId, targetType 기준)
+     */
+    @Modifying
+    @Query("DELETE FROM Notification n WHERE n.recipient = :recipient AND n.type = :type AND n.targetId = :targetId AND n.targetType = :targetType")
+    void deleteByRecipientAndTypeAndTarget(
+            @Param("recipient") User recipient,
+            @Param("type") com.wiedu.domain.enums.NotificationType type,
+            @Param("targetId") Long targetId,
+            @Param("targetType") String targetType
+    );
 }

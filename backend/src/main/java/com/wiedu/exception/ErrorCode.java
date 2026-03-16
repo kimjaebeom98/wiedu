@@ -112,6 +112,13 @@ public enum ErrorCode {
     ALREADY_BOOKMARKED(HttpStatus.CONFLICT, "BM001", "이미 북마크한 스터디입니다."),
     BOOKMARK_NOT_FOUND(HttpStatus.NOT_FOUND, "BM002", "북마크를 찾을 수 없습니다."),
 
+    // Withdrawal Request
+    WITHDRAWAL_REQUEST_NOT_FOUND(HttpStatus.NOT_FOUND, "W001", "탈퇴 신청을 찾을 수 없습니다."),
+    WITHDRAWAL_ALREADY_REQUESTED(HttpStatus.CONFLICT, "W002", "이미 탈퇴 신청한 상태입니다."),
+    WITHDRAWAL_REQUEST_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "W003", "이미 처리된 탈퇴 신청입니다."),
+    NOT_WITHDRAWAL_REQUEST_OWNER(HttpStatus.FORBIDDEN, "W004", "본인의 탈퇴 신청만 취소할 수 있습니다."),
+    LEADER_CANNOT_REQUEST_WITHDRAWAL(HttpStatus.BAD_REQUEST, "W005", "스터디장은 탈퇴 신청을 할 수 없습니다. 리더 위임 후 탈퇴해주세요."),
+
     // Common Authorization
     FORBIDDEN(HttpStatus.FORBIDDEN, "C006", "접근 권한이 없습니다.");
 

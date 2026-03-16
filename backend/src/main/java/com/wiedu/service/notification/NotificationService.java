@@ -273,4 +273,54 @@ public class NotificationService {
         log.info("회차 취소 알림 생성 완료: studyId={}, sessionId={}", study.getId(), session.getId());
     }
 
+    /**
+     * 탈퇴 신청 알림 생성 (리더에게)
+     */
+    @Transactional
+    public void createWithdrawalRequestNotification(User leader, Study study, String memberNickname) {
+        Notification notification = Notification.builder()
+            .recipient(leader)
+            .type(NotificationType.WITHDRAWAL_REQUEST)
+            .title("탈퇴 신청이 있어요")
+            .message(memberNickname + "님이 '" + study.getTitle() + "' 스터디 탈퇴를 신청했습니다.")
+            .targetId(study.getId())
+            .targetType("STUDY")
+            .build();
+
+        notificationRepository.save(notification);
+        log.info("탈퇴 신청 알림 생성: leaderId={}, studyId={}", leader.getId(), study.getId());
+    }
+
+    /**
+     * 탈퇴 승인 알림 생성
+     */
+    @Transactional
+    public void createWithdrawalApprovedNotification(User recipient, Study study) {
+        Notification notification = Notification.builder()
+            .recipient(recipient)
+            .type(NotificationType.WITHDRAWAL_APPROVED)
+            .title("탈퇴가 승인되었어요")
+            .message("'" + study.getTitle() + "' 스터디에서 탈퇴되었습니다. 보증금 환불은 스터디장에게 직접 문의해주세요.")
+            .targetId(study.getId())
+            .targetType("STUDY")
+            .build();
+
+        notificationRepository.save(notification);
+        log.info("탈퇴 승인 알림 생성: userId={}, studyId={}", recipient.getId(), study.getId());
+    }
+
+    /**
+     * 탈퇴 신청 알림 삭제 (취소 시)
+     */
+    @Transactional
+    public void deleteWithdrawalRequestNotification(User leader, Long studyId) {
+        notificationRepository.deleteByRecipientAndTypeAndTarget(
+                leader,
+                NotificationType.WITHDRAWAL_REQUEST,
+                studyId,
+                "STUDY"
+        );
+        log.info("탈퇴 신청 알림 삭제: leaderId={}, studyId={}", leader.getId(), studyId);
+    }
+
 }

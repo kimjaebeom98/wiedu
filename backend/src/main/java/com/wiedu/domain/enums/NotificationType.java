@@ -21,5 +21,9 @@ public enum NotificationType {
     // 참석 관련
     ABSENCE_REQUEST,     // 불참 신청 (리더에게)
     ABSENCE_APPROVED,    // 불참 승인됨
-    ABSENCE_REJECTED     // 불참 거절됨
+    ABSENCE_REJECTED,    // 불참 거절됨
+
+    // 탈퇴 관련
+    WITHDRAWAL_REQUEST,  // 탈퇴 신청 (리더에게)
+    WITHDRAWAL_APPROVED  // 탈퇴 승인됨
 }
