@@ -156,11 +156,23 @@ export default function StudyDetailScreen() {
     }
   };
 
-  // Load curriculums data
+  // Load curriculums data (preserve existing sessions)
   const loadCurriculumData = useCallback(async () => {
     try {
       const data = await getCurriculums(studyId);
-      setCurriculumData(data);
+      // Preserve existing sessions when reloading
+      setCurriculumData(prev => {
+        const sessionsMap = new Map<number, typeof prev[0]['sessions']>();
+        prev.forEach(c => {
+          if (c.sessions && c.sessions.length > 0) {
+            sessionsMap.set(c.id, c.sessions);
+          }
+        });
+        return data.map(c => ({
+          ...c,
+          sessions: sessionsMap.get(c.id) || c.sessions,
+        }));
+      });
     } catch (error) {
       console.error('Failed to load curriculums:', error);
     }
