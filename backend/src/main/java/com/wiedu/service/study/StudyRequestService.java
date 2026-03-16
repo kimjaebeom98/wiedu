@@ -84,6 +84,17 @@ public class StudyRequestService {
             throw new BusinessException(ErrorCode.REAPPLY_COOLDOWN);
         }
 
+        // 기존 신청 삭제 (탈퇴 후 재신청, 쿨다운 지난 재신청 대응)
+        // 유니크 제약조건(study_id, user_id)으로 인해 기존 APPROVED/REJECTED 신청 삭제 필요
+        studyRequestRepository.findByStudyAndUser(study, user)
+                .ifPresent(existingRequest -> {
+                    // PENDING이 아닌 경우만 삭제 (PENDING은 위에서 이미 체크)
+                    if (existingRequest.getStatus() != RequestStatus.PENDING) {
+                        studyRequestRepository.delete(existingRequest);
+                        studyRequestRepository.flush(); // 즉시 삭제 반영
+                    }
+                });
+
         StudyRequest studyRequest = StudyRequest.builder()
                 .study(study)
                 .user(user)

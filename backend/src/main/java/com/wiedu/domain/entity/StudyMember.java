@@ -82,6 +82,11 @@ public class StudyMember {
         this.withdrawnAt = LocalDateTime.now();
     }
 
+    public void reactivate() {
+        this.status = MemberStatus.ACTIVE;
+        this.withdrawnAt = null;
+    }
+
     public void promoteToLeader() {
         this.role = MemberRole.LEADER;
     }
