@@ -164,7 +164,7 @@ export default function LocationMapPickerScreen({
   const handleMapMessage = useCallback(async (event: { nativeEvent: { data: string } }) => {
     try {
       const data = JSON.parse(event.nativeEvent.data);
-      if (data.type === 'mapReady') {
+      if (data.type === 'mapReady' || data.type === 'pageLoaded') {
         setMapReady(true);
       } else if (data.type === 'locationSelected') {
         const { latitude, longitude } = data;
@@ -236,12 +236,17 @@ export default function LocationMapPickerScreen({
       <View style={styles.mapContainer}>
         <WebView
           ref={webViewRef}
-          source={{ uri: mapUrl }}
+          source={{
+            uri: mapUrl,
+            headers: { 'ngrok-skip-browser-warning': 'true' },
+          }}
           style={styles.map}
           onMessage={handleMapMessage}
           javaScriptEnabled
           domStorageEnabled
           scrollEnabled={false}
+          originWhitelist={['*']}
+          mixedContentMode="compatibility"
         />
         {!mapReady && (
           <View style={styles.mapLoading}>

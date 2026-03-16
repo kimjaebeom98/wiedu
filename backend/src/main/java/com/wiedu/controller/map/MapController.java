@@ -34,11 +34,26 @@ public class MapController {
 </head>
 <body>
   <div id="map"></div>
-  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=%s&autoload=false"></script>
+  <script>
+    // 즉시 테스트 메시지 전송
+    if (window.ReactNativeWebView) {
+      window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'pageLoaded' }));
+    }
+  </script>
+  <script src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=%s&autoload=false" onerror="handleScriptError()"></script>
   <script>
     let map, marker;
 
-    kakao.maps.load(function() {
+    function handleScriptError() {
+      if (window.ReactNativeWebView) {
+        window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'error', message: 'SDK load failed' }));
+      }
+    }
+
+    if (typeof kakao === 'undefined') {
+      handleScriptError();
+    } else {
+      kakao.maps.load(function() {
       const container = document.getElementById('map');
       const options = {
         center: new kakao.maps.LatLng(%f, %f),
@@ -67,6 +82,7 @@ public class MapController {
         window.ReactNativeWebView.postMessage(JSON.stringify({ type: 'mapReady' }));
       }
     });
+    }
 
     function moveToLocation(lat, lng) {
       const position = new kakao.maps.LatLng(lat, lng);
