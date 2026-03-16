@@ -106,25 +106,25 @@ export default function StudyDetailScreen() {
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkProcessing, setBookmarkProcessing] = useState(false);
 
-  // Toggle curriculum expansion and load sessions
-  const toggleCurriculum = async (index: number, curriculumId?: number) => {
-    const isExpanded = expandedCurriculums.has(index);
+  // Toggle curriculum expansion and load sessions (uses curriculumId, not index)
+  const toggleCurriculum = async (curriculumId: number) => {
+    const isExpanded = expandedCurriculums.has(curriculumId);
 
     setExpandedCurriculums(prev => {
       const next = new Set(prev);
-      if (next.has(index)) {
-        next.delete(index);
+      if (next.has(curriculumId)) {
+        next.delete(curriculumId);
       } else {
-        next.add(index);
+        next.add(curriculumId);
       }
       return next;
     });
 
-    // Load sessions if expanding and curriculumId is provided
-    if (!isExpanded && curriculumId) {
-      // Check if already loaded
+    // Load sessions if expanding
+    if (!isExpanded) {
+      // Check if already loaded (sessions !== undefined means already fetched, even if empty)
       const existing = curriculumData.find(c => c.id === curriculumId);
-      if (existing?.sessions) return;
+      if (existing?.sessions !== undefined) return;
 
       setCurriculumLoading(prev => new Set(prev).add(curriculumId));
       try {
@@ -860,14 +860,14 @@ export default function StudyDetailScreen() {
                 {curriculumData.length > 0 ? (
                   curriculumData.map((curriculum, idx) => {
                     const sessions = curriculum.sessions || [];
-                    const isExpanded = expandedCurriculums.has(idx);
+                    const isExpanded = expandedCurriculums.has(curriculum.id);
                     const isLoading = curriculumLoading.has(curriculum.id);
                     const isAccessDenied = curriculumAccessDenied.has(curriculum.id);
 
                     return (
                       <View key={curriculum.id} style={styles.curriculumItem}>
                         <TouchableOpacity
-                          onPress={() => toggleCurriculum(idx, curriculum.id)}
+                          onPress={() => toggleCurriculum(curriculum.id)}
                           activeOpacity={0.7}
                         >
                           <View style={styles.curriculumHeader}>
