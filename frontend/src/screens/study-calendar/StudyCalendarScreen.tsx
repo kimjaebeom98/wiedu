@@ -25,16 +25,26 @@ const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 export default function StudyCalendarScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<StudyCalendarRouteProp>();
-  const { studyId, studyTitle, isLeader } = route.params;
+  const { studyId, studyTitle, isLeader, initialDate } = route.params;
   const insets = useSafeAreaInsets();
 
+  // Initialize currentDate based on initialDate or today
+  const getInitialDate = () => {
+    if (initialDate) {
+      const [year, month] = initialDate.split('-').map(Number);
+      return new Date(year, month - 1, 1);
+    }
+    return new Date();
+  };
+
   const [loading, setLoading] = useState(true);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(getInitialDate);
   const [sessionDates, setSessionDates] = useState<string[]>([]);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [attendances, setAttendances] = useState<AttendanceSummaryResponse[]>([]);
   const [pendingAbsences, setPendingAbsences] = useState<AttendanceResponse[]>([]);
   const [loadingAttendances, setLoadingAttendances] = useState(false);
+  const [initialSelectionDone, setInitialSelectionDone] = useState(false);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth() + 1;
@@ -53,6 +63,23 @@ export default function StudyCalendarScreen() {
       setLoading(true);
       const dates = await getSessionDatesInMonth(studyId, year, month);
       setSessionDates(dates);
+
+      // Auto-select date on first load only
+      if (!initialSelectionDone && dates.length > 0) {
+        setInitialSelectionDone(true);
+
+        // Priority: initialDate > today > first available session
+        if (initialDate && dates.includes(initialDate)) {
+          handleDateSelect(initialDate);
+        } else {
+          const today = new Date();
+          const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+          if (dates.includes(todayStr)) {
+            handleDateSelect(todayStr);
+          }
+          // If neither initialDate nor today has a session, don't auto-select
+        }
+      }
     } catch (error) {
       console.error('Failed to load session dates:', error);
     } finally {
