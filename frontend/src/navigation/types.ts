@@ -91,6 +91,7 @@ export type RootStackParamList = {
     studyId: number;
     studyTitle: string;
     isLeader: boolean;
+    initialDate?: string; // YYYY-MM-DD format - auto-selects this date when provided
   };
   SessionAttendance: {
     sessionId: number;

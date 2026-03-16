@@ -10,6 +10,7 @@ import {
   Modal,
   Platform,
   Linking,
+  TextInput,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -31,6 +32,14 @@ import {
 import { getLeaderReviews } from '../../api/review';
 import { getCurriculums, getCurriculumDetail } from '../../api/curriculum';
 import { toggleBookmark as toggleBookmarkApi } from '../../api/bookmark';
+import {
+  requestWithdrawal,
+  getMyWithdrawalRequest,
+  cancelWithdrawalRequest,
+  getWithdrawalRequests,
+  approveWithdrawalRequest,
+  WithdrawalRequestResponse,
+} from '../../api/withdrawal';
 import { StudyDetailResponse } from '../../types/study';
 import { StudyLeaderReviewsResponse } from '../../types/review';
 import { CurriculumResponse, SessionResponse } from '../../types/curriculum';
@@ -105,6 +114,17 @@ export default function StudyDetailScreen() {
   const [curriculumAccessDenied, setCurriculumAccessDenied] = useState<Set<number>>(new Set());
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [bookmarkProcessing, setBookmarkProcessing] = useState(false);
+
+  // Withdrawal state (member)
+  const [showWithdrawalModal, setShowWithdrawalModal] = useState(false);
+  const [withdrawalReason, setWithdrawalReason] = useState('');
+  const [withdrawalProcessing, setWithdrawalProcessing] = useState(false);
+  const [myWithdrawalRequest, setMyWithdrawalRequest] = useState<WithdrawalRequestResponse | null>(null);
+
+  // Withdrawal state (leader)
+  const [withdrawalRequests, setWithdrawalRequests] = useState<WithdrawalRequestResponse[]>([]);
+  const [showWithdrawalListModal, setShowWithdrawalListModal] = useState(false);
+  const [approvalProcessing, setApprovalProcessing] = useState<number | null>(null);
 
   // Toggle curriculum expansion and load sessions (uses curriculumId, not index)
   const toggleCurriculum = async (curriculumId: number) => {
@@ -196,8 +216,11 @@ export default function StudyDetailScreen() {
   const loadMyApplication = async () => {
     try {
       const requests = await getMyStudyRequests();
-      const application = requests.find(r => r.studyId === studyId);
-      setMyApplication(application || null);
+      // 해당 스터디의 모든 신청 중 가장 최신 것을 찾음 (여러 번 신청한 경우 대비)
+      const studyApplications = requests
+        .filter(r => r.studyId === studyId)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setMyApplication(studyApplications[0] || null);
     } catch {
       // 로그인하지 않은 경우 무시
     }
@@ -490,6 +513,197 @@ export default function StudyDetailScreen() {
               });
             } finally {
               setProcessing(false);
+            }
+          },
+        },
+      ],
+    });
+  };
+
+  // Load my withdrawal request
+  const loadMyWithdrawalRequest = useCallback(async () => {
+    if (!study?.isMember || study?.leader?.id === currentUserId) return;
+    try {
+      const request = await getMyWithdrawalRequest(studyId);
+      setMyWithdrawalRequest(request);
+    } catch (error) {
+      console.error('Failed to load withdrawal request:', error);
+    }
+  }, [studyId, study?.isMember, study?.leader?.id, currentUserId]);
+
+  useEffect(() => {
+    loadMyWithdrawalRequest();
+  }, [loadMyWithdrawalRequest]);
+
+  // Load withdrawal requests for leader
+  const loadWithdrawalRequests = useCallback(async () => {
+    if (!study || study.leader?.id !== currentUserId) return;
+    try {
+      const requests = await getWithdrawalRequests(studyId);
+      setWithdrawalRequests(requests);
+    } catch (error) {
+      console.error('Failed to load withdrawal requests:', error);
+    }
+  }, [studyId, study, currentUserId]);
+
+  useEffect(() => {
+    loadWithdrawalRequests();
+  }, [loadWithdrawalRequests]);
+
+  // Handle approve withdrawal (leader)
+  const handleApproveWithdrawal = async (requestId: number, userNickname: string) => {
+    showAlert({
+      title: '탈퇴 승인',
+      message: `${userNickname}님의 탈퇴를 승인하시겠습니까?\n\n승인 후에는 취소할 수 없습니다.`,
+      icon: 'user-x',
+      iconColor: '#EF4444',
+      buttons: [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '승인',
+          style: 'destructive',
+          onPress: async () => {
+            setApprovalProcessing(requestId);
+            try {
+              await approveWithdrawalRequest(requestId);
+              showAlert({
+                title: '승인 완료',
+                message: `${userNickname}님의 탈퇴가 승인되었습니다.`,
+                icon: 'check-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
+              // Refresh data
+              loadWithdrawalRequests();
+              loadStudyDetail();
+            } catch (error: any) {
+              console.error('Failed to approve withdrawal:', error);
+              showAlert({
+                title: '오류',
+                message: error.message || '탈퇴 승인에 실패했습니다.',
+                icon: 'alert-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
+            } finally {
+              setApprovalProcessing(null);
+            }
+          },
+        },
+      ],
+    });
+  };
+
+  // Handle withdrawal request
+  const handleWithdrawalRequest = () => {
+    // Show deposit warning if study has deposit
+    const depositWarning = study?.deposit
+      ? `\n\n⚠️ 보증금 ${study.deposit.toLocaleString()}원은 탈퇴 시 환불이 어려울 수 있습니다. 스터디장에게 직접 문의해주세요.`
+      : '';
+
+    showAlert({
+      title: '스터디 탈퇴 신청',
+      message: `탈퇴 사유를 입력해주세요.${depositWarning}`,
+      icon: 'alert-circle',
+      iconColor: '#EF4444',
+      buttons: [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '다음',
+          style: 'default',
+          onPress: () => setShowWithdrawalModal(true),
+        },
+      ],
+    });
+  };
+
+  // Submit withdrawal request
+  const submitWithdrawalRequest = async () => {
+    if (!withdrawalReason.trim()) {
+      showAlert({
+        title: '오류',
+        message: '탈퇴 사유를 입력해주세요.',
+        icon: 'alert-circle',
+        buttons: [{ text: '확인', style: 'default' }],
+      });
+      return;
+    }
+
+    // Final confirmation
+    showAlert({
+      title: '정말 탈퇴하시겠습니까?',
+      message: study?.deposit
+        ? `탈퇴 신청 후 스터디장의 승인이 필요합니다.\n\n⚠️ 보증금 환불은 스터디장에게 직접 문의해주세요.`
+        : '탈퇴 신청 후 스터디장의 승인이 필요합니다.',
+      icon: 'alert-circle',
+      iconColor: '#EF4444',
+      buttons: [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '탈퇴 신청',
+          style: 'destructive',
+          onPress: async () => {
+            setWithdrawalProcessing(true);
+            try {
+              const request = await requestWithdrawal(studyId, withdrawalReason.trim());
+              setMyWithdrawalRequest(request);
+              setShowWithdrawalModal(false);
+              setWithdrawalReason('');
+              showAlert({
+                title: '탈퇴 신청 완료',
+                message: '스터디장에게 탈퇴 신청이 전달되었습니다.\n승인되면 알림으로 안내드립니다.',
+                icon: 'check-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
+            } catch (error: any) {
+              console.error('Failed to request withdrawal:', error);
+              showAlert({
+                title: '오류',
+                message: error.message || '탈퇴 신청에 실패했습니다.',
+                icon: 'alert-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
+            } finally {
+              setWithdrawalProcessing(false);
+            }
+          },
+        },
+      ],
+    });
+  };
+
+  // Cancel withdrawal request
+  const handleCancelWithdrawal = () => {
+    if (!myWithdrawalRequest) return;
+
+    showAlert({
+      title: '탈퇴 신청 취소',
+      message: '탈퇴 신청을 취소하시겠습니까?',
+      icon: 'info',
+      buttons: [
+        { text: '아니오', style: 'cancel' },
+        {
+          text: '취소하기',
+          style: 'default',
+          onPress: async () => {
+            setWithdrawalProcessing(true);
+            try {
+              await cancelWithdrawalRequest(myWithdrawalRequest.id);
+              setMyWithdrawalRequest(null);
+              showAlert({
+                title: '취소 완료',
+                message: '탈퇴 신청이 취소되었습니다.',
+                icon: 'check-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
+            } catch (error: any) {
+              console.error('Failed to cancel withdrawal:', error);
+              showAlert({
+                title: '오류',
+                message: error.message || '탈퇴 신청 취소에 실패했습니다.',
+                icon: 'alert-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
+            } finally {
+              setWithdrawalProcessing(false);
             }
           },
         },
@@ -910,12 +1124,26 @@ export default function StudyDetailScreen() {
                               </View>
                             ) : sessions.length > 0 ? (
                               sessions.map((session) => (
-                                <View key={session.id} style={{
-                                  backgroundColor: '#1F1F23',
-                                  borderRadius: 12,
-                                  padding: 14,
-                                  marginTop: 8,
-                                }}>
+                                <TouchableOpacity
+                                  key={session.id}
+                                  style={{
+                                    backgroundColor: '#1F1F23',
+                                    borderRadius: 12,
+                                    padding: 14,
+                                    marginTop: 8,
+                                  }}
+                                  activeOpacity={0.7}
+                                  onPress={() => {
+                                    if (session.sessionDate && study) {
+                                      navigation.navigate('StudyCalendar', {
+                                        studyId,
+                                        studyTitle: study.title,
+                                        isLeader: study.leader.id === currentUserId,
+                                        initialDate: session.sessionDate,
+                                      });
+                                    }
+                                  }}
+                                >
                                   {/* 헤더: 회차 번호, 제목, 온/오프라인 배지 */}
                                   <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
                                     <View style={{
@@ -1036,7 +1264,7 @@ export default function StudyDetailScreen() {
                                       )}
                                     </TouchableOpacity>
                                   )}
-                                </View>
+                                </TouchableOpacity>
                               ))
                             ) : (
                               <Text style={{ fontSize: 13, color: '#71717A', textAlign: 'center', paddingVertical: 8 }}>
@@ -1082,14 +1310,14 @@ export default function StudyDetailScreen() {
             {/* Deposit Section */}
             {study.deposit && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>보증금 정보</Text>
+                <Text style={styles.sectionTitle}>보증금</Text>
                 <View style={styles.depositCard}>
                   <View style={styles.depositHeader}>
                     <View style={styles.depositIconWrapper}>
-                      <Feather name="dollar-sign" size={20} color="#22C55E" />
+                      <Feather name="dollar-sign" size={16} color="#22C55E" />
                     </View>
                     <View style={styles.depositInfo}>
-                      <Text style={styles.depositLabel}>보증금</Text>
+                      <Text style={styles.depositLabel}>참가비</Text>
                       <Text style={styles.depositValue}>{study.deposit.toLocaleString()}원</Text>
                     </View>
                   </View>
@@ -1098,9 +1326,9 @@ export default function StudyDetailScreen() {
                       style={styles.policyLinkRow}
                       onPress={() => setShowPolicyModal(true)}
                     >
-                      <Feather name="info" size={14} color="#8B5CF6" />
-                      <Text style={styles.policyLinkText}>환불 정책 자세히보기</Text>
-                      <Feather name="chevron-right" size={16} color="#8B5CF6" />
+                      <Feather name="info" size={12} color="#8B5CF6" />
+                      <Text style={styles.policyLinkText}>환불 정책 보기</Text>
+                      <Feather name="chevron-right" size={14} color="#8B5CF6" />
                     </TouchableOpacity>
                   )}
                 </View>
@@ -1140,6 +1368,29 @@ export default function StudyDetailScreen() {
           {study.leader.id === currentUserId ? (
             // 스터디장 관리 버튼
             <View style={styles.leaderActionsWrapper}>
+              {/* 탈퇴 신청 관리 버튼 (대기 중인 신청이 있을 때) */}
+              {withdrawalRequests.length > 0 && (study.status === 'RECRUITING' || study.status === 'IN_PROGRESS') && (
+                <TouchableOpacity
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: '#27272A',
+                    borderRadius: 12,
+                    paddingVertical: 10,
+                    paddingHorizontal: 16,
+                    marginBottom: 8,
+                    borderWidth: 1,
+                    borderColor: '#EF4444',
+                  }}
+                  onPress={() => setShowWithdrawalListModal(true)}
+                >
+                  <Feather name="user-minus" size={16} color="#EF4444" />
+                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#EF4444', marginLeft: 8 }}>
+                    탈퇴 신청 {withdrawalRequests.length}건
+                  </Text>
+                </TouchableOpacity>
+              )}
               {study.status === 'RECRUITING' && (
                 <>
                   <View style={styles.leaderActionsContainer}>
@@ -1204,37 +1455,119 @@ export default function StudyDetailScreen() {
               )}
             </View>
           ) : study.isMember ? (
-            // 이미 멤버인 경우 - 하단 바 숨김 (null 반환)
-            null
+            // 이미 멤버인 경우 - 탈퇴 신청 버튼
+            study.status !== 'COMPLETED' && (
+              myWithdrawalRequest ? (
+                // 이미 탈퇴 신청한 경우
+                <View style={styles.applicationStatusContainer}>
+                  <View style={[styles.applicationStatusBtn, styles.pendingBtn]}>
+                    <Feather name="clock" size={18} color="#F59E0B" style={{ marginRight: 8 }} />
+                    <Text style={[styles.applicationStatusBtnText, { color: '#F59E0B' }]}>
+                      탈퇴 승인 대기 중
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={{
+                      height: 44,
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                    onPress={handleCancelWithdrawal}
+                    disabled={withdrawalProcessing}
+                  >
+                    {withdrawalProcessing ? (
+                      <ActivityIndicator size="small" color="#71717A" />
+                    ) : (
+                      <Text style={{ fontSize: 14, color: '#71717A' }}>신청 취소</Text>
+                    )}
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                // 탈퇴 신청 버튼
+                <TouchableOpacity
+                  style={[styles.joinBtn, { backgroundColor: '#3F3F46' }]}
+                  onPress={handleWithdrawalRequest}
+                  disabled={withdrawalProcessing}
+                >
+                  {withdrawalProcessing ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <>
+                      <Feather name="log-out" size={18} color="#A1A1AA" style={{ marginRight: 8 }} />
+                      <Text style={[styles.joinBtnText, { color: '#A1A1AA' }]}>스터디 탈퇴</Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )
+            )
           ) : (
             // 일반 사용자 - 참여 신청 버튼
             study.status === 'RECRUITING' ? (
-              myApplication ? (
-                // 이미 신청한 경우 (대기중 또는 거절됨만 표시, 승인됨은 isMember로 처리)
+              myApplication && myApplication.status === 'PENDING' ? (
+                // 대기중인 신청
                 <View style={styles.applicationStatusContainer}>
-                  <View style={[
-                    styles.applicationStatusBtn,
-                    myApplication.status === 'PENDING' && styles.pendingBtn,
-                    myApplication.status === 'REJECTED' && styles.rejectedBtn,
-                  ]}>
-                    <Feather
-                      name={myApplication.status === 'PENDING' ? 'clock' : 'x-circle'}
-                      size={18}
-                      color={myApplication.status === 'PENDING' ? '#F59E0B' : '#EF4444'}
-                      style={{ marginRight: 8 }}
-                    />
-                    <Text style={[
-                      styles.applicationStatusBtnText,
-                      myApplication.status === 'PENDING' && styles.pendingText,
-                      myApplication.status === 'REJECTED' && styles.rejectedText,
-                    ]}>
-                      {myApplication.status === 'PENDING' ? '신청 대기중' : '신청 거절됨'}
+                  <View style={[styles.applicationStatusBtn, styles.pendingBtn]}>
+                    <Feather name="clock" size={18} color="#F59E0B" style={{ marginRight: 8 }} />
+                    <Text style={[styles.applicationStatusBtnText, styles.pendingText]}>
+                      신청 대기중
                     </Text>
                   </View>
-                  {myApplication.status === 'REJECTED' && myApplication.rejectReason && (
-                    <Text style={styles.rejectReasonText}>사유: {myApplication.rejectReason}</Text>
-                  )}
                 </View>
+              ) : myApplication && myApplication.status === 'REJECTED' ? (
+                // 거절된 신청 - 3일 쿨다운 체크
+                (() => {
+                  const processedDate = myApplication.processedAt ? new Date(myApplication.processedAt) : null;
+                  const cooldownEnd = processedDate ? new Date(processedDate.getTime() + 3 * 24 * 60 * 60 * 1000) : null;
+                  const now = new Date();
+                  const canReapply = cooldownEnd ? now >= cooldownEnd : true;
+                  const remainingDays = cooldownEnd ? Math.ceil((cooldownEnd.getTime() - now.getTime()) / (24 * 60 * 60 * 1000)) : 0;
+
+                  if (canReapply) {
+                    // 쿨다운 종료 - 재신청 가능
+                    return (
+                      <View style={styles.applicationStatusContainer}>
+                        <View style={{
+                          backgroundColor: '#27272A',
+                          borderRadius: 12,
+                          padding: 12,
+                          marginBottom: 8,
+                        }}>
+                          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
+                            <Feather name="info" size={14} color="#71717A" style={{ marginRight: 6 }} />
+                            <Text style={{ fontSize: 13, color: '#71717A' }}>이전 신청이 거절되었습니다</Text>
+                          </View>
+                          {myApplication.rejectReason && (
+                            <Text style={{ fontSize: 12, color: '#52525B', marginLeft: 20 }}>
+                              사유: {myApplication.rejectReason}
+                            </Text>
+                          )}
+                        </View>
+                        <TouchableOpacity style={styles.joinBtn} onPress={handleJoinStudy}>
+                          <Feather name="refresh-cw" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                          <Text style={styles.joinBtnText}>다시 신청하기</Text>
+                        </TouchableOpacity>
+                      </View>
+                    );
+                  } else {
+                    // 쿨다운 중 - 재신청 불가
+                    return (
+                      <View style={styles.applicationStatusContainer}>
+                        <View style={[styles.applicationStatusBtn, styles.rejectedBtn]}>
+                          <Feather name="x-circle" size={18} color="#EF4444" style={{ marginRight: 8 }} />
+                          <Text style={[styles.applicationStatusBtnText, styles.rejectedText]}>
+                            신청 거절됨
+                          </Text>
+                        </View>
+                        {myApplication.rejectReason && (
+                          <Text style={styles.rejectReasonText}>사유: {myApplication.rejectReason}</Text>
+                        )}
+                        <Text style={{ fontSize: 12, color: '#71717A', textAlign: 'center', marginTop: 4 }}>
+                          {remainingDays}일 후 재신청 가능
+                        </Text>
+                      </View>
+                    );
+                  }
+                })()
               ) : (
                 <TouchableOpacity style={styles.joinBtn} onPress={handleJoinStudy}>
                   <Text style={styles.joinBtnText}>스터디 참여 신청하기</Text>
@@ -1294,6 +1627,191 @@ export default function StudyDetailScreen() {
                   환불 조건은 스터디장이 정한 기준에 따릅니다
                 </Text>
               </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Withdrawal Request Modal */}
+      <Modal
+        visible={showWithdrawalModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowWithdrawalModal(false)}
+      >
+        <View style={[styles.modalOverlay, { paddingBottom: insets.bottom }]}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>탈퇴 사유 입력</Text>
+              <TouchableOpacity onPress={() => setShowWithdrawalModal(false)}>
+                <Feather name="x" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+            <View style={{ padding: 16 }}>
+              <TextInput
+                style={{
+                  backgroundColor: '#3F3F46',
+                  borderRadius: 12,
+                  padding: 14,
+                  color: '#FFFFFF',
+                  fontSize: 15,
+                  minHeight: 120,
+                  textAlignVertical: 'top',
+                }}
+                placeholder="탈퇴 사유를 입력해주세요"
+                placeholderTextColor="#71717A"
+                value={withdrawalReason}
+                onChangeText={setWithdrawalReason}
+                multiline
+                maxLength={500}
+              />
+              <Text style={{ color: '#71717A', fontSize: 12, marginTop: 8, textAlign: 'right' }}>
+                {withdrawalReason.length}/500
+              </Text>
+              {study?.deposit && (
+                <View style={{
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
+                  backgroundColor: '#EF444420',
+                  borderRadius: 10,
+                  padding: 12,
+                  marginTop: 12,
+                  gap: 8,
+                }}>
+                  <Feather name="alert-triangle" size={16} color="#EF4444" style={{ marginTop: 2 }} />
+                  <Text style={{ flex: 1, fontSize: 13, color: '#EF4444', lineHeight: 18 }}>
+                    보증금 {study.deposit.toLocaleString()}원은 탈퇴 시 환불이 어려울 수 있습니다. 스터디장에게 직접 문의해주세요.
+                  </Text>
+                </View>
+              )}
+              <TouchableOpacity
+                style={{
+                  backgroundColor: withdrawalReason.trim() ? '#EF4444' : '#3F3F46',
+                  borderRadius: 12,
+                  paddingVertical: 14,
+                  alignItems: 'center',
+                  marginTop: 16,
+                }}
+                onPress={submitWithdrawalRequest}
+                disabled={!withdrawalReason.trim() || withdrawalProcessing}
+              >
+                {withdrawalProcessing ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>
+                    탈퇴 신청하기
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Withdrawal List Modal (Leader) */}
+      <Modal
+        visible={showWithdrawalListModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowWithdrawalListModal(false)}
+      >
+        <View style={[styles.modalOverlay, { paddingBottom: insets.bottom }]}>
+          <View style={[styles.modalContent, { maxHeight: '70%' }]}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>탈퇴 신청 관리</Text>
+              <TouchableOpacity onPress={() => setShowWithdrawalListModal(false)}>
+                <Feather name="x" size={24} color="#FFFFFF" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
+              {withdrawalRequests.length === 0 ? (
+                <View style={{ padding: 32, alignItems: 'center' }}>
+                  <Feather name="inbox" size={40} color="#3F3F46" />
+                  <Text style={{ fontSize: 14, color: '#71717A', marginTop: 12 }}>
+                    대기 중인 탈퇴 신청이 없습니다
+                  </Text>
+                </View>
+              ) : (
+                <View style={{ padding: 16, gap: 12 }}>
+                  {withdrawalRequests.map((request) => (
+                    <View
+                      key={request.id}
+                      style={{
+                        backgroundColor: '#27272A',
+                        borderRadius: 12,
+                        padding: 14,
+                      }}
+                    >
+                      {/* User info */}
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                        {request.userProfileImage ? (
+                          <Image
+                            source={{ uri: request.userProfileImage }}
+                            style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
+                          />
+                        ) : (
+                          <View style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 18,
+                            backgroundColor: '#8B5CF630',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            marginRight: 10,
+                          }}>
+                            <Feather name="user" size={18} color="#8B5CF6" />
+                          </View>
+                        )}
+                        <View style={{ flex: 1 }}>
+                          <Text style={{ fontSize: 15, fontWeight: '600', color: '#FFFFFF' }}>
+                            {request.userNickname}
+                          </Text>
+                          <Text style={{ fontSize: 12, color: '#71717A', marginTop: 2 }}>
+                            {new Date(request.createdAt).toLocaleDateString('ko-KR')} 신청
+                          </Text>
+                        </View>
+                      </View>
+                      {/* Reason */}
+                      <View style={{
+                        backgroundColor: '#18181B',
+                        borderRadius: 8,
+                        padding: 12,
+                        marginBottom: 12,
+                      }}>
+                        <Text style={{ fontSize: 12, color: '#71717A', marginBottom: 4 }}>탈퇴 사유</Text>
+                        <Text style={{ fontSize: 14, color: '#E4E4E7', lineHeight: 20 }}>
+                          {request.reason}
+                        </Text>
+                      </View>
+                      {/* Approve button */}
+                      <TouchableOpacity
+                        style={{
+                          backgroundColor: '#EF4444',
+                          borderRadius: 8,
+                          paddingVertical: 10,
+                          alignItems: 'center',
+                          flexDirection: 'row',
+                          justifyContent: 'center',
+                          gap: 6,
+                        }}
+                        onPress={() => handleApproveWithdrawal(request.id, request.userNickname)}
+                        disabled={approvalProcessing === request.id}
+                      >
+                        {approvalProcessing === request.id ? (
+                          <ActivityIndicator size="small" color="#FFFFFF" />
+                        ) : (
+                          <>
+                            <Feather name="check" size={16} color="#FFFFFF" />
+                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#FFFFFF' }}>
+                              탈퇴 승인
+                            </Text>
+                          </>
+                        )}
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
             </ScrollView>
           </View>
         </View>
