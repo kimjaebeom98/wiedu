@@ -31,4 +31,19 @@ public interface BoardCommentRepository extends JpaRepository<BoardComment, Long
     @Modifying
     @Query("UPDATE BoardComment c SET c.likeCount = CASE WHEN c.likeCount > 0 THEN c.likeCount - 1 ELSE 0 END WHERE c.id = :id")
     void decrementLikeCount(@Param("id") Long id);
+
+    /**
+     * 사용자 삭제 시 작성자를 NULL로 설정 (알 수 없음 처리)
+     */
+    @Modifying
+    @Query("UPDATE BoardComment c SET c.author = null WHERE c.author.id = :userId")
+    void setAuthorToNull(@Param("userId") Long userId);
+
+    /**
+     * 사용자가 좋아요한 댓글들의 like_count 일괄 감소 (탈퇴 시 사용)
+     */
+    @Modifying
+    @Query("UPDATE BoardComment c SET c.likeCount = CASE WHEN c.likeCount > 0 THEN c.likeCount - 1 ELSE 0 END " +
+           "WHERE c.id IN (SELECT cl.comment.id FROM BoardCommentLike cl WHERE cl.user.id = :userId)")
+    void decrementLikeCountByUserId(@Param("userId") Long userId);
 }

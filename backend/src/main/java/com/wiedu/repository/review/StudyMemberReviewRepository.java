@@ -4,6 +4,7 @@ import com.wiedu.domain.entity.Study;
 import com.wiedu.domain.entity.StudyMemberReview;
 import com.wiedu.domain.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -38,4 +39,11 @@ public interface StudyMemberReviewRepository extends JpaRepository<StudyMemberRe
     // 특정 스터디에서 리뷰 대상자 목록 (이미 리뷰한 사람 확인용)
     @Query("SELECT r.reviewee.id FROM StudyMemberReview r WHERE r.study = :study AND r.reviewer = :reviewer")
     List<Long> findReviewedMemberIds(@Param("study") Study study, @Param("reviewer") User reviewer);
+
+    /**
+     * 사용자 삭제 시 리뷰어를 NULL로 설정 (알 수 없음 처리)
+     */
+    @Modifying
+    @Query("UPDATE StudyMemberReview r SET r.reviewer = null WHERE r.reviewer.id = :userId")
+    void setReviewerToNull(@Param("userId") Long userId);
 }

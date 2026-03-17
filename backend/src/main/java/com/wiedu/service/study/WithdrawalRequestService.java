@@ -6,6 +6,7 @@ import com.wiedu.domain.entity.User;
 import com.wiedu.domain.entity.WithdrawalRequest;
 import com.wiedu.domain.enums.MemberStatus;
 import com.wiedu.domain.enums.RequestStatus;
+import com.wiedu.domain.enums.StudyStatus;
 import com.wiedu.dto.study.WithdrawalRequestResponse;
 import com.wiedu.exception.BusinessException;
 import com.wiedu.exception.ErrorCode;
@@ -48,6 +49,11 @@ public class WithdrawalRequestService {
     public WithdrawalRequestResponse requestWithdrawal(Long studyId, Long userId, String reason) {
         Study study = studyService.findStudyEntityById(studyId);
         User user = userService.findUserEntityById(userId);
+
+        // 종료된 스터디인지 확인 (COMPLETED, CLOSED)
+        if (study.getStatus() == StudyStatus.COMPLETED || study.getStatus() == StudyStatus.CLOSED) {
+            throw new BusinessException(ErrorCode.STUDY_NOT_ACTIVE);
+        }
 
         // 멤버인지 확인
         StudyMember member = studyMemberRepository.findByStudyAndUser(study, user)

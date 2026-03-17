@@ -27,14 +27,20 @@ public record BoardPostListResponse(
         if (preview.length() > 100) {
             preview = preview.substring(0, 100) + "...";
         }
+
+        // 작성자가 삭제된 경우 "탈퇴한 사용자" 표시
+        Long authorId = post.getAuthor() != null ? post.getAuthor().getId() : null;
+        String authorNickname = post.getAuthor() != null ? post.getAuthor().getNickname() : "탈퇴한 사용자";
+        String authorProfileImage = post.getAuthor() != null ? post.getAuthor().getProfileImage() : null;
+
         return new BoardPostListResponse(
             post.getId(),
             post.getCategory(),
             post.getTitle(),
             preview,
-            post.getAuthor().getId(),
-            post.getAuthor().getNickname(),
-            post.getAuthor().getProfileImage(),
+            authorId,
+            authorNickname,
+            authorProfileImage,
             post.getViewCount(),
             post.getCommentCount(),
             post.getLikeCount(),

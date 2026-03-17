@@ -54,4 +54,19 @@ public interface BoardPostRepository extends JpaRepository<BoardPost, Long> {
     @Query(value = "SELECT p FROM BoardPost p JOIN FETCH p.author WHERE p.study = :study AND p.category = :category AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%'))) ORDER BY p.createdAt DESC",
            countQuery = "SELECT COUNT(p) FROM BoardPost p WHERE p.study = :study AND p.category = :category AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     Page<BoardPost> searchByKeywordAndCategory(@Param("study") Study study, @Param("category") PostCategory category, @Param("keyword") String keyword, Pageable pageable);
+
+    /**
+     * 사용자 삭제 시 작성자를 NULL로 설정 (알 수 없음 처리)
+     */
+    @Modifying
+    @Query("UPDATE BoardPost p SET p.author = null WHERE p.author.id = :userId")
+    void setAuthorToNull(@Param("userId") Long userId);
+
+    /**
+     * 사용자가 좋아요한 게시글들의 like_count 일괄 감소 (탈퇴 시 사용)
+     */
+    @Modifying
+    @Query("UPDATE BoardPost p SET p.likeCount = CASE WHEN p.likeCount > 0 THEN p.likeCount - 1 ELSE 0 END " +
+           "WHERE p.id IN (SELECT pl.post.id FROM BoardPostLike pl WHERE pl.user.id = :userId)")
+    void decrementLikeCountByUserId(@Param("userId") Long userId);
 }

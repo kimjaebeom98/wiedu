@@ -28,8 +28,8 @@ public class BoardPost extends BaseEntity {
     private Study study;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "author_id", nullable = false)
-    @Comment("작성자 ID")
+    @JoinColumn(name = "author_id")
+    @Comment("작성자 ID (삭제된 사용자의 경우 NULL)")
     private User author;
 
     @Enumerated(EnumType.STRING)

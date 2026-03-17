@@ -25,4 +25,11 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
     void deleteExpiredAndRevoked(@Param("now") LocalDateTime now);
 
     long countByUserAndRevokedFalse(User user);
+
+    /**
+     * 사용자 삭제 시 해당 사용자의 모든 리프레시 토큰 삭제
+     */
+    @Modifying
+    @Query("DELETE FROM RefreshToken rt WHERE rt.user.id = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
 }

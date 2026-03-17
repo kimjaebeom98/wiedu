@@ -154,6 +154,12 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
     Page<Study> findNearbyStudiesPaginated(@Param("lat") Double lat, @Param("lng") Double lng, @Param("radius") Double radiusKm, Pageable pageable);
 
     /**
+     * 특정 사용자가 리더인 스터디가 있는지 확인
+     */
+    @Query("SELECT CASE WHEN COUNT(s) > 0 THEN true ELSE false END FROM Study s WHERE s.leader.id = :leaderId")
+    boolean existsByLeaderId(@Param("leaderId") Long leaderId);
+
+    /**
      * 멤버 수 atomic 증가 (Lost Update 방지)
      * 정원 초과 방지: maxMembers 미만일 때만 증가
      * @return 업데이트된 행 수 (1이면 성공, 0이면 정원 초과)

@@ -6,6 +6,7 @@ import com.wiedu.domain.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -35,4 +36,11 @@ public interface StudyLeaderReviewRepository extends JpaRepository<StudyLeaderRe
 
     // 중복 리뷰 방지 (한 스터디당 한 번만)
     boolean existsByReviewerAndStudy(User reviewer, Study study);
+
+    /**
+     * 사용자 삭제 시 리뷰어를 NULL로 설정 (알 수 없음 처리)
+     */
+    @Modifying
+    @Query("UPDATE StudyLeaderReview r SET r.reviewer = null WHERE r.reviewer.id = :userId")
+    void setReviewerToNull(@Param("userId") Long userId);
 }

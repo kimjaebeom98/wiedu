@@ -11,6 +11,7 @@ import org.hibernate.annotations.Comment;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
 @Table(name = "USERS")
@@ -190,6 +191,37 @@ public class User extends BaseEntity {
 
     public void withdraw() {
         this.status = UserStatus.WITHDRAWN;
+    }
+
+    /**
+     * 회원 탈퇴 시 개인정보 익명화
+     * - status를 WITHDRAWN으로 변경
+     * - 이메일, 닉네임 등 개인정보 익명화
+     * - 게시글/댓글 작성자는 유지 (화면에서 "탈퇴한 사용자"로 표시)
+     */
+    public void anonymize() {
+        this.status = UserStatus.WITHDRAWN;
+        this.email = "withdrawn_" + UUID.randomUUID() + "@deleted.local";
+        this.nickname = "탈퇴한 사용자";
+        this.profileImage = null;
+        this.bio = null;
+        this.password = null;
+        this.oauthProvider = null;
+        this.oauthProviderId = null;
+        this.region = null;
+        this.latitude = null;
+        this.longitude = null;
+        this.emailVerified = false;
+        this.pushNotificationEnabled = false;
+        this.chatNotificationEnabled = false;
+        this.studyNotificationEnabled = false;
+    }
+
+    /**
+     * 탈퇴한 사용자인지 확인
+     */
+    public boolean isWithdrawn() {
+        return this.status == UserStatus.WITHDRAWN;
     }
 
     /**

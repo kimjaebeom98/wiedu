@@ -6,6 +6,7 @@ import com.wiedu.domain.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -68,6 +69,14 @@ public interface StudyBookmarkRepository extends JpaRepository<StudyBookmark, Lo
     /**
      * 사용자 ID와 스터디 ID로 북마크 삭제
      */
+    @Modifying
     @Query("DELETE FROM StudyBookmark sb WHERE sb.user.id = :userId AND sb.study.id = :studyId")
     void deleteByUserIdAndStudyId(@Param("userId") Long userId, @Param("studyId") Long studyId);
+
+    /**
+     * 사용자 삭제 시 해당 사용자의 모든 북마크 삭제
+     */
+    @Modifying
+    @Query("DELETE FROM StudyBookmark sb WHERE sb.user.id = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
 }

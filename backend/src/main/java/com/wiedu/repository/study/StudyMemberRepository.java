@@ -7,6 +7,7 @@ import com.wiedu.domain.enums.MemberRole;
 import com.wiedu.domain.enums.MemberStatus;
 import com.wiedu.domain.enums.StudyStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -71,4 +72,11 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
     // 스터디 ID + 사용자 ID로 멤버 여부 확인
     @Query("SELECT CASE WHEN COUNT(sm) > 0 THEN true ELSE false END FROM StudyMember sm WHERE sm.study.id = :studyId AND sm.user.id = :userId AND sm.status = :status")
     boolean existsByStudyIdAndUserIdAndStatus(@Param("studyId") Long studyId, @Param("userId") Long userId, @Param("status") MemberStatus status);
+
+    /**
+     * 사용자 삭제 시 해당 사용자의 모든 멤버십 삭제
+     */
+    @Modifying
+    @Query("DELETE FROM StudyMember sm WHERE sm.user.id = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
 }

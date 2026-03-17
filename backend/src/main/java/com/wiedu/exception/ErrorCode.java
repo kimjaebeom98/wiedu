@@ -118,6 +118,7 @@ public enum ErrorCode {
     WITHDRAWAL_REQUEST_ALREADY_PROCESSED(HttpStatus.BAD_REQUEST, "W003", "이미 처리된 탈퇴 신청입니다."),
     NOT_WITHDRAWAL_REQUEST_OWNER(HttpStatus.FORBIDDEN, "W004", "본인의 탈퇴 신청만 취소할 수 있습니다."),
     LEADER_CANNOT_REQUEST_WITHDRAWAL(HttpStatus.BAD_REQUEST, "W005", "스터디장은 탈퇴 신청을 할 수 없습니다. 리더 위임 후 탈퇴해주세요."),
+    STUDY_NOT_ACTIVE(HttpStatus.BAD_REQUEST, "W006", "종료된 스터디에서는 탈퇴 신청을 할 수 없습니다."),
 
     // Common Authorization
     FORBIDDEN(HttpStatus.FORBIDDEN, "C006", "접근 권한이 없습니다.");

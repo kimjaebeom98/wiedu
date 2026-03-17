@@ -4,6 +4,9 @@ import com.wiedu.domain.entity.GalleryPhoto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
 
@@ -31,4 +34,11 @@ public interface GalleryPhotoRepository extends JpaRepository<GalleryPhoto, Long
      * 업로더별 갤러리 사진 조회
      */
     Page<GalleryPhoto> findByUploaderIdOrderByCreatedAtDesc(Long uploaderId, Pageable pageable);
+
+    /**
+     * 사용자 삭제 시 업로더를 NULL로 설정 (알 수 없음 처리)
+     */
+    @Modifying
+    @Query("UPDATE GalleryPhoto g SET g.uploader = null WHERE g.uploader.id = :userId")
+    void setUploaderToNull(@Param("userId") Long userId);
 }

@@ -25,4 +25,11 @@ public interface UserInterestRepository extends JpaRepository<UserInterest, Long
     @Modifying
     @Query("DELETE FROM UserInterest ui WHERE ui.user.id = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
+
+    /**
+     * 사용자 삭제 시 해당 사용자의 모든 관심사 삭제 (alias)
+     */
+    @Modifying
+    @Query("DELETE FROM UserInterest ui WHERE ui.user.id = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
 }

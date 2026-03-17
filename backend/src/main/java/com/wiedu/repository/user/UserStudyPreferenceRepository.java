@@ -25,4 +25,11 @@ public interface UserStudyPreferenceRepository extends JpaRepository<UserStudyPr
     @Modifying
     @Query("DELETE FROM UserStudyPreference usp WHERE usp.user.id = :userId")
     void deleteAllByUserId(@Param("userId") Long userId);
+
+    /**
+     * 사용자 삭제 시 해당 사용자의 모든 스터디 선호도 삭제 (alias)
+     */
+    @Modifying
+    @Query("DELETE FROM UserStudyPreference usp WHERE usp.user.id = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
 }

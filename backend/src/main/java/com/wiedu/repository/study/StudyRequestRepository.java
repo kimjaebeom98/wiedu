@@ -7,6 +7,9 @@ import com.wiedu.domain.enums.RequestStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -53,4 +56,11 @@ public interface StudyRequestRepository extends JpaRepository<StudyRequest, Long
     // 특정 스터디 + 사용자의 최근 거절된 신청 중 쿨다운 기간 이후 것 확인
     boolean existsByStudyAndUserAndStatusAndProcessedAtAfter(
             Study study, User user, RequestStatus status, LocalDateTime processedAfter);
+
+    /**
+     * 사용자 삭제 시 해당 사용자의 모든 가입 신청 삭제
+     */
+    @Modifying
+    @Query("DELETE FROM StudyRequest sr WHERE sr.user.id = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
 }

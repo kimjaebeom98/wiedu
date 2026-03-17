@@ -7,6 +7,9 @@ import com.wiedu.domain.enums.RequestStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -36,4 +39,11 @@ public interface WithdrawalRequestRepository extends JpaRepository<WithdrawalReq
 
     // 특정 스터디의 대기 중인 탈퇴 신청 수
     long countByStudyAndStatus(Study study, RequestStatus status);
+
+    /**
+     * 사용자 삭제 시 해당 사용자의 모든 탈퇴 신청 삭제
+     */
+    @Modifying
+    @Query("DELETE FROM WithdrawalRequest wr WHERE wr.user.id = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
 }

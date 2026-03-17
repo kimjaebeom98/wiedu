@@ -4,7 +4,9 @@ import com.wiedu.domain.entity.CurriculumSession;
 import com.wiedu.domain.entity.SessionAttendance;
 import com.wiedu.domain.enums.AttendanceStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -67,4 +69,11 @@ public interface SessionAttendanceRepository extends JpaRepository<SessionAttend
            "AND s.cancelled = false " +
            "AND NOT EXISTS (SELECT a FROM SessionAttendance a WHERE a.session = s AND a.user.id = :userId)")
     List<CurriculumSession> findPendingResponsesByUserAndStudy(Long userId, Long studyId, LocalDate today);
+
+    /**
+     * 사용자 삭제 시 사용자를 NULL로 설정 (알 수 없음 처리)
+     */
+    @Modifying
+    @Query("UPDATE SessionAttendance a SET a.user = null WHERE a.user.id = :userId")
+    void setUserToNull(@Param("userId") Long userId);
 }

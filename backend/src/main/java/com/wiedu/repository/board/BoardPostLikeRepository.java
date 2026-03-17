@@ -4,6 +4,7 @@ import com.wiedu.domain.entity.BoardPost;
 import com.wiedu.domain.entity.BoardPostLike;
 import com.wiedu.domain.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -29,4 +30,11 @@ public interface BoardPostLikeRepository extends JpaRepository<BoardPostLike, Lo
      */
     @Query("SELECT l.post.id FROM BoardPostLike l WHERE l.user = :user AND l.post.id IN :postIds")
     Set<Long> findLikedPostIdsByUserAndPostIds(@Param("user") User user, @Param("postIds") List<Long> postIds);
+
+    /**
+     * 사용자 삭제 시 해당 사용자의 모든 게시글 좋아요 삭제
+     */
+    @Modifying
+    @Query("DELETE FROM BoardPostLike l WHERE l.user.id = :userId")
+    void deleteByUserId(@Param("userId") Long userId);
 }

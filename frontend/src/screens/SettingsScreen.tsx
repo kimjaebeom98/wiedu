@@ -218,16 +218,33 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          {/* 로그아웃 */}
-          <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.7}>
-            <Feather name="log-out" size={18} color="#FFFFFF" />
-            <Text style={styles.logoutText}>로그아웃</Text>
-          </TouchableOpacity>
-
-          {/* 회원 탈퇴 */}
-          <TouchableOpacity style={styles.withdrawBtn} onPress={handleWithdraw} activeOpacity={0.7}>
-            <Text style={styles.withdrawText}>회원 탈퇴</Text>
-          </TouchableOpacity>
+          {/* 계정 관리 섹션 */}
+          <Text style={styles.sectionLabel}>계정 관리</Text>
+          <View style={styles.section}>
+            <TouchableOpacity
+              style={styles.row}
+              onPress={handleLogout}
+              activeOpacity={0.7}
+            >
+              <View style={styles.rowWithIcon}>
+                <Feather name="log-out" size={18} color="#FFFFFF" />
+                <Text style={styles.rowText}>로그아웃</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#71717A" />
+            </TouchableOpacity>
+            <View style={styles.divider} />
+            <TouchableOpacity
+              style={styles.row}
+              onPress={handleWithdraw}
+              activeOpacity={0.7}
+            >
+              <View style={styles.rowWithIcon}>
+                <Feather name="user-x" size={18} color="#EF4444" />
+                <Text style={styles.withdrawRowText}>회원 탈퇴</Text>
+              </View>
+              <Feather name="chevron-right" size={20} color="#71717A" />
+            </TouchableOpacity>
+          </View>
 
           <View style={styles.bottomSpacer} />
         </ScrollView>
@@ -315,27 +332,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#71717A',
   },
-  logoutBtn: {
+  rowWithIcon: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 32,
-    backgroundColor: '#27272A',
-    paddingVertical: 16,
-    borderRadius: 12,
+    gap: 12,
   },
-  logoutText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
-  withdrawBtn: {
-    marginTop: 32,
-    alignItems: 'center',
-    paddingVertical: 14,
-  },
-  withdrawText: {
+  withdrawRowText: {
     fontSize: 15,
     fontWeight: '500',
     color: '#EF4444',

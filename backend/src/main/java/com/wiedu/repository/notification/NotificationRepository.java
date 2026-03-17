@@ -43,4 +43,11 @@ public interface NotificationRepository extends JpaRepository<Notification, Long
             @Param("targetId") Long targetId,
             @Param("targetType") String targetType
     );
+
+    /**
+     * 사용자 삭제 시 해당 사용자의 모든 알림 삭제
+     */
+    @Modifying
+    @Query("DELETE FROM Notification n WHERE n.recipient.id = :recipientId")
+    void deleteByRecipientId(@Param("recipientId") Long recipientId);
 }

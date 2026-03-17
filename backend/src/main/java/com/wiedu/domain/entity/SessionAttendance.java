@@ -30,8 +30,8 @@ public class SessionAttendance {
     private CurriculumSession session;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    @Comment("사용자 ID")
+    @JoinColumn(name = "user_id")
+    @Comment("사용자 ID (삭제된 사용자의 경우 NULL)")
     private User user;
 
     @Enumerated(EnumType.STRING)

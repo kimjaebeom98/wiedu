@@ -19,12 +19,17 @@ public record BoardCommentResponse(
     }
 
     public static BoardCommentResponse from(BoardComment comment, boolean isLiked) {
+        // 작성자가 삭제된 경우 "탈퇴한 사용자" 표시
+        Long authorId = comment.getAuthor() != null ? comment.getAuthor().getId() : null;
+        String authorNickname = comment.getAuthor() != null ? comment.getAuthor().getNickname() : "탈퇴한 사용자";
+        String authorProfileImage = comment.getAuthor() != null ? comment.getAuthor().getProfileImage() : null;
+
         return new BoardCommentResponse(
             comment.getId(),
             comment.getContent(),
-            comment.getAuthor().getId(),
-            comment.getAuthor().getNickname(),
-            comment.getAuthor().getProfileImage(),
+            authorId,
+            authorNickname,
+            authorProfileImage,
             comment.getLikeCount(),
             isLiked,
             comment.getCreatedAt(),
