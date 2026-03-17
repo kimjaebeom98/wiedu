@@ -5,13 +5,13 @@ import {
   TextInput,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  StatusBar,
 } from 'react-native';
-
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CustomAlert, AlertButton } from '../../components/common';
 import { Feather } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -25,6 +25,7 @@ const TITLE_MAX_LENGTH = 100;
 
 export default function BoardPostCreateScreen({ navigation, route }: Props) {
   const { studyId, isLeader = false } = route.params;
+  const insets = useSafeAreaInsets();
 
   const [selectedCategory, setSelectedCategory] = useState<PostCategory>('CHAT');
   const [title, setTitle] = useState('');
@@ -97,13 +98,14 @@ export default function BoardPostCreateScreen({ navigation, route }: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#18181B" />
       <KeyboardAvoidingView
         style={styles.keyboardAvoid}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.backButton}
@@ -209,7 +211,7 @@ export default function BoardPostCreateScreen({ navigation, route }: Props) {
         buttons={alertConfig.buttons}
         onClose={() => setAlertVisible(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
