@@ -56,16 +56,20 @@ export const styles = StyleSheet.create({
   // Tab Bar
   tabBar: {
     height: 48,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
     backgroundColor: '#18181B',
     borderBottomWidth: 1,
     borderBottomColor: '#27272A',
   },
+  tabBarContent: {
+    flexDirection: 'row',
+    paddingHorizontal: 8,
+    gap: 4,
+  },
   tab: {
-    flex: 1,
     paddingVertical: 12,
+    paddingHorizontal: 16,
     alignItems: 'center',
+    overflow: 'visible',
   },
   tabText: {
     fontSize: 15,
@@ -930,6 +934,7 @@ export const styles = StyleSheet.create({
     position: 'relative',
     flexDirection: 'row',
     alignItems: 'center',
+    overflow: 'visible',
   },
   tabBadge: {
     position: 'absolute',

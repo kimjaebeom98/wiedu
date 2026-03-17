@@ -755,7 +755,12 @@ export default function StudyDetailScreen() {
       </View>
 
       {/* Tab Bar */}
-      <View style={styles.tabBar}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.tabBar}
+        contentContainerStyle={styles.tabBarContent}
+      >
         {(() => {
           const isLeader = study.leader.id === currentUserId;
           const showApplicantsTab = isLeader && study.status === 'RECRUITING';
@@ -813,7 +818,7 @@ export default function StudyDetailScreen() {
             </TouchableOpacity>
           ));
         })()}
-      </View>
+      </ScrollView>
 
       {activeTab === 'board' ? (
         // 게시판 - 멤버만 접근 가능
