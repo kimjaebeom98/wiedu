@@ -55,13 +55,16 @@ export const styles = StyleSheet.create({
 
   // Tab Bar
   tabBar: {
-    height: 48,
+    maxHeight: 48,
+    flexGrow: 0,
     backgroundColor: '#18181B',
     borderBottomWidth: 1,
     borderBottomColor: '#27272A',
   },
   tabBarContent: {
     flexDirection: 'row',
+    alignItems: 'center',
+    height: 48,
     paddingHorizontal: 8,
     gap: 4,
   },
