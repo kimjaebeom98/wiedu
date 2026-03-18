@@ -139,7 +139,12 @@ export default function StudyCalendarScreen() {
 
     const weeks: (number | null)[][] = [];
     for (let i = 0; i < days.length; i += 7) {
-      weeks.push(days.slice(i, i + 7));
+      const week = days.slice(i, i + 7);
+      // 마지막 주가 7일 미만이면 null로 채움
+      while (week.length < 7) {
+        week.push(null);
+      }
+      weeks.push(week);
     }
 
     return weeks.map((week, weekIndex) => (
