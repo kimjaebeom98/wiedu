@@ -49,11 +49,23 @@ public class StudyService {
     private final NotificationService notificationService;
     private final jakarta.persistence.EntityManager entityManager;
 
+    private static final int MAX_ACTIVE_STUDIES = 3;
+
     /**
      * 스터디 생성 (6단계 플로우)
      */
     @Transactional
     public StudyResponse createStudy(Long leaderId, StudyCreateRequest request) {
+        // Step 0: 활성 스터디 수 제한 검증 (최대 3개)
+        long activeStudyCount = studyMemberRepository.countActiveStudiesByUserId(
+                leaderId,
+                MemberStatus.ACTIVE,
+                java.util.List.of(StudyStatus.RECRUITING, StudyStatus.IN_PROGRESS)
+        );
+        if (activeStudyCount >= MAX_ACTIVE_STUDIES) {
+            throw new BusinessException(ErrorCode.STUDY_LIMIT_EXCEEDED);
+        }
+
         User leader = userService.findUserEntityById(leaderId);
 
         // Step 1: 카테고리/서브카테고리 조회 및 검증

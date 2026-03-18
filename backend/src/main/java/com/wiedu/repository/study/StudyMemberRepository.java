@@ -79,4 +79,11 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
     @Modifying
     @Query("DELETE FROM StudyMember sm WHERE sm.user.id = :userId")
     void deleteByUserId(@Param("userId") Long userId);
+
+    /**
+     * 사용자의 활성 스터디 수 카운트 (RECRUITING 또는 IN_PROGRESS 상태)
+     * 스터디 생성/가입 제한 정책(최대 3개) 검증용
+     */
+    @Query("SELECT COUNT(sm) FROM StudyMember sm WHERE sm.user.id = :userId AND sm.status = :memberStatus AND sm.study.status IN :studyStatuses")
+    long countActiveStudiesByUserId(@Param("userId") Long userId, @Param("memberStatus") MemberStatus memberStatus, @Param("studyStatuses") java.util.List<StudyStatus> studyStatuses);
 }

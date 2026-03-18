@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,10 @@ import {
   StatusBar,
   ActivityIndicator,
   Image,
+  TextInput,
+  Modal,
 } from 'react-native';
+import { Swipeable } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
@@ -17,6 +20,7 @@ import { RootStackParamList } from '../navigation/types';
 import { getMyProfile, getMyStudies } from '../api/profile';
 import { getMyStudyRequests, StudyRequestResponse } from '../api/study';
 import { getMyBookmarks } from '../api/bookmark';
+import { requestWithdrawal } from '../api/withdrawal';
 import { MyProfile, MyStudy } from '../types/profile';
 import { StudyListResponse } from '../types/study';
 import { clearTokens } from '../storage/token';
@@ -66,6 +70,13 @@ export default function MyPageScreen() {
   const [error, setError] = useState<string | null>(null);
   const [expandedSection, setExpandedSection] = useState<ExpandedSection>(null);
 
+  // 탈퇴 모달 관련 상태
+  const [withdrawalModalVisible, setWithdrawalModalVisible] = useState(false);
+  const [selectedStudyForWithdrawal, setSelectedStudyForWithdrawal] = useState<MyStudy | null>(null);
+  const [withdrawalReason, setWithdrawalReason] = useState('');
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const swipeableRefs = useRef<Map<number, Swipeable | null>>(new Map());
+
   const loadProfile = useCallback(async () => {
     try {
       setError(null);
@@ -100,6 +111,51 @@ export default function MyPageScreen() {
   const handleLogout = async () => {
     await clearTokens();
     navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
+  };
+
+  const handleWithdrawalPress = (study: MyStudy) => {
+    // 스터디장은 탈퇴할 수 없음
+    if (study.myRole === 'LEADER') return;
+
+    setSelectedStudyForWithdrawal(study);
+    setWithdrawalReason('');
+    setWithdrawalModalVisible(true);
+
+    // 스와이프 닫기
+    swipeableRefs.current.get(study.studyId)?.close();
+  };
+
+  const handleWithdrawalSubmit = async () => {
+    if (!selectedStudyForWithdrawal || !withdrawalReason.trim()) return;
+
+    try {
+      setIsWithdrawing(true);
+      await requestWithdrawal(selectedStudyForWithdrawal.studyId, withdrawalReason.trim());
+      setWithdrawalModalVisible(false);
+      setSelectedStudyForWithdrawal(null);
+      setWithdrawalReason('');
+      // 새로고침
+      loadProfile();
+    } catch (error) {
+      // API 에러는 withErrorHandling에서 처리됨
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
+
+  const renderRightActions = (study: MyStudy) => {
+    // 스터디장은 스와이프 불가
+    if (study.myRole === 'LEADER') return null;
+
+    return (
+      <TouchableOpacity
+        style={styles.swipeAction}
+        onPress={() => handleWithdrawalPress(study)}
+      >
+        <Feather name="log-out" size={20} color="#FFFFFF" />
+        <Text style={styles.swipeActionText}>탈퇴</Text>
+      </TouchableOpacity>
+    );
   };
 
   useFocusEffect(
@@ -235,7 +291,7 @@ export default function MyPageScreen() {
             activeOpacity={0.7}
           >
             <Text style={styles.statNumber}>
-              {profile.stats.activeStudyCount + profile.stats.completedStudyCount}
+              {myStudies.filter(s => s.status === 'RECRUITING' || s.status === 'IN_PROGRESS').length}
             </Text>
             <View style={styles.statLabelRow}>
               <Text style={styles.statLabel}>참여 스터디</Text>
@@ -252,7 +308,7 @@ export default function MyPageScreen() {
             onPress={() => setExpandedSection(expandedSection === 'leading' ? null : 'leading')}
             activeOpacity={0.7}
           >
-            <Text style={styles.statNumber}>{profile.stats.leadingStudyCount}</Text>
+            <Text style={styles.statNumber}>{myStudies.filter(s => s.myRole === 'LEADER' && (s.status === 'RECRUITING' || s.status === 'IN_PROGRESS')).length}</Text>
             <View style={styles.statLabelRow}>
               <Text style={styles.statLabel}>운영 스터디</Text>
               <Feather
@@ -281,37 +337,55 @@ export default function MyPageScreen() {
         </View>
 
         {/* Expanded Section - Participating Studies */}
-        {expandedSection === 'participating' && myStudies.length > 0 && (
+        {expandedSection === 'participating' && myStudies.filter(s => s.status === 'RECRUITING' || s.status === 'IN_PROGRESS').length > 0 && (
           <View style={styles.expandedSection}>
-            {myStudies.slice(0, 3).map((study) => (
-              <TouchableOpacity
+            {myStudies.filter(s => s.status === 'RECRUITING' || s.status === 'IN_PROGRESS').slice(0, 3).map((study) => (
+              <Swipeable
                 key={study.studyId}
-                style={styles.studyCard}
-                onPress={() => navigation.navigate('StudyDetail', { studyId: study.studyId })}
+                ref={(ref) => { swipeableRefs.current.set(study.studyId, ref); }}
+                renderRightActions={() => renderRightActions(study)}
+                overshootRight={false}
+                friction={2}
+                enabled={study.myRole !== 'LEADER'}
               >
-                {study.thumbnailImage ? (
-                  <Image source={{ uri: study.thumbnailImage }} style={styles.studyThumb} />
-                ) : (
-                  <View style={styles.studyThumbPlaceholder}>
-                    <Feather name="book-open" size={24} color="#71717A" />
+                <TouchableOpacity
+                  style={styles.studyCard}
+                  onPress={() => navigation.navigate('StudyDetail', { studyId: study.studyId })}
+                >
+                  {study.thumbnailImage ? (
+                    <Image source={{ uri: study.thumbnailImage }} style={styles.studyThumb} />
+                  ) : (
+                    <View style={styles.studyThumbPlaceholder}>
+                      <Feather name="book-open" size={24} color="#71717A" />
+                    </View>
+                  )}
+                  <View style={styles.studyInfo}>
+                    <View style={styles.studyNameRow}>
+                      <Text style={styles.studyName} numberOfLines={1}>{study.title}</Text>
+                      {study.myRole === 'LEADER' && (
+                        <View style={styles.leaderBadge}>
+                          <Text style={styles.leaderBadgeText}>스터디장</Text>
+                        </View>
+                      )}
+                    </View>
+                    <View style={styles.studyMeta}>
+                      {study.category && (
+                        <Text style={[
+                          styles.studyTag,
+                          { color: CATEGORY_COLORS[study.category] || '#8B5CF6' }
+                        ]}>
+                          {CATEGORY_LABELS[study.category] || study.category}
+                        </Text>
+                      )}
+                      <Text style={styles.studyMembers}>멤버 {study.currentMembers}명</Text>
+                    </View>
                   </View>
-                )}
-                <View style={styles.studyInfo}>
-                  <Text style={styles.studyName} numberOfLines={1}>{study.title}</Text>
-                  <View style={styles.studyMeta}>
-                    {study.category && (
-                      <Text style={[
-                        styles.studyTag,
-                        { color: CATEGORY_COLORS[study.category] || '#8B5CF6' }
-                      ]}>
-                        {CATEGORY_LABELS[study.category] || study.category}
-                      </Text>
-                    )}
-                    <Text style={styles.studyMembers}>멤버 {study.currentMembers}명</Text>
-                  </View>
-                </View>
-                <Feather name="chevron-right" size={20} color="#71717A" />
-              </TouchableOpacity>
+                  {study.myRole !== 'LEADER' && (
+                    <Feather name="chevron-left" size={16} color="#52525B" style={styles.swipeHint} />
+                  )}
+                  <Feather name="chevron-right" size={20} color="#71717A" />
+                </TouchableOpacity>
+              </Swipeable>
             ))}
             {myStudies.length === 0 && (
               <View style={styles.emptyExpanded}>
@@ -331,8 +405,8 @@ export default function MyPageScreen() {
         {/* Expanded Section - Leading Studies */}
         {expandedSection === 'leading' && (
           <View style={styles.expandedSection}>
-            {myStudies.filter(s => s.myRole === 'LEADER').length > 0 ? (
-              myStudies.filter(s => s.myRole === 'LEADER').slice(0, 3).map((study) => (
+            {myStudies.filter(s => s.myRole === 'LEADER' && (s.status === 'RECRUITING' || s.status === 'IN_PROGRESS')).length > 0 ? (
+              myStudies.filter(s => s.myRole === 'LEADER' && (s.status === 'RECRUITING' || s.status === 'IN_PROGRESS')).slice(0, 3).map((study) => (
                 <TouchableOpacity
                   key={study.studyId}
                   style={styles.studyCard}
@@ -497,6 +571,68 @@ export default function MyPageScreen() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
+
+      {/* 탈퇴 사유 입력 모달 */}
+      <Modal
+        visible={withdrawalModalVisible}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setWithdrawalModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <View style={styles.modalIconContainer}>
+                <Feather name="log-out" size={24} color="#EF4444" />
+              </View>
+              <Text style={styles.modalTitle}>스터디 탈퇴</Text>
+              <Text style={styles.modalSubtitle}>
+                {selectedStudyForWithdrawal?.title}
+              </Text>
+            </View>
+
+            <Text style={styles.modalLabel}>탈퇴 사유</Text>
+            <TextInput
+              style={styles.reasonInput}
+              placeholder="탈퇴 사유를 입력해주세요"
+              placeholderTextColor="#71717A"
+              value={withdrawalReason}
+              onChangeText={setWithdrawalReason}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+
+            <Text style={styles.modalNote}>
+              * 탈퇴 신청 후 스터디장의 승인이 필요합니다.
+            </Text>
+
+            <View style={styles.modalButtons}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setWithdrawalModalVisible(false)}
+                disabled={isWithdrawing}
+              >
+                <Text style={styles.cancelButtonText}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  !withdrawalReason.trim() && styles.submitButtonDisabled,
+                ]}
+                onPress={handleWithdrawalSubmit}
+                disabled={!withdrawalReason.trim() || isWithdrawing}
+              >
+                {isWithdrawing ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Text style={styles.submitButtonText}>탈퇴 신청</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -895,5 +1031,130 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     color: '#8B5CF6',
+  },
+  // 스와이프 관련 스타일
+  swipeAction: {
+    backgroundColor: '#EF4444',
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: 80,
+    borderRadius: 12,
+    marginLeft: 8,
+    gap: 4,
+  },
+  swipeActionText: {
+    color: '#FFFFFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  swipeHint: {
+    marginRight: 4,
+    opacity: 0.5,
+  },
+  studyNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  leaderBadge: {
+    backgroundColor: 'rgba(139, 92, 246, 0.2)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  leaderBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: '#8B5CF6',
+  },
+  // 탈퇴 모달 스타일
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: '#27272A',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 340,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#A1A1AA',
+    textAlign: 'center',
+  },
+  modalLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginBottom: 8,
+  },
+  reasonInput: {
+    backgroundColor: '#3F3F46',
+    borderRadius: 12,
+    padding: 14,
+    fontSize: 14,
+    color: '#FFFFFF',
+    minHeight: 100,
+    marginBottom: 12,
+  },
+  modalNote: {
+    fontSize: 12,
+    color: '#71717A',
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: '#3F3F46',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  submitButton: {
+    flex: 1,
+    backgroundColor: '#EF4444',
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  submitButtonDisabled: {
+    backgroundColor: '#52525B',
+  },
+  submitButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
 });

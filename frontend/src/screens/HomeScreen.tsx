@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   Image,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -16,7 +17,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/types';
 import { fetchCategories, fetchNearbyStudies, fetchPopularStudies } from '../api/study';
-import { getMyProfile } from '../api/profile';
+import { getMyProfile, checkStudyLimitExceeded } from '../api/profile';
 import { fetchUnreadCount } from '../api/notification';
 import { fetchNearbyMembers } from '../api/user';
 import { StudyListResponse, Category } from '../types/study';
@@ -187,6 +188,25 @@ export default function HomeScreen() {
       console.error('Failed to load unread count:', error);
     }
   }, []);
+
+  // 스터디 생성 버튼 핸들러 (활성 스터디 3개 제한 체크)
+  const handleCreateStudy = useCallback(async () => {
+    try {
+      const { exceeded, count } = await checkStudyLimitExceeded();
+      if (exceeded) {
+        Alert.alert(
+          '스터디 생성 불가',
+          `현재 ${count}개의 활성 스터디에 참여 중입니다.\n스터디는 최대 3개까지만 참여할 수 있습니다.`,
+          [{ text: '확인' }]
+        );
+        return;
+      }
+      navigation.navigate('StudyCreate');
+    } catch (error) {
+      console.error('Failed to check study limit:', error);
+      navigation.navigate('StudyCreate');
+    }
+  }, [navigation]);
 
   // 화면 포커스 시 프로필 지역 다시 로드 (프로필 수정 반영)
   const lastProfileRegionRef = useRef<string | null>(null);
@@ -553,7 +573,7 @@ export default function HomeScreen() {
               <Text style={styles.emptyStateText}>아직 등록된 스터디가 없어요</Text>
               <TouchableOpacity
                 style={styles.emptyStateBtn}
-                onPress={() => navigation.navigate('StudyCreate')}
+                onPress={handleCreateStudy}
               >
                 <Text style={styles.emptyStateBtnText}>첫 스터디 만들기</Text>
               </TouchableOpacity>
@@ -654,7 +674,7 @@ export default function HomeScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.navAddBtn}
-          onPress={() => navigation.navigate('StudyCreate')}
+          onPress={handleCreateStudy}
         >
           <Feather name="plus" size={24} color="#FFFFFF" />
         </TouchableOpacity>

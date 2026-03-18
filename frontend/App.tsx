@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { View, StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import SplashScreen from './src/screens/SplashScreen';
 import LoginScreen from './src/screens/LoginScreen';
@@ -127,7 +128,7 @@ export default function App() {
   }
 
   return (
-    <>
+    <GestureHandlerRootView style={styles.container}>
       <StatusBar style="light" />
       <NavigationContainer>
         <Stack.Navigator
@@ -171,7 +172,7 @@ export default function App() {
           <Stack.Screen name="BookmarkedStudies" component={BookmarkedStudiesScreen} />
         </Stack.Navigator>
       </NavigationContainer>
-    </>
+    </GestureHandlerRootView>
   );
 }
 

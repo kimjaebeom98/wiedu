@@ -40,6 +40,7 @@ import {
   approveWithdrawalRequest,
   WithdrawalRequestResponse,
 } from '../../api/withdrawal';
+import { checkStudyLimitExceeded } from '../../api/profile';
 import { StudyDetailResponse } from '../../types/study';
 import { StudyLeaderReviewsResponse } from '../../types/review';
 import { CurriculumResponse, SessionResponse } from '../../types/curriculum';
@@ -125,9 +126,6 @@ export default function StudyDetailScreen() {
   const [withdrawalRequests, setWithdrawalRequests] = useState<WithdrawalRequestResponse[]>([]);
   const [showWithdrawalListModal, setShowWithdrawalListModal] = useState(false);
   const [approvalProcessing, setApprovalProcessing] = useState<number | null>(null);
-
-  // More menu state
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
 
   // Toggle curriculum expansion and load sessions (uses curriculumId, not index)
   const toggleCurriculum = async (curriculumId: number) => {
@@ -404,16 +402,40 @@ export default function StudyDetailScreen() {
       .join(', ');
   };
 
-  const handleJoinStudy = () => {
-    navigation.navigate('StudyApply', {
-      studyId: study!.id,
-      studyTitle: study!.title,
-      leaderName: study!.leader.nickname,
-      currentMembers: study!.currentMembers,
-      maxMembers: study!.maxMembers,
-      rules: study!.rules || [],
-      depositRefundPolicy: study!.depositRefundPolicy,
-    });
+  const handleJoinStudy = async () => {
+    try {
+      const { exceeded, count } = await checkStudyLimitExceeded();
+      if (exceeded) {
+        showAlert({
+          title: '신청 불가',
+          message: `현재 ${count}개의 활성 스터디에 참여 중입니다.\n스터디는 최대 3개까지만 참여할 수 있습니다.`,
+          buttons: [{ text: '확인', onPress: () => setAlertVisible(false) }],
+          icon: 'alert-circle',
+          iconColor: '#EF4444',
+        });
+        return;
+      }
+      navigation.navigate('StudyApply', {
+        studyId: study!.id,
+        studyTitle: study!.title,
+        leaderName: study!.leader.nickname,
+        currentMembers: study!.currentMembers,
+        maxMembers: study!.maxMembers,
+        rules: study!.rules || [],
+        depositRefundPolicy: study!.depositRefundPolicy,
+      });
+    } catch (error) {
+      console.error('Failed to check study limit:', error);
+      navigation.navigate('StudyApply', {
+        studyId: study!.id,
+        studyTitle: study!.title,
+        leaderName: study!.leader.nickname,
+        currentMembers: study!.currentMembers,
+        maxMembers: study!.maxMembers,
+        rules: study!.rules || [],
+        depositRefundPolicy: study!.depositRefundPolicy,
+      });
+    }
   };
 
   const handleWriteReview = () => {
@@ -746,12 +768,6 @@ export default function StudyDetailScreen() {
           <TouchableOpacity onPress={handleToggleBookmark} disabled={bookmarkProcessing || !currentUserId}>
             <Feather name="bookmark" size={22} color={isBookmarked ? '#8B5CF6' : '#A1A1AA'} />
           </TouchableOpacity>
-          {/* 더보기 메뉴 - 멤버만 표시 */}
-          {study.isMember && (
-            <TouchableOpacity onPress={() => setShowMoreMenu(true)}>
-              <Feather name="more-vertical" size={22} color="#A1A1AA" />
-            </TouchableOpacity>
-          )}
         </View>
       </View>
 
@@ -1802,76 +1818,6 @@ export default function StudyDetailScreen() {
             </ScrollView>
           </View>
         </View>
-      </Modal>
-
-      {/* More Menu Modal */}
-      <Modal
-        visible={showMoreMenu}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowMoreMenu(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setShowMoreMenu(false)}
-        >
-          <View style={{
-            position: 'absolute',
-            top: insets.top + 56,
-            right: 16,
-            backgroundColor: '#27272A',
-            borderRadius: 12,
-            overflow: 'hidden',
-            minWidth: 160,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
-            elevation: 8,
-          }}>
-            {/* 알림 설정 */}
-            <TouchableOpacity
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                paddingVertical: 14,
-                paddingHorizontal: 16,
-                gap: 12,
-              }}
-              onPress={() => {
-                setShowMoreMenu(false);
-                // TODO: 알림 설정 화면으로 이동
-              }}
-            >
-              <Feather name="bell" size={18} color="#A1A1AA" />
-              <Text style={{ fontSize: 15, color: '#FFFFFF' }}>알림 설정</Text>
-            </TouchableOpacity>
-
-            {/* 스터디 탈퇴 - 일반 멤버만 (리더 제외) */}
-            {study?.isMember && study?.leader.id !== currentUserId && study?.status !== 'COMPLETED' && (
-              <>
-                <View style={{ height: 1, backgroundColor: '#3F3F46' }} />
-                <TouchableOpacity
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    paddingVertical: 14,
-                    paddingHorizontal: 16,
-                    gap: 12,
-                  }}
-                  onPress={() => {
-                    setShowMoreMenu(false);
-                    handleWithdrawalRequest();
-                  }}
-                >
-                  <Feather name="log-out" size={18} color="#EF4444" />
-                  <Text style={{ fontSize: 15, color: '#EF4444' }}>스터디 탈퇴</Text>
-                </TouchableOpacity>
-              </>
-            )}
-          </View>
-        </TouchableOpacity>
       </Modal>
     </View>
   );

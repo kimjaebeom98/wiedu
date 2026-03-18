@@ -42,3 +42,16 @@ export const updateMyProfile = async (data: UpdateProfileRequest): Promise<void>
     { defaultMessage: '프로필 저장에 실패했습니다.' }
   );
 };
+
+const MAX_ACTIVE_STUDIES = 3;
+
+export const checkStudyLimitExceeded = async (): Promise<{ exceeded: boolean; count: number }> => {
+  const myStudies = await getMyStudies();
+  const activeCount = myStudies.filter(
+    s => s.status === 'RECRUITING' || s.status === 'IN_PROGRESS'
+  ).length;
+  return {
+    exceeded: activeCount >= MAX_ACTIVE_STUDIES,
+    count: activeCount,
+  };
+};
