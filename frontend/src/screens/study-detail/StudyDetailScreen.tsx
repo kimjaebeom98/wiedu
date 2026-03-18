@@ -126,6 +126,9 @@ export default function StudyDetailScreen() {
   const [showWithdrawalListModal, setShowWithdrawalListModal] = useState(false);
   const [approvalProcessing, setApprovalProcessing] = useState<number | null>(null);
 
+  // More menu state
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+
   // Toggle curriculum expansion and load sessions (uses curriculumId, not index)
   const toggleCurriculum = async (curriculumId: number) => {
     const isExpanded = expandedCurriculums.has(curriculumId);
@@ -142,9 +145,9 @@ export default function StudyDetailScreen() {
 
     // Load sessions if expanding
     if (!isExpanded) {
-      // Check if already loaded (sessions !== undefined means already fetched, even if empty)
+      // Check if already loaded (sessions != null means already fetched, even if empty)
       const existing = curriculumData.find(c => c.id === curriculumId);
-      if (existing?.sessions !== undefined) return;
+      if (existing?.sessions != null) return;
 
       setCurriculumLoading(prev => new Set(prev).add(curriculumId));
       try {
@@ -176,23 +179,13 @@ export default function StudyDetailScreen() {
     }
   };
 
-  // Load curriculums data (preserve existing sessions)
+  // Load curriculums data (sessions are loaded separately on expand)
   const loadCurriculumData = useCallback(async () => {
     try {
       const data = await getCurriculums(studyId);
-      // Preserve existing sessions when reloading
-      setCurriculumData(prev => {
-        const sessionsMap = new Map<number, typeof prev[0]['sessions']>();
-        prev.forEach(c => {
-          if (c.sessions && c.sessions.length > 0) {
-            sessionsMap.set(c.id, c.sessions);
-          }
-        });
-        return data.map(c => ({
-          ...c,
-          sessions: sessionsMap.get(c.id) || c.sessions,
-        }));
-      });
+      // Don't preserve sessions - they will be re-fetched when curriculum is expanded
+      // This ensures fresh data after adding/editing sessions
+      setCurriculumData(data);
     } catch (error) {
       console.error('Failed to load curriculums:', error);
     }
@@ -262,6 +255,8 @@ export default function StudyDetailScreen() {
     useCallback(() => {
       loadStudyDetail();
       loadCurriculumData();
+      // 세션 캐시 무효화 - 회차 추가/수정 후 돌아올 때 새로 로드하도록
+      setExpandedCurriculums(new Set());
       if (study?.leader?.id === currentUserId && study?.status === 'RECRUITING') {
         loadApplicants();
       }
@@ -751,6 +746,12 @@ export default function StudyDetailScreen() {
           <TouchableOpacity onPress={handleToggleBookmark} disabled={bookmarkProcessing || !currentUserId}>
             <Feather name="bookmark" size={22} color={isBookmarked ? '#8B5CF6' : '#A1A1AA'} />
           </TouchableOpacity>
+          {/* 더보기 메뉴 - 멤버만 표시 */}
+          {study.isMember && (
+            <TouchableOpacity onPress={() => setShowMoreMenu(true)}>
+              <Feather name="more-vertical" size={22} color="#A1A1AA" />
+            </TouchableOpacity>
+          )}
         </View>
       </View>
 
@@ -1460,51 +1461,32 @@ export default function StudyDetailScreen() {
               )}
             </View>
           ) : study.isMember ? (
-            // 이미 멤버인 경우 - 탈퇴 신청 버튼
-            study.status !== 'COMPLETED' && (
-              myWithdrawalRequest ? (
-                // 이미 탈퇴 신청한 경우
-                <View style={styles.applicationStatusContainer}>
-                  <View style={[styles.applicationStatusBtn, styles.pendingBtn]}>
-                    <Feather name="clock" size={18} color="#F59E0B" style={{ marginRight: 8 }} />
-                    <Text style={[styles.applicationStatusBtnText, { color: '#F59E0B' }]}>
-                      탈퇴 승인 대기 중
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    style={{
-                      height: 44,
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                    }}
-                    onPress={handleCancelWithdrawal}
-                    disabled={withdrawalProcessing}
-                  >
-                    {withdrawalProcessing ? (
-                      <ActivityIndicator size="small" color="#71717A" />
-                    ) : (
-                      <Text style={{ fontSize: 14, color: '#71717A' }}>신청 취소</Text>
-                    )}
-                  </TouchableOpacity>
+            // 이미 멤버인 경우 - 탈퇴 대기 중일 때만 상태 표시 (탈퇴 버튼은 더보기 메뉴로 이동)
+            study.status !== 'COMPLETED' && myWithdrawalRequest ? (
+              <View style={styles.applicationStatusContainer}>
+                <View style={[styles.applicationStatusBtn, styles.pendingBtn]}>
+                  <Feather name="clock" size={18} color="#F59E0B" style={{ marginRight: 8 }} />
+                  <Text style={[styles.applicationStatusBtnText, { color: '#F59E0B' }]}>
+                    탈퇴 승인 대기 중
+                  </Text>
                 </View>
-              ) : (
-                // 탈퇴 신청 버튼
                 <TouchableOpacity
-                  style={[styles.joinBtn, { backgroundColor: '#3F3F46' }]}
-                  onPress={handleWithdrawalRequest}
+                  style={{
+                    height: 44,
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                  onPress={handleCancelWithdrawal}
                   disabled={withdrawalProcessing}
                 >
                   {withdrawalProcessing ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
+                    <ActivityIndicator size="small" color="#71717A" />
                   ) : (
-                    <>
-                      <Feather name="log-out" size={18} color="#A1A1AA" style={{ marginRight: 8 }} />
-                      <Text style={[styles.joinBtnText, { color: '#A1A1AA' }]}>스터디 탈퇴</Text>
-                    </>
+                    <Text style={{ fontSize: 14, color: '#71717A' }}>신청 취소</Text>
                   )}
                 </TouchableOpacity>
-              )
-            )
+              </View>
+            ) : null
           ) : (
             // 일반 사용자 - 참여 신청 버튼
             study.status === 'RECRUITING' ? (
@@ -1820,6 +1802,76 @@ export default function StudyDetailScreen() {
             </ScrollView>
           </View>
         </View>
+      </Modal>
+
+      {/* More Menu Modal */}
+      <Modal
+        visible={showMoreMenu}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowMoreMenu(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setShowMoreMenu(false)}
+        >
+          <View style={{
+            position: 'absolute',
+            top: insets.top + 56,
+            right: 16,
+            backgroundColor: '#27272A',
+            borderRadius: 12,
+            overflow: 'hidden',
+            minWidth: 160,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.3,
+            shadowRadius: 8,
+            elevation: 8,
+          }}>
+            {/* 알림 설정 */}
+            <TouchableOpacity
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                paddingVertical: 14,
+                paddingHorizontal: 16,
+                gap: 12,
+              }}
+              onPress={() => {
+                setShowMoreMenu(false);
+                // TODO: 알림 설정 화면으로 이동
+              }}
+            >
+              <Feather name="bell" size={18} color="#A1A1AA" />
+              <Text style={{ fontSize: 15, color: '#FFFFFF' }}>알림 설정</Text>
+            </TouchableOpacity>
+
+            {/* 스터디 탈퇴 - 일반 멤버만 (리더 제외) */}
+            {study?.isMember && study?.leader.id !== currentUserId && study?.status !== 'COMPLETED' && (
+              <>
+                <View style={{ height: 1, backgroundColor: '#3F3F46' }} />
+                <TouchableOpacity
+                  style={{
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    paddingVertical: 14,
+                    paddingHorizontal: 16,
+                    gap: 12,
+                  }}
+                  onPress={() => {
+                    setShowMoreMenu(false);
+                    handleWithdrawalRequest();
+                  }}
+                >
+                  <Feather name="log-out" size={18} color="#EF4444" />
+                  <Text style={{ fontSize: 15, color: '#EF4444' }}>스터디 탈퇴</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
