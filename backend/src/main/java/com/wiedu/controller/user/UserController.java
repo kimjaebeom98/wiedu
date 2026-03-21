@@ -1,6 +1,7 @@
 package com.wiedu.controller.user;
 
 import com.wiedu.dto.user.NearbyMemberResponse;
+import com.wiedu.dto.user.PublicUserResponse;
 import com.wiedu.dto.user.SignUpRequest;
 import com.wiedu.dto.user.UserUpdateRequest;
 import com.wiedu.dto.user.UserResponse;
@@ -43,11 +44,22 @@ public class UserController {
     /**
      * 사용자 조회 (ID)
      * GET /api/users/{userId}
+     * - 본인 조회: 전체 정보 (UserResponse)
+     * - 타인 조회: 공개 정보만 (PublicUserResponse)
      */
     @GetMapping("/{userId}")
-    public ResponseEntity<UserResponse> getUser(@PathVariable Long userId) {
-        UserResponse response = userService.findById(userId);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> getUser(@PathVariable Long userId) {
+        Long currentUserId = SecurityUtils.isAuthenticated() ? SecurityUtils.getCurrentUserId() : null;
+
+        if (currentUserId != null && currentUserId.equals(userId)) {
+            // 본인 조회 - 전체 정보
+            UserResponse response = userService.findById(userId);
+            return ResponseEntity.ok(response);
+        } else {
+            // 타인 조회 - 공개 정보만
+            PublicUserResponse response = userService.findPublicById(userId);
+            return ResponseEntity.ok(response);
+        }
     }
 
     /**

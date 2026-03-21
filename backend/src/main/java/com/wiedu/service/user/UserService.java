@@ -1,6 +1,7 @@
 package com.wiedu.service.user;
 
 import com.wiedu.domain.entity.User;
+import com.wiedu.dto.user.PublicUserResponse;
 import com.wiedu.dto.user.SignUpRequest;
 import com.wiedu.dto.user.UserUpdateRequest;
 import com.wiedu.dto.user.UserResponse;
@@ -48,11 +49,19 @@ public class UserService {
     }
 
     /**
-     * 사용자 조회 (ID)
+     * 사용자 조회 (ID) - 전체 정보
      */
     public UserResponse findById(Long userId) {
         User user = findUserEntityById(userId);
         return UserResponse.from(user);
+    }
+
+    /**
+     * 사용자 조회 (ID) - 공개 정보만 (타인 조회용)
+     */
+    public PublicUserResponse findPublicById(Long userId) {
+        User user = findUserEntityById(userId);
+        return PublicUserResponse.from(user);
     }
 
     /**
