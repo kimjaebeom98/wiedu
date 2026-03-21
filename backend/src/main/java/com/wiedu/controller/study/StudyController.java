@@ -8,6 +8,7 @@ import com.wiedu.dto.study.StudyResponse;
 import com.wiedu.security.SecurityUtils;
 import com.wiedu.service.study.StudyService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -104,7 +105,7 @@ public class StudyController {
      */
     @GetMapping("/search")
     public ResponseEntity<Page<StudyListResponse>> searchStudies(
-            @RequestParam String keyword,
+            @RequestParam @Size(max = 100, message = "검색어는 100자 이하로 입력해주세요") String keyword,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<StudyListResponse> response = studyService.searchByKeyword(keyword, pageable);
         return ResponseEntity.ok(response);

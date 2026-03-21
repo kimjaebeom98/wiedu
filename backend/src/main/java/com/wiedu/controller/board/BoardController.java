@@ -5,6 +5,7 @@ import com.wiedu.dto.board.*;
 import com.wiedu.security.SecurityUtils;
 import com.wiedu.service.board.BoardService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,7 +28,7 @@ public class BoardController {
     public ResponseEntity<Page<BoardPostListResponse>> getPosts(
             @PathVariable Long studyId,
             @RequestParam(required = false) PostCategory category,
-            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) @Size(max = 100, message = "검색어는 100자 이하로 입력해주세요") String keyword,
             @PageableDefault(size = 20, sort = "createdAt") Pageable pageable) {
         Long userId = SecurityUtils.getCurrentUserId();
         Page<BoardPostListResponse> posts = boardService.getPosts(studyId, category, keyword, userId, pageable);
