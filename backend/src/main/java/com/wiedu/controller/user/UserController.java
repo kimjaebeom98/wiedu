@@ -10,6 +10,7 @@ import com.wiedu.security.SecurityUtils;
 import com.wiedu.service.user.NearbyMemberService;
 import com.wiedu.service.user.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -90,8 +91,8 @@ public class UserController {
     public ResponseEntity<List<NearbyMemberResponse>> getNearbyActiveMembers(
             @RequestParam(required = false) Double latitude,
             @RequestParam(required = false) Double longitude,
-            @RequestParam(required = false, defaultValue = "10") Double radius,
-            @RequestParam(required = false, defaultValue = "10") Integer limit) {
+            @RequestParam(required = false, defaultValue = "10") @Max(value = 100, message = "검색 반경은 100km 이하로 설정해주세요") Double radius,
+            @RequestParam(required = false, defaultValue = "10") @Max(value = 50, message = "조회 개수는 50개 이하로 설정해주세요") Integer limit) {
 
         Long currentUserId = SecurityUtils.getCurrentUserId();
 

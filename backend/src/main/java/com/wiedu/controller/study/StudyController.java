@@ -8,6 +8,7 @@ import com.wiedu.dto.study.StudyResponse;
 import com.wiedu.security.SecurityUtils;
 import com.wiedu.service.study.StudyService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -132,7 +133,7 @@ public class StudyController {
     public ResponseEntity<java.util.List<StudyListResponse>> getNearbyStudies(
             @RequestParam Double latitude,
             @RequestParam Double longitude,
-            @RequestParam(defaultValue = "10.0") Double radius) {
+            @RequestParam(defaultValue = "10.0") @Max(value = 100, message = "검색 반경은 100km 이하로 설정해주세요") Double radius) {
         java.util.List<StudyListResponse> response = studyService.findNearbyStudies(latitude, longitude, radius);
         return ResponseEntity.ok(response);
     }
@@ -143,7 +144,7 @@ public class StudyController {
      */
     @GetMapping("/popular")
     public ResponseEntity<java.util.List<StudyListResponse>> getPopularStudies(
-            @RequestParam(defaultValue = "5") int limit) {
+            @RequestParam(defaultValue = "5") @Max(value = 50, message = "조회 개수는 50개 이하로 설정해주세요") int limit) {
         java.util.List<StudyListResponse> response = studyService.findPopularStudies(limit);
         return ResponseEntity.ok(response);
     }
@@ -167,7 +168,7 @@ public class StudyController {
     public ResponseEntity<Page<StudyListResponse>> getNearbyStudiesPaginated(
             @RequestParam Double latitude,
             @RequestParam Double longitude,
-            @RequestParam(defaultValue = "10.0") Double radius,
+            @RequestParam(defaultValue = "10.0") @Max(value = 100, message = "검색 반경은 100km 이하로 설정해주세요") Double radius,
             @PageableDefault(size = 10) Pageable pageable) {
         Page<StudyListResponse> response = studyService.findNearbyStudiesPaginated(latitude, longitude, radius, pageable);
         return ResponseEntity.ok(response);
