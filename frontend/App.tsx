@@ -39,6 +39,7 @@ import BookmarkedStudiesScreen from './src/screens/BookmarkedStudiesScreen';
 import { getAccessToken } from './src/storage/token';
 import { getMyProfile } from './src/api/profile';
 import { RootStackParamList } from './src/navigation/types';
+import { ErrorBoundary } from './src/components/common';
 
 type LocationSearchRouteProp = RouteProp<RootStackParamList, 'LocationSearch'>;
 
@@ -128,9 +129,10 @@ export default function App() {
   }
 
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <StatusBar style="light" />
-      <NavigationContainer>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={styles.container}>
+        <StatusBar style="light" />
+        <NavigationContainer>
         <Stack.Navigator
           initialRouteName={isAuthenticated ? (onboardingCompleted ? 'Home' : 'Onboarding') : 'Login'}
           screenOptions={{
@@ -171,8 +173,9 @@ export default function App() {
           <Stack.Screen name="SessionAttendance" component={SessionAttendanceScreen} />
           <Stack.Screen name="BookmarkedStudies" component={BookmarkedStudiesScreen} />
         </Stack.Navigator>
-      </NavigationContainer>
-    </GestureHandlerRootView>
+        </NavigationContainer>
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
 
