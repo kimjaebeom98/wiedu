@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
@@ -40,6 +40,8 @@ import { getAccessToken } from './src/storage/token';
 import { getMyProfile } from './src/api/profile';
 import { RootStackParamList } from './src/navigation/types';
 import { ErrorBoundary } from './src/components/common';
+import { sessionExpiredEvent } from './src/utils/authEvents';
+import { CommonActions, NavigationContainerRef } from '@react-navigation/native';
 
 type LocationSearchRouteProp = RouteProp<RootStackParamList, 'LocationSearch'>;
 
@@ -75,9 +77,26 @@ export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [onboardingCompleted, setOnboardingCompleted] = useState(true);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const navigationRef = useRef<NavigationContainerRef<RootStackParamList>>(null);
 
   useEffect(() => {
     checkAuthentication();
+  }, []);
+
+  // Handle session expiry - navigate to login
+  useEffect(() => {
+    const unsubscribe = sessionExpiredEvent.subscribe(() => {
+      setIsAuthenticated(false);
+      if (navigationRef.current) {
+        navigationRef.current.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'Login' }],
+          })
+        );
+      }
+    });
+    return unsubscribe;
   }, []);
 
   const checkAuthentication = async () => {
@@ -132,7 +151,7 @@ export default function App() {
     <ErrorBoundary>
       <GestureHandlerRootView style={styles.container}>
         <StatusBar style="light" />
-        <NavigationContainer>
+        <NavigationContainer ref={navigationRef}>
         <Stack.Navigator
           initialRouteName={isAuthenticated ? (onboardingCompleted ? 'Home' : 'Onboarding') : 'Login'}
           screenOptions={{

@@ -1,6 +1,7 @@
 import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { getBaseURL } from '../config/api';
 import { getAccessToken, getRefreshToken, saveTokens, clearTokens } from '../storage/token';
+import { sessionExpiredEvent } from '../utils/authEvents';
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -88,7 +89,8 @@ export const createAuthClient = (): AxiosInstance => {
         } catch (refreshError) {
           processQueue(new Error('Token refresh failed'), null);
           await clearTokens();
-          // The app should handle navigation to login
+          // Emit session expired event for global handling
+          sessionExpiredEvent.emit();
           throw new Error('세션이 만료되었습니다. 다시 로그인해주세요.');
         } finally {
           isRefreshing = false;
