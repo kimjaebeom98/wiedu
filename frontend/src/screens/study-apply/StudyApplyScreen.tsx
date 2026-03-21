@@ -18,6 +18,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { applyToStudy } from '../../api/study';
+import { handleApiError } from '../../api/apiError';
 import { styles } from './styles';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -68,9 +69,13 @@ export default function StudyApplyScreen() {
 
       await applyToStudy(studyId, message);
       navigation.replace('ApplyComplete', { studyId, studyTitle });
-    } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || '가입 신청에 실패했습니다.';
-      showAlert({ title: '오류', message: errorMessage, icon: 'x-circle' });
+    } catch (error: unknown) {
+      try {
+        handleApiError(error, { defaultMessage: '가입 신청에 실패했습니다.' });
+      } catch (e) {
+        const errorMessage = e instanceof Error ? e.message : '가입 신청에 실패했습니다.';
+        showAlert({ title: '오류', message: errorMessage, icon: 'x-circle' });
+      }
     } finally {
       setLoading(false);
     }
