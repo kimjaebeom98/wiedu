@@ -23,6 +23,7 @@ import { fetchNearbyMembers } from '../api/user';
 import { StudyListResponse, Category } from '../types/study';
 import { NearbyMember } from '../types/user';
 import { formatLocationFromAddress, formatLocationDisplay } from '../utils/location';
+import CustomAlert from '../components/common/CustomAlert';
 
 interface SelectedLocation {
   latitude: number;
@@ -71,6 +72,7 @@ export default function HomeScreen() {
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const [nearbyMembers, setNearbyMembers] = useState<NearbyMember[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
+  const [comingSoonAlert, setComingSoonAlert] = useState(false);
   const isInitialized = useRef(false);
 
   // 프로필 활동지역 로드 (앱 시작 시 항상 프로필 기준)
@@ -668,7 +670,10 @@ export default function HomeScreen() {
           <Feather name="home" size={24} color="#8B5CF6" />
           <Text style={styles.navTextActive}>홈</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => setComingSoonAlert(true)}
+        >
           <Feather name="compass" size={24} color="#71717A" />
           <Text style={styles.navText}>탐색</Text>
         </TouchableOpacity>
@@ -678,7 +683,10 @@ export default function HomeScreen() {
         >
           <Feather name="plus" size={24} color="#FFFFFF" />
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
+        <TouchableOpacity
+          style={styles.navItem}
+          onPress={() => setComingSoonAlert(true)}
+        >
           <Feather name="message-circle" size={24} color="#71717A" />
           <Text style={styles.navText}>채팅</Text>
         </TouchableOpacity>
@@ -690,6 +698,16 @@ export default function HomeScreen() {
           <Text style={styles.navText}>마이</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Coming Soon Alert */}
+      <CustomAlert
+        visible={comingSoonAlert}
+        title="준비 중"
+        message="해당 기능은 준비 중입니다."
+        icon="info"
+        onClose={() => setComingSoonAlert(false)}
+        buttons={[{ text: '확인', style: 'default' }]}
+      />
     </View>
   );
 }
