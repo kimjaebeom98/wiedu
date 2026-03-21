@@ -105,15 +105,10 @@ export interface StudyCreateRequest {
 
 export interface LeaderInfo {
   id: number;
-  email: string;
   nickname: string;
   profileImage?: string;
   bio?: string;
   temperature: number;
-  status: string;
-  emailVerified: boolean;
-  lastLoginAt: string;
-  createdAt: string;
 }
 
 export interface MemberInfo {
