@@ -1,11 +1,13 @@
 package com.wiedu.oauth.kakao;
 
+import com.wiedu.domain.entity.RefreshToken;
 import com.wiedu.domain.entity.User;
 import com.wiedu.dto.oauth.KakaoTokenResponse;
 import com.wiedu.dto.oauth.KakaoUserResponse;
 import com.wiedu.dto.auth.TokenResponse;
 import com.wiedu.exception.BusinessException;
 import com.wiedu.exception.ErrorCode;
+import com.wiedu.repository.auth.RefreshTokenRepository;
 import com.wiedu.repository.user.UserRepository;
 import com.wiedu.security.jwt.JwtProvider;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +20,7 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Slf4j
@@ -33,7 +36,10 @@ public class KakaoOAuthService {
     private final KakaoProperties kakaoProperties;
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final WebClient webClient = WebClient.builder().build();
+
+    private static final int MAX_REFRESH_TOKENS_PER_USER = 5;
 
     /**
      * 카카오 인가 URL 생성
@@ -72,6 +78,9 @@ public class KakaoOAuthService {
         // 4. JWT 토큰 발급
         String accessToken = jwtProvider.createAccessToken(user.getId(), user.getEmail(), user.getNickname());
         String refreshToken = jwtProvider.createRefreshToken(user.getId(), user.getEmail());
+
+        // 5. Refresh Token을 DB에 저장
+        saveRefreshToken(user, refreshToken);
 
         log.info("Kakao login successful: userId={}, email={}", user.getId(), user.getEmail());
 
@@ -180,5 +189,22 @@ public class KakaoOAuthService {
         newUser.verifyEmail(); // OAuth 사용자는 이메일 인증 완료 처리
 
         return userRepository.save(newUser);
+    }
+
+    /**
+     * Refresh Token을 DB에 저장
+     */
+    private void saveRefreshToken(User user, String token) {
+        // 사용자당 최대 토큰 수 제한 (오래된 토큰 자동 폐기)
+        if (refreshTokenRepository.countByUserAndRevokedFalse(user) >= MAX_REFRESH_TOKENS_PER_USER) {
+            refreshTokenRepository.revokeAllByUser(user, LocalDateTime.now());
+        }
+
+        RefreshToken refreshToken = RefreshToken.builder()
+                .user(user)
+                .token(token)
+                .expiresAt(LocalDateTime.now().plusDays(14)) // 14일 유효
+                .build();
+        refreshTokenRepository.save(refreshToken);
     }
 }
