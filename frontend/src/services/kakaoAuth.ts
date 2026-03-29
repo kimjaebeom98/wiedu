@@ -160,7 +160,7 @@ export const startKakaoLogin = async (): Promise<KakaoLoginResult> => {
         if (!resolved) {
           resolved = true;
           subscription.remove();
-          resolve({ success: false, error: err.message });
+          resolve({ success: false, error: '로그인 응답 처리 중 오류가 발생했습니다' });
         }
       }
     };
@@ -201,7 +201,7 @@ export const startKakaoLogin = async (): Promise<KakaoLoginResult> => {
           resolved = true;
           subscription.remove();
           console.error('[Kakao] Browser error:', err);
-          resolve({ success: false, error: err.message });
+          resolve({ success: false, error: '카카오 로그인 창을 열 수 없습니다' });
         }
       }
     };
