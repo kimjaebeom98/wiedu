@@ -18,6 +18,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { login } from '../api/auth';
 import { saveTokens } from '../storage/token';
+import { CustomAlert } from '../components/common';
 
 const { height } = Dimensions.get('window');
 
@@ -32,11 +33,16 @@ export default function EmailLoginScreen({ navigation }: EmailLoginScreenProps) 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [alertVisible, setAlertVisible] = useState(false);
 
   const passwordRef = useRef<TextInput>(null);
 
   const handleBack = () => {
     navigation.goBack();
+  };
+
+  const handleForgotPassword = () => {
+    setAlertVisible(true);
   };
 
   const handleLogin = async () => {
@@ -76,6 +82,7 @@ export default function EmailLoginScreen({ navigation }: EmailLoginScreenProps) 
   };
 
   return (
+  <>
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.container}>
         <StatusBar barStyle="light-content" backgroundColor="#18181B" />
@@ -189,7 +196,11 @@ export default function EmailLoginScreen({ navigation }: EmailLoginScreenProps) 
               </TouchableOpacity>
 
               {/* Forgot Password */}
-              <TouchableOpacity style={styles.forgotBtn} disabled={loading}>
+              <TouchableOpacity
+                style={styles.forgotBtn}
+                disabled={loading}
+                onPress={handleForgotPassword}
+              >
                 <Text style={styles.forgotText}>비밀번호를 잊으셨나요?</Text>
               </TouchableOpacity>
             </View>
@@ -205,6 +216,14 @@ export default function EmailLoginScreen({ navigation }: EmailLoginScreenProps) 
         </KeyboardAvoidingView>
       </View>
     </TouchableWithoutFeedback>
+    <CustomAlert
+      visible={alertVisible}
+      title="준비 중"
+      message="비밀번호 찾기 기능은 준비 중입니다."
+      icon="info"
+      onClose={() => setAlertVisible(false)}
+    />
+  </>
   );
 }
 
