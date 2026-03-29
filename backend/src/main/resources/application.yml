@@ -41,7 +41,7 @@ server:
 # JWT Configuration (환경변수 필수)
 jwt:
   secret: ${JWT_SECRET}
-  access-token-validity: 86400000
+  access-token-validity: 3600000
   refresh-token-validity: 1209600000
   issuer: wiedu
 

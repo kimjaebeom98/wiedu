@@ -22,7 +22,7 @@ spring:
 # H2 테스트용 기본값 (로컬 전용 - 프로덕션 사용 금지)
 jwt:
   secret: h2-test-secret-key-must-be-at-least-32-characters-long
-  access-token-validity: 86400000
+  access-token-validity: 3600000
   refresh-token-validity: 1209600000
   issuer: wiedu
 
