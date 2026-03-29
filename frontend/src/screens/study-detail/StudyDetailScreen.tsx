@@ -403,6 +403,18 @@ export default function StudyDetailScreen() {
   };
 
   const handleJoinStudy = async () => {
+    // 정원 체크
+    if (study && study.currentMembers >= study.maxMembers) {
+      showAlert({
+        title: '신청 불가',
+        message: '스터디 정원이 가득 찼습니다.',
+        buttons: [{ text: '확인', onPress: () => setAlertVisible(false) }],
+        icon: 'alert-circle',
+        iconColor: '#EF4444',
+      });
+      return;
+    }
+
     try {
       const { exceeded, count } = await checkStudyLimitExceeded();
       if (exceeded) {
