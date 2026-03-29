@@ -23,7 +23,8 @@ import { getMyBookmarks } from '../api/bookmark';
 import { requestWithdrawal } from '../api/withdrawal';
 import { MyProfile, MyStudy } from '../types/profile';
 import { StudyListResponse } from '../types/study';
-import { clearTokens } from '../storage/token';
+import { logout } from '../api/auth';
+import { getRefreshToken, clearTokens } from '../storage/token';
 import { formatLocationFromAddress } from '../utils/location';
 import {
   APPLICATION_STATUS_LABELS,
@@ -109,6 +110,14 @@ export default function MyPageScreen() {
   }, []);
 
   const handleLogout = async () => {
+    try {
+      const refreshToken = await getRefreshToken();
+      if (refreshToken) {
+        await logout(refreshToken);
+      }
+    } catch (error) {
+      // 서버 로그아웃 실패해도 로컬 토큰은 삭제
+    }
     await clearTokens();
     navigation.reset({ index: 0, routes: [{ name: 'Login' }] });
   };
