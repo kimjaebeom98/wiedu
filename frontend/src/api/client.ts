@@ -73,10 +73,18 @@ export const createAuthClient = (): AxiosInstance => {
             throw new Error('No refresh token');
           }
 
-          // Call refresh endpoint
-          const response = await axios.post(`${getBaseURL()}/api/auth/refresh`, {
-            refreshToken,
-          });
+          // Call refresh endpoint (5초 timeout - 단순 작업이므로 짧게 설정)
+          const response = await axios.post(
+            `${getBaseURL()}/api/auth/refresh`,
+            { refreshToken },
+            {
+              timeout: 5000,
+              headers: {
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true',
+              },
+            }
+          );
 
           const { accessToken, refreshToken: newRefreshToken } = response.data;
           // Keep old refresh token if new one is not provided
