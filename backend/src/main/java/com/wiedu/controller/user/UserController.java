@@ -8,6 +8,7 @@ import com.wiedu.dto.user.UserResponse;
 import com.wiedu.exception.BusinessException;
 import com.wiedu.exception.ErrorCode;
 import com.wiedu.security.SecurityUtils;
+import com.wiedu.service.auth.AuthService;
 import com.wiedu.service.user.NearbyMemberService;
 import com.wiedu.service.user.UserService;
 import jakarta.validation.Valid;
@@ -30,6 +31,7 @@ public class UserController {
 
     private final UserService userService;
     private final NearbyMemberService nearbyMemberService;
+    private final AuthService authService;
 
     /**
      * 회원가입
@@ -119,5 +121,17 @@ public class UserController {
         }
 
         return ResponseEntity.ok(members);
+    }
+
+    /**
+     * 모든 기기에서 로그아웃
+     * POST /api/users/logout-all
+     * 현재 사용자의 모든 Refresh Token 폐기
+     */
+    @PostMapping("/logout-all")
+    public ResponseEntity<Void> logoutAll() {
+        Long currentUserId = SecurityUtils.getCurrentUserId();
+        authService.logoutAll(currentUserId);
+        return ResponseEntity.ok().build();
     }
 }
