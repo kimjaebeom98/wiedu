@@ -1,6 +1,4 @@
 spring:
-  # profiles:
-  #   active: h2  # H2 사용 시 주석 해제
   application:
     name: wiedu-backend
 
