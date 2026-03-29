@@ -80,7 +80,7 @@ const pollForTokens = async (
         await new Promise((resolve) => setTimeout(resolve, intervalMs));
       } else {
         console.error('[Kakao] Poll error:', response.status);
-        return { success: false, error: `Poll failed with status ${response.status}` };
+        return { success: false, error: '카카오 로그인 처리 중 오류가 발생했습니다' };
       }
     } catch (err: any) {
       console.error('[Kakao] Poll request error:', err);
@@ -88,7 +88,7 @@ const pollForTokens = async (
     }
   }
 
-  return { success: false, error: 'Polling timeout' };
+  return { success: false, error: '카카오 로그인 응답 대기 시간이 초과되었습니다' };
 };
 
 /**
@@ -153,7 +153,7 @@ export const startKakaoLogin = async (): Promise<KakaoLoginResult> => {
           });
         } else {
           console.error('[Kakao] Missing tokens in deep link');
-          resolve({ success: false, error: 'Missing tokens in callback' });
+          resolve({ success: false, error: '로그인 정보를 받아오지 못했습니다' });
         }
       } catch (err: any) {
         console.error('[Kakao] Error parsing deep link:', err);
@@ -214,7 +214,7 @@ export const startKakaoLogin = async (): Promise<KakaoLoginResult> => {
         resolved = true;
         subscription.remove();
         WebBrowser.dismissBrowser();
-        resolve({ success: false, error: 'Authentication timeout' });
+        resolve({ success: false, error: '인증 시간이 초과되었습니다. 다시 시도해주세요' });
       }
     }, 120000);
   });
