@@ -113,8 +113,8 @@ public class WithdrawalRequestService {
                 .filter(StudyMember::isActive)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_MEMBER));
 
-        // 멤버 삭제 (Hard Delete)
-        studyMemberRepository.delete(member);
+        // 멤버 탈퇴 (Soft Delete - 일관성 유지)
+        member.withdraw();
 
         // 현재 인원 감소
         studyRepository.decrementMemberCount(study.getId());
