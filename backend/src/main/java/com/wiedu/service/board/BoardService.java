@@ -47,10 +47,15 @@ public class BoardService {
 
         Page<BoardPost> posts;
         if (keyword != null && !keyword.trim().isEmpty()) {
+            // LIKE 와일드카드 문자 이스케이프 처리
+            String sanitizedKeyword = keyword.trim()
+                    .replace("\\", "\\\\")
+                    .replace("%", "\\%")
+                    .replace("_", "\\_");
             if (category != null) {
-                posts = boardPostRepository.searchByKeywordAndCategory(study, category, keyword.trim(), pageable);
+                posts = boardPostRepository.searchByKeywordAndCategory(study, category, sanitizedKeyword, pageable);
             } else {
-                posts = boardPostRepository.searchByKeyword(study, keyword.trim(), pageable);
+                posts = boardPostRepository.searchByKeyword(study, sanitizedKeyword, pageable);
             }
         } else {
             if (category != null) {
