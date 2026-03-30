@@ -144,6 +144,12 @@ public class StudyRequestService {
             throw new BusinessException(ErrorCode.STUDY_LIMIT_EXCEEDED);
         }
 
+        // 기존 멤버십 확인 (중복 방지 - 변경 전에 먼저 체크)
+        Optional<StudyMember> existingMember = studyMemberRepository.findByStudyAndUser(study, applicant);
+        if (existingMember.isPresent() && existingMember.get().getStatus() == MemberStatus.ACTIVE) {
+            throw new BusinessException(ErrorCode.ALREADY_MEMBER);
+        }
+
         // 신청 승인
         request.approve();
 
@@ -153,16 +159,10 @@ public class StudyRequestService {
             throw new BusinessException(ErrorCode.STUDY_FULL);
         }
 
-        // 기존 멤버십 확인 (탈퇴 후 재가입 또는 중복 방지)
-        Optional<StudyMember> existingMember = studyMemberRepository.findByStudyAndUser(study, applicant);
+        // 멤버 등록 또는 재활성화
         if (existingMember.isPresent()) {
-            StudyMember member = existingMember.get();
-            if (member.getStatus() == MemberStatus.ACTIVE) {
-                // 이미 활성 멤버인 경우 (엣지 케이스)
-                throw new BusinessException(ErrorCode.ALREADY_MEMBER);
-            }
             // WITHDRAWN 상태인 경우 재활성화
-            member.reactivate();
+            existingMember.get().reactivate();
         } else {
             // 신규 멤버 등록
             StudyMember newMember = StudyMember.builder()
