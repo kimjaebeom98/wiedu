@@ -172,10 +172,11 @@ public class BoardService {
         return BoardPostDetailResponse.from(post, commentResponses, isLiked);
     }
 
-    // 게시글 삭제
+    // 게시글 삭제 (본인 또는 스터디 리더만 가능)
     @Transactional
     public void deletePost(Long studyId, Long postId, Long userId) {
         Study study = studyService.findStudyEntityById(studyId);
+        User user = userService.findUserEntityById(userId);
         validateMembership(study, userId);
 
         BoardPost post = boardPostRepository.findByIdWithDetails(postId)
@@ -185,7 +186,13 @@ public class BoardService {
             throw new BusinessException(ErrorCode.BOARD_POST_NOT_FOUND);
         }
 
-        if (!post.getAuthor().getId().equals(userId)) {
+        // 본인 또는 스터디 리더만 삭제 가능
+        boolean isAuthor = post.getAuthor() != null && post.getAuthor().getId().equals(userId);
+        boolean isLeader = studyMemberRepository.findByStudyAndUser(study, user)
+                .map(m -> m.getRole() == MemberRole.LEADER)
+                .orElse(false);
+
+        if (!isAuthor && !isLeader) {
             throw new BusinessException(ErrorCode.NOT_POST_AUTHOR);
         }
 
@@ -281,10 +288,11 @@ public class BoardService {
         return BoardCommentResponse.from(comment, isLiked);
     }
 
-    // 댓글 삭제
+    // 댓글 삭제 (본인 또는 스터디 리더만 가능)
     @Transactional
     public void deleteComment(Long studyId, Long postId, Long commentId, Long userId) {
         Study study = studyService.findStudyEntityById(studyId);
+        User user = userService.findUserEntityById(userId);
         validateMembership(study, userId);
 
         BoardComment comment = boardCommentRepository.findById(commentId)
@@ -294,7 +302,13 @@ public class BoardService {
             throw new BusinessException(ErrorCode.BOARD_COMMENT_NOT_FOUND);
         }
 
-        if (!comment.getAuthor().getId().equals(userId)) {
+        // 본인 또는 스터디 리더만 삭제 가능
+        boolean isAuthor = comment.getAuthor() != null && comment.getAuthor().getId().equals(userId);
+        boolean isLeader = studyMemberRepository.findByStudyAndUser(study, user)
+                .map(m -> m.getRole() == MemberRole.LEADER)
+                .orElse(false);
+
+        if (!isAuthor && !isLeader) {
             throw new BusinessException(ErrorCode.NOT_COMMENT_AUTHOR);
         }
 
