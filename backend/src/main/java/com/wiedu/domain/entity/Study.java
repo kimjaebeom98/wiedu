@@ -226,7 +226,12 @@ public class Study extends BaseEntity {
         if (meetingCity != null) this.meetingCity = meetingCity;
         if (meetingLatitude != null) this.meetingLatitude = meetingLatitude;
         if (meetingLongitude != null) this.meetingLongitude = meetingLongitude;
-        if (maxMembers != null) this.maxMembers = maxMembers;
+        if (maxMembers != null) {
+            if (maxMembers < this.currentMembers) {
+                throw new IllegalArgumentException("정원은 현재 멤버 수(" + this.currentMembers + "명)보다 작게 설정할 수 없습니다.");
+            }
+            this.maxMembers = maxMembers;
+        }
         if (deposit != null) this.deposit = deposit;
         if (depositRefundPolicy != null) this.depositRefundPolicy = depositRefundPolicy;
         if (requirements != null) this.requirements = requirements;
