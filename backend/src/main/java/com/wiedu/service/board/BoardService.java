@@ -252,7 +252,7 @@ public class BoardService {
                 .build();
 
         BoardComment savedComment = boardCommentRepository.save(comment);
-        post.incrementCommentCount();
+        boardPostRepository.incrementCommentCount(post.getId());
 
         return BoardCommentResponse.from(savedComment, false);
     }
@@ -300,7 +300,7 @@ public class BoardService {
 
         BoardPost post = comment.getPost();
         boardCommentRepository.delete(comment);
-        post.decrementCommentCount();
+        boardPostRepository.decrementCommentCount(post.getId());
     }
 
     // 댓글 좋아요 토글 (Race Condition 방지)

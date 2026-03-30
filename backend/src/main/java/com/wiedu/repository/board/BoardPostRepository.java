@@ -45,6 +45,20 @@ public interface BoardPostRepository extends JpaRepository<BoardPost, Long> {
     @Query("UPDATE BoardPost p SET p.likeCount = CASE WHEN p.likeCount > 0 THEN p.likeCount - 1 ELSE 0 END WHERE p.id = :id")
     void decrementLikeCount(@Param("id") Long id);
 
+    /**
+     * 댓글 수 atomic 증가 (Lost Update 방지)
+     */
+    @Modifying
+    @Query("UPDATE BoardPost p SET p.commentCount = p.commentCount + 1 WHERE p.id = :id")
+    void incrementCommentCount(@Param("id") Long id);
+
+    /**
+     * 댓글 수 atomic 감소 (Lost Update 방지, 0 미만 방지)
+     */
+    @Modifying
+    @Query("UPDATE BoardPost p SET p.commentCount = CASE WHEN p.commentCount > 0 THEN p.commentCount - 1 ELSE 0 END WHERE p.id = :id")
+    void decrementCommentCount(@Param("id") Long id);
+
     // 검색 쿼리 - 제목 또는 내용에서 키워드 검색
     @Query(value = "SELECT p FROM BoardPost p JOIN FETCH p.author WHERE p.study = :study AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%'))) ORDER BY p.createdAt DESC",
            countQuery = "SELECT COUNT(p) FROM BoardPost p WHERE p.study = :study AND (LOWER(p.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(p.content) LIKE LOWER(CONCAT('%', :keyword, '%')))")

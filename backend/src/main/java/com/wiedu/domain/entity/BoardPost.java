@@ -73,28 +73,12 @@ public class BoardPost extends BaseEntity {
         this.viewCount++;
     }
 
-    public void incrementCommentCount() {
-        this.commentCount++;
-    }
-
-    public void decrementCommentCount() {
-        if (this.commentCount > 0) {
-            this.commentCount--;
-        }
-    }
+    // Note: commentCount, likeCount 증감은 BoardPostRepository의 atomic 쿼리 사용
+    // incrementCommentCount(), decrementCommentCount()
+    // incrementLikeCount(), decrementLikeCount()
 
     public void update(String title, String content) {
         this.title = title;
         this.content = content;
-    }
-
-    public void incrementLikeCount() {
-        this.likeCount++;
-    }
-
-    public void decrementLikeCount() {
-        if (this.likeCount > 0) {
-            this.likeCount--;
-        }
     }
 }
