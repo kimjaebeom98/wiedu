@@ -254,10 +254,16 @@ public class Study extends BaseEntity {
     // decrementMemberCount(): 멤버 감소 (최소 1명 유지)
 
     public void close() {
+        if (this.status == StudyStatus.COMPLETED || this.status == StudyStatus.CLOSED) {
+            throw new IllegalStateException("이미 완료되었거나 마감된 스터디입니다.");
+        }
         this.status = StudyStatus.CLOSED;
     }
 
     public void complete() {
+        if (this.status != StudyStatus.IN_PROGRESS) {
+            throw new IllegalStateException("진행 중인 스터디만 완료 처리할 수 있습니다.");
+        }
         this.status = StudyStatus.COMPLETED;
     }
 
