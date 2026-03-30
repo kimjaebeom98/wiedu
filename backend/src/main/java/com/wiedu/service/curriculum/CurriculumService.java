@@ -120,9 +120,12 @@ public class CurriculumService {
     }
 
     /**
-     * 세션 목록 조회
+     * 세션 목록 조회 (스터디원만 가능)
      */
-    public List<SessionResponse> getSessions(Long curriculumId) {
+    public List<SessionResponse> getSessions(Long curriculumId, Long userId) {
+        StudyCurriculum curriculum = findCurriculumById(curriculumId);
+        validateStudyMember(curriculum.getStudy(), userId);
+
         return sessionRepository.findByCurriculumIdOrderBySessionNumber(curriculumId)
             .stream()
             .map(SessionResponse::from)
@@ -130,10 +133,12 @@ public class CurriculumService {
     }
 
     /**
-     * 세션 상세 조회
+     * 세션 상세 조회 (스터디원만 가능)
      */
-    public SessionResponse getSession(Long sessionId) {
+    public SessionResponse getSession(Long sessionId, Long userId) {
         CurriculumSession session = findSessionById(sessionId);
+        validateStudyMember(session.getCurriculum().getStudy(), userId);
+
         return SessionResponse.from(session);
     }
 

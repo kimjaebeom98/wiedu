@@ -79,21 +79,23 @@ public class CurriculumController {
     // ==================== 세션 (회차) API ====================
 
     /**
-     * 세션 목록 조회
+     * 세션 목록 조회 (스터디원만 가능)
      * GET /api/curriculums/{curriculumId}/sessions
      */
     @GetMapping("/curriculums/{curriculumId}/sessions")
     public ResponseEntity<List<SessionResponse>> getSessions(@PathVariable Long curriculumId) {
-        return ResponseEntity.ok(curriculumService.getSessions(curriculumId));
+        Long userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(curriculumService.getSessions(curriculumId, userId));
     }
 
     /**
-     * 세션 상세 조회
+     * 세션 상세 조회 (스터디원만 가능)
      * GET /api/sessions/{sessionId}
      */
     @GetMapping("/sessions/{sessionId}")
     public ResponseEntity<SessionResponse> getSession(@PathVariable Long sessionId) {
-        return ResponseEntity.ok(curriculumService.getSession(sessionId));
+        Long userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(curriculumService.getSession(sessionId, userId));
     }
 
     /**
