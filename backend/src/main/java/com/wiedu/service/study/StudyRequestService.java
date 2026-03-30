@@ -7,6 +7,7 @@ import com.wiedu.domain.entity.User;
 import com.wiedu.domain.enums.MemberRole;
 import com.wiedu.domain.enums.MemberStatus;
 import com.wiedu.domain.enums.RequestStatus;
+import com.wiedu.domain.enums.StudyStatus;
 import com.wiedu.dto.study.StudyJoinRequest;
 import com.wiedu.dto.study.StudyRequestResponse;
 import com.wiedu.exception.BusinessException;
@@ -67,8 +68,12 @@ public class StudyRequestService {
             throw new BusinessException(ErrorCode.ALREADY_MEMBER);
         }
 
-        // 스터디 가입 개수 제한 확인 (최대 3개)
-        long userStudyCount = studyMemberRepository.findByUserAndStatus(user, MemberStatus.ACTIVE).size();
+        // 스터디 가입 개수 제한 확인 (최대 3개, 활성 스터디만)
+        long userStudyCount = studyMemberRepository.countActiveStudiesByUserId(
+                user.getId(),
+                MemberStatus.ACTIVE,
+                List.of(StudyStatus.RECRUITING, StudyStatus.IN_PROGRESS)
+        );
         if (userStudyCount >= MAX_STUDY_MEMBERSHIPS) {
             throw new BusinessException(ErrorCode.STUDY_LIMIT_EXCEEDED);
         }
@@ -137,9 +142,13 @@ public class StudyRequestService {
             throw new BusinessException(ErrorCode.STUDY_FULL);
         }
 
-        // 신청자의 스터디 가입 개수 제한 확인 (최대 3개)
+        // 신청자의 스터디 가입 개수 제한 확인 (최대 3개, 활성 스터디만)
         User applicant = request.getUser();
-        long userStudyCount = studyMemberRepository.findByUserAndStatus(applicant, MemberStatus.ACTIVE).size();
+        long userStudyCount = studyMemberRepository.countActiveStudiesByUserId(
+                applicant.getId(),
+                MemberStatus.ACTIVE,
+                List.of(StudyStatus.RECRUITING, StudyStatus.IN_PROGRESS)
+        );
         if (userStudyCount >= MAX_STUDY_MEMBERSHIPS) {
             throw new BusinessException(ErrorCode.STUDY_LIMIT_EXCEEDED);
         }
