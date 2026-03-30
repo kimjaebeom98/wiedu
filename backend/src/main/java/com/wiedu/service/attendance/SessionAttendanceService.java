@@ -12,6 +12,7 @@ import com.wiedu.exception.ErrorCode;
 import com.wiedu.repository.study.CurriculumSessionRepository;
 import com.wiedu.repository.study.SessionAttendanceRepository;
 import com.wiedu.repository.study.StudyMemberRepository;
+import com.wiedu.repository.study.StudyRepository;
 import com.wiedu.repository.user.UserRepository;
 import com.wiedu.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +32,7 @@ public class SessionAttendanceService {
     private final SessionAttendanceRepository attendanceRepository;
     private final CurriculumSessionRepository sessionRepository;
     private final StudyMemberRepository memberRepository;
+    private final StudyRepository studyRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
 
@@ -261,10 +263,7 @@ public class SessionAttendanceService {
     }
 
     private Study findStudyById(Long studyId) {
-        return memberRepository.findByStudyIdAndStatus(studyId, MemberStatus.ACTIVE)
-            .stream()
-            .findFirst()
-            .map(m -> m.getStudy())
+        return studyRepository.findById(studyId)
             .orElseThrow(() -> new BusinessException(ErrorCode.STUDY_NOT_FOUND));
     }
 
