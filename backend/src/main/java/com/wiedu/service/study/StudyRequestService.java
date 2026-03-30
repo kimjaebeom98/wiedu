@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * 스터디 가입 신청 서비스
@@ -152,13 +153,25 @@ public class StudyRequestService {
             throw new BusinessException(ErrorCode.STUDY_FULL);
         }
 
-        // 멤버로 등록
-        StudyMember newMember = StudyMember.builder()
-                .study(study)
-                .user(request.getUser())
-                .role(MemberRole.MEMBER)
-                .build();
-        studyMemberRepository.save(newMember);
+        // 기존 멤버십 확인 (탈퇴 후 재가입 또는 중복 방지)
+        Optional<StudyMember> existingMember = studyMemberRepository.findByStudyAndUser(study, applicant);
+        if (existingMember.isPresent()) {
+            StudyMember member = existingMember.get();
+            if (member.getStatus() == MemberStatus.ACTIVE) {
+                // 이미 활성 멤버인 경우 (엣지 케이스)
+                throw new BusinessException(ErrorCode.ALREADY_MEMBER);
+            }
+            // WITHDRAWN 상태인 경우 재활성화
+            member.reactivate();
+        } else {
+            // 신규 멤버 등록
+            StudyMember newMember = StudyMember.builder()
+                    .study(study)
+                    .user(applicant)
+                    .role(MemberRole.MEMBER)
+                    .build();
+            studyMemberRepository.save(newMember);
+        }
 
         // 신청자에게 승인 알림 발송
         notificationService.createStudyApprovedNotification(request.getUser(), study);
