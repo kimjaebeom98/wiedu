@@ -162,10 +162,14 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
     /**
      * 멤버 수 atomic 증가 (Lost Update 방지)
      * 정원 초과 방지: maxMembers 미만일 때만 증가
+     * 정원 도달 시 자동으로 RECRUITING → IN_PROGRESS 상태 전이
      * @return 업데이트된 행 수 (1이면 성공, 0이면 정원 초과)
      */
     @Modifying
-    @Query("UPDATE Study s SET s.currentMembers = s.currentMembers + 1 WHERE s.id = :id AND s.currentMembers < s.maxMembers")
+    @Query("UPDATE Study s SET s.currentMembers = s.currentMembers + 1, " +
+           "s.status = CASE WHEN s.currentMembers + 1 >= s.maxMembers AND s.status = 'RECRUITING' " +
+           "THEN 'IN_PROGRESS' ELSE s.status END " +
+           "WHERE s.id = :id AND s.currentMembers < s.maxMembers")
     int incrementMemberCount(@Param("id") Long id);
 
     /**

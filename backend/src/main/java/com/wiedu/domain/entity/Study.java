@@ -244,18 +244,9 @@ public class Study extends BaseEntity {
         this.rules.clear();
     }
 
-    public void incrementMember() {
-        this.currentMembers++;
-        if (this.currentMembers >= this.maxMembers) {
-            this.status = StudyStatus.IN_PROGRESS;
-        }
-    }
-
-    public void decrementMember() {
-        if (this.currentMembers > 1) {
-            this.currentMembers--;
-        }
-    }
+    // Note: incrementMember/decrementMember 로직은 StudyRepository의 atomic 쿼리에서 처리
+    // incrementMemberCount(): 멤버 증가 + 정원 도달 시 자동 상태 전이
+    // decrementMemberCount(): 멤버 감소 (최소 1명 유지)
 
     public void close() {
         this.status = StudyStatus.CLOSED;
