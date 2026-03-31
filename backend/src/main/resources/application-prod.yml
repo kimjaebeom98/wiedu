@@ -42,8 +42,9 @@ kakao:
   redirect-uri: ${KAKAO_REDIRECT_URI}
 
 # File Upload Configuration
+# Railway Volume mount path: /data (Volume 생성 후 mount path를 /data로 설정)
 file:
-  upload-dir: /app/uploads
+  upload-dir: ${FILE_UPLOAD_DIR:/data/uploads}
   max-size: 10485760
   allowed-types: image/jpeg,image/png,image/webp
   base-url: ${FILE_BASE_URL}

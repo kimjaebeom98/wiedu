@@ -13,6 +13,7 @@ import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Step1Props } from '../types';
 import { styles } from '../styles';
+import { uploadCoverImage } from '../../../api/file';
 
 export default function Step1BasicInfo({
   data,
@@ -33,10 +34,46 @@ export default function Step1BasicInfo({
     icon?: 'alert-circle' | 'lock';
     buttons?: AlertButton[];
   }>({ title: '' });
+  const [isUploading, setIsUploading] = useState(false);
 
   const showAlert = (config: typeof alertConfig) => {
     setAlertConfig(config);
     setAlertVisible(true);
+  };
+
+  const handleImagePick = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!permissionResult.granted) {
+      showAlert({ title: '권한 필요', message: '이미지를 선택하려면 갤러리 접근 권한이 필요합니다.', icon: 'lock' });
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [16, 9],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      const localUri = result.assets[0].uri;
+
+      // 서버에 이미지 업로드
+      setIsUploading(true);
+      try {
+        const serverUrl = await uploadCoverImage(localUri);
+        updateData('coverImageUrl', serverUrl);
+      } catch (error) {
+        console.error('Cover image upload failed:', error);
+        showAlert({
+          title: '업로드 실패',
+          message: '이미지 업로드에 실패했습니다. 다시 시도해주세요.',
+          icon: 'alert-circle',
+        });
+      } finally {
+        setIsUploading(false);
+      }
+    }
   };
 
   return (
@@ -110,25 +147,16 @@ export default function Step1BasicInfo({
         <Text style={styles.fieldLabel}>커버 이미지</Text>
         <TouchableOpacity
           style={styles.imageUploadBtn}
-          onPress={async () => {
-            const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (!permissionResult.granted) {
-              showAlert({ title: '권한 필요', message: '이미지를 선택하려면 갤러리 접근 권한이 필요합니다.', icon: 'lock' });
-              return;
-            }
-            const result = await ImagePicker.launchImageLibraryAsync({
-              mediaTypes: ImagePicker.MediaTypeOptions.Images,
-              allowsEditing: true,
-              aspect: [16, 9],
-              quality: 0.8,
-            });
-            if (!result.canceled && result.assets[0]) {
-              updateData('coverImageUrl', result.assets[0].uri);
-            }
-          }}
+          onPress={handleImagePick}
           activeOpacity={0.7}
+          disabled={isUploading}
         >
-          {data.coverImageUrl ? (
+          {isUploading ? (
+            <View style={styles.imageUploadPlaceholder}>
+              <ActivityIndicator size="large" color="#8B5CF6" />
+              <Text style={styles.imageUploadText}>업로드 중...</Text>
+            </View>
+          ) : data.coverImageUrl ? (
             <View style={styles.imagePreviewContainer}>
               <Image source={{ uri: data.coverImageUrl }} style={styles.imagePreview} />
               <TouchableOpacity
