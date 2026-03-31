@@ -84,15 +84,20 @@ public class BoardService {
         User user = userService.findUserEntityById(userId);
         validateMembership(study, userId);
 
-        BoardPost post = boardPostRepository.findByIdWithDetails(postId)
+        // 게시글 존재 및 스터디 소속 검증
+        BoardPost postForValidation = boardPostRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_POST_NOT_FOUND));
 
-        if (!post.getStudy().getId().equals(studyId)) {
+        if (!postForValidation.getStudy().getId().equals(studyId)) {
             throw new BusinessException(ErrorCode.BOARD_POST_NOT_FOUND);
         }
 
-        // Increment view count
+        // 조회수 증가 (clearAutomatically=true로 persistence context 클리어)
         boardPostRepository.incrementViewCount(postId);
+
+        // 조회수 증가 후 다시 조회하여 정확한 viewCount 반영
+        BoardPost post = boardPostRepository.findByIdWithDetails(postId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_POST_NOT_FOUND));
 
         boolean isPostLiked = boardPostLikeRepository.existsByPostAndUser(post, user);
 

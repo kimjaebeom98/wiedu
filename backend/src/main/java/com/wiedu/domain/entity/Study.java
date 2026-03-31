@@ -213,7 +213,8 @@ public class Study extends BaseEntity {
         if (title != null) this.title = title;
         if (description != null) this.description = description;
         if (category != null) this.category = category;
-        this.subcategory = subcategory;
+        // subcategory도 다른 필드처럼 null 체크 - 명시적으로 null을 전달하고 싶을 때는 서비스 레이어에서 처리
+        if (subcategory != null) this.subcategory = subcategory;
         if (coverImageUrl != null) this.coverImageUrl = coverImageUrl;
         if (targetAudience != null) this.targetAudience = targetAudience;
         if (goals != null) this.goals = goals;

@@ -27,7 +27,7 @@ public interface BoardPostRepository extends JpaRepository<BoardPost, Long> {
     @Query("SELECT p FROM BoardPost p JOIN FETCH p.author JOIN FETCH p.study WHERE p.id = :id")
     Optional<BoardPost> findByIdWithDetails(@Param("id") Long id);
 
-    @Modifying
+    @Modifying(clearAutomatically = true)
     @Query("UPDATE BoardPost p SET p.viewCount = p.viewCount + 1 WHERE p.id = :id")
     void incrementViewCount(@Param("id") Long id);
 
