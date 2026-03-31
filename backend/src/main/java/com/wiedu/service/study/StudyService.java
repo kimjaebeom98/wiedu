@@ -24,9 +24,11 @@ import com.wiedu.repository.study.StudyCategoryRepository;
 import com.wiedu.repository.study.StudyMemberRepository;
 import com.wiedu.repository.study.StudyRepository;
 import com.wiedu.repository.study.StudySubcategoryRepository;
+import com.wiedu.service.file.FileStorageService;
 import com.wiedu.service.notification.NotificationService;
 import com.wiedu.service.user.UserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -35,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * 스터디 서비스
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -47,6 +50,7 @@ public class StudyService {
     private final StudySubcategoryRepository studySubcategoryRepository;
     private final UserService userService;
     private final NotificationService notificationService;
+    private final FileStorageService fileStorageService;
     private final jakarta.persistence.EntityManager entityManager;
 
     private static final int MAX_ACTIVE_STUDIES = 3;
@@ -382,6 +386,9 @@ public class StudyService {
         String daysOfWeekJson = request.daysOfWeek() != null ?
                 String.join(",", request.daysOfWeek()) : null;
 
+        // 커버 이미지 변경 시 기존 파일 삭제
+        deleteOldCoverImageIfChanged(study.getCoverImageUrl(), request.coverImageUrl());
+
         // 전체 필드 업데이트
         study.updateFull(
                 request.title(),
@@ -480,6 +487,34 @@ public class StudyService {
     private void validateLeaderPermission(Study study, Long userId) {
         if (!study.getLeader().getId().equals(userId)) {
             throw new BusinessException(ErrorCode.NOT_STUDY_LEADER);
+        }
+    }
+
+    /**
+     * 커버 이미지 변경 시 기존 파일 삭제
+     */
+    private void deleteOldCoverImageIfChanged(String oldUrl, String newUrl) {
+        // 기존 URL이 없으면 스킵
+        if (oldUrl == null || oldUrl.isBlank()) {
+            return;
+        }
+
+        // file:// 로컬 URI는 서버에서 삭제 불가
+        if (oldUrl.startsWith("file://")) {
+            return;
+        }
+
+        // 새 URL이 없거나 기존과 동일하면 스킵
+        if (newUrl == null || oldUrl.equals(newUrl)) {
+            return;
+        }
+
+        // 기존 파일 삭제
+        try {
+            fileStorageService.delete(oldUrl);
+            log.info("기존 커버 이미지 삭제: {}", oldUrl);
+        } catch (Exception e) {
+            log.warn("기존 커버 이미지 삭제 실패: {}", oldUrl, e);
         }
     }
 }
