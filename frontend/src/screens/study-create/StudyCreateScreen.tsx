@@ -22,6 +22,7 @@ import { Category, StudyCreateData, CurriculumItem, DurationType } from '../../t
 import { getValidImageUrl } from '../../utils/image';
 import { TOTAL_STEPS, STEP_INFO, INITIAL_DATA } from './constants';
 import { styles } from './styles';
+import { CustomAlert, AlertButton } from '../../components/common';
 
 import Step1BasicInfo from './steps/Step1BasicInfo';
 import Step2Description from './steps/Step2Description';
@@ -51,6 +52,10 @@ export default function StudyCreateScreen() {
   const [data, setData] = useState<StudyCreateData>(INITIAL_DATA);
   const [tagInput, setTagInput] = useState('');
   const hasUnsavedChanges = useRef(false); // 변경사항 추적
+  const pendingNavAction = useRef<any>(null); // 보류 중인 네비게이션 액션
+
+  // 나가기 확인 알럿 상태
+  const [exitAlertVisible, setExitAlertVisible] = useState(false);
 
   // Load categories on mount
   useEffect(() => {
@@ -144,18 +149,22 @@ export default function StudyCreateScreen() {
     hasUnsavedChanges.current = hasData;
   }, [data]);
 
+  const handleExitConfirm = useCallback(() => {
+    setExitAlertVisible(false);
+    if (pendingNavAction.current) {
+      navigation.dispatch(pendingNavAction.current);
+      pendingNavAction.current = null;
+    } else {
+      navigation.goBack();
+    }
+  }, [navigation]);
+
   useEffect(() => {
     // Android 하드웨어 백 버튼 처리
     const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       if (hasUnsavedChanges.current && currentStep === 1) {
-        Alert.alert(
-          '작성 중인 내용이 있습니다',
-          '이 페이지를 나가면 입력한 내용이 모두 사라집니다. 나가시겠습니까?',
-          [
-            { text: '취소', style: 'cancel' },
-            { text: '나가기', style: 'destructive', onPress: () => navigation.goBack() },
-          ]
-        );
+        pendingNavAction.current = null;
+        setExitAlertVisible(true);
         return true; // 기본 동작 방지
       }
       return false;
@@ -166,14 +175,8 @@ export default function StudyCreateScreen() {
       if (!hasUnsavedChanges.current || currentStep > 1) return;
 
       e.preventDefault();
-      Alert.alert(
-        '작성 중인 내용이 있습니다',
-        '이 페이지를 나가면 입력한 내용이 모두 사라집니다. 나가시겠습니까?',
-        [
-          { text: '취소', style: 'cancel' },
-          { text: '나가기', style: 'destructive', onPress: () => navigation.dispatch(e.data.action) },
-        ]
-      );
+      pendingNavAction.current = e.data.action;
+      setExitAlertVisible(true);
     });
 
     return () => {
@@ -423,6 +426,7 @@ export default function StudyCreateScreen() {
   }
 
   return (
+    <>
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#18181B" />
       <View style={[styles.safeArea, { paddingTop: insets.top }]}>
@@ -530,5 +534,19 @@ export default function StudyCreateScreen() {
           </KeyboardAvoidingView>
         </View>
       </View>
+
+      {/* 나가기 확인 알럿 */}
+      <CustomAlert
+        visible={exitAlertVisible}
+        title="작성 중인 내용이 있습니다"
+        message="이 페이지를 나가면 입력한 내용이 모두 사라집니다. 나가시겠습니까?"
+        icon="alert-circle"
+        buttons={[
+          { text: '취소', style: 'cancel', onPress: () => setExitAlertVisible(false) },
+          { text: '나가기', style: 'destructive', onPress: handleExitConfirm },
+        ]}
+        onClose={() => setExitAlertVisible(false)}
+      />
+    </>
   );
 }
