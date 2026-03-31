@@ -347,7 +347,7 @@ export default function HomeScreen() {
         {/* Category Section */}
         <View style={styles.categorySection}>
           {loading ? (
-            <ActivityIndicator color="#8B5CF6" style={{ marginVertical: 20 }} />
+            <ActivityIndicator color="#8B5CF6" style={styles.loadingIndicator} />
           ) : (
             <ScrollView
               horizontal
@@ -385,7 +385,7 @@ export default function HomeScreen() {
           </View>
 
           {membersLoading ? (
-            <ActivityIndicator color="#8B5CF6" style={{ marginVertical: 20 }} />
+            <ActivityIndicator color="#8B5CF6" style={styles.loadingIndicator} />
           ) : !selectedLocation ? (
             <View style={styles.emptyMembersState}>
               <Feather name="users" size={32} color="#52525B" />
@@ -447,21 +447,21 @@ export default function HomeScreen() {
           </View>
 
           {nearbyLoading ? (
-            <ActivityIndicator color="#8B5CF6" style={{ marginVertical: 20 }} />
+            <ActivityIndicator color="#8B5CF6" style={styles.loadingIndicator} />
           ) : nearbyError ? (
             <View style={styles.emptyState}>
               <Feather name="alert-circle" size={40} color="#EF4444" />
               <Text style={styles.emptyStateText}>{nearbyError}</Text>
-              <TouchableOpacity onPress={() => loadNearbyStudies()} style={{ marginTop: 8 }}>
-                <Text style={{ color: '#8B5CF6' }}>다시 시도</Text>
+              <TouchableOpacity onPress={() => loadNearbyStudies()} style={styles.retryLink}>
+                <Text style={styles.linkText}>다시 시도</Text>
               </TouchableOpacity>
             </View>
           ) : !selectedLocation ? (
             <View style={styles.emptyState}>
               <Feather name="map-pin" size={40} color="#52525B" />
               <Text style={styles.emptyStateText}>위치를 설정해주세요</Text>
-              <TouchableOpacity onPress={handleLocationPress} style={{ marginTop: 8 }}>
-                <Text style={{ color: '#8B5CF6' }}>위치 설정하기</Text>
+              <TouchableOpacity onPress={handleLocationPress} style={styles.retryLink}>
+                <Text style={styles.linkText}>위치 설정하기</Text>
               </TouchableOpacity>
             </View>
           ) : nearbyStudies.length === 0 ? (
@@ -564,7 +564,7 @@ export default function HomeScreen() {
           </View>
 
           {popularLoading ? (
-            <ActivityIndicator color="#8B5CF6" style={{ marginVertical: 20 }} />
+            <ActivityIndicator color="#8B5CF6" style={styles.loadingIndicator} />
           ) : popularStudies.length === 0 ? (
             <View style={styles.emptyState}>
               <Feather name="inbox" size={40} color="#52525B" />
@@ -656,7 +656,7 @@ export default function HomeScreen() {
           )}
 
           {/* Bottom spacer for navigation */}
-          <View style={{ height: 100 }} />
+          <View style={styles.bottomSpacer} />
         </View>
       </ScrollView>
 
@@ -1031,5 +1031,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: -10,
+  },
+  loadingIndicator: {
+    marginVertical: 20,
+  },
+  retryLink: {
+    marginTop: 8,
+  },
+  linkText: {
+    color: '#8B5CF6',
+  },
+  bottomSpacer: {
+    height: 100,
   },
 });

@@ -380,21 +380,21 @@ export default function SessionEditScreen() {
               onPress={() => setShowLocationPicker(true)}
               activeOpacity={0.7}
             >
-              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: '#8B5CF620', justifyContent: 'center', alignItems: 'center', marginRight: 12 }}>
+              <View style={styles.locationIconContainer}>
                 <Feather name="map-pin" size={18} color="#8B5CF6" />
               </View>
-              <View style={{ flex: 1 }}>
+              <View style={styles.locationContent}>
                 {meetingPlaceName ? (
                   <>
-                    <Text style={{ fontSize: 15, fontWeight: '600', color: '#FFFFFF' }} numberOfLines={1}>
+                    <Text style={styles.locationPlaceName} numberOfLines={1}>
                       {meetingPlaceName}
                     </Text>
-                    <Text style={{ fontSize: 13, color: '#A1A1AA', marginTop: 4 }} numberOfLines={2}>
+                    <Text style={styles.locationAddress} numberOfLines={2}>
                       {meetingLocation}
                     </Text>
                   </>
                 ) : (
-                  <Text style={{ fontSize: 15, color: '#71717A' }}>장소를 선택하세요</Text>
+                  <Text style={styles.locationPlaceholder}>장소를 선택하세요</Text>
                 )}
               </View>
               <Feather name="chevron-right" size={20} color="#71717A" />
@@ -410,7 +410,7 @@ export default function SessionEditScreen() {
           </Text>
         </View>
 
-        <View style={{ height: 40 }} />
+        <View style={styles.bottomSpacer} />
       </ScrollView>
 
       {/* Android Date Picker */}

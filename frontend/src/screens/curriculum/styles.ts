@@ -38,6 +38,9 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#8B5CF6',
   },
+  headerSpacer: {
+    width: 40,
+  },
 
   // Scroll
   scrollContent: {
@@ -89,6 +92,11 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
+  },
+  weekTitleBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   weekTitleInput: {
     fontSize: 16,
@@ -400,5 +408,36 @@ export const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
     color: '#8B5CF6',
+  },
+  bottomSpacer: {
+    height: 40,
+  },
+
+  // Location Picker
+  locationIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#8B5CF620',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  locationContent: {
+    flex: 1,
+  },
+  locationPlaceName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  locationAddress: {
+    fontSize: 13,
+    color: '#A1A1AA',
+    marginTop: 4,
+  },
+  locationPlaceholder: {
+    fontSize: 15,
+    color: '#71717A',
   },
 });

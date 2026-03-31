@@ -219,7 +219,7 @@ export default function CurriculumEditScreen() {
           <Feather name="arrow-left" size={20} color="#FFFFFF" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>커리큘럼 수정</Text>
-        <View style={{ width: 40 }} />
+        <View style={styles.headerSpacer} />
       </View>
 
       <ScrollView
@@ -247,7 +247,7 @@ export default function CurriculumEditScreen() {
                   <Text style={styles.weekBadgeText}>{curriculum.weekNumber}</Text>
                 </View>
                 <TouchableOpacity
-                  style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                  style={styles.weekTitleBtn}
                   onPress={() => {
                     if (editingCurriculum !== curriculum.id) {
                       setEditingCurriculum(curriculum.id);
@@ -391,7 +391,7 @@ export default function CurriculumEditScreen() {
           )}
         </TouchableOpacity>
 
-        <View style={{ height: 40 }} />
+        <View style={styles.bottomSpacer} />
       </ScrollView>
 
       <CustomAlert {...alert.alertProps} />
