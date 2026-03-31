@@ -45,6 +45,7 @@ import { StudyDetailResponse } from '../../types/study';
 import { StudyLeaderReviewsResponse } from '../../types/review';
 import { CurriculumResponse, SessionResponse } from '../../types/curriculum';
 import { formatLocationDisplay } from '../../utils/location';
+import { isValidImageUrl } from '../../utils/image';
 import { CustomAlert, AlertButton } from '../../components/common';
 import { styles } from './styles';
 import { TabType } from './types';
@@ -906,8 +907,8 @@ export default function StudyDetailScreen() {
           <>
             {/* Cover Image */}
             <View style={styles.coverImage}>
-              {study.coverImageUrl ? (
-                <Image source={{ uri: study.coverImageUrl }} style={styles.coverImg} />
+              {isValidImageUrl(study.coverImageUrl) ? (
+                <Image source={{ uri: study.coverImageUrl! }} style={styles.coverImg} />
               ) : (
                 <Feather name="image" size={48} color="#3F3F46" />
               )}

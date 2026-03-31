@@ -19,6 +19,7 @@ import { Feather } from '@expo/vector-icons';
 import { RootStackParamList } from '../../navigation/types';
 import { fetchCategories, createStudy, getStudyDetail, updateStudy } from '../../api/study';
 import { Category, StudyCreateData, CurriculumItem, DurationType } from '../../types/study';
+import { getValidImageUrl } from '../../utils/image';
 import { TOTAL_STEPS, STEP_INFO, INITIAL_DATA } from './constants';
 import { styles } from './styles';
 
@@ -99,7 +100,7 @@ export default function StudyCreateScreen() {
           title: study.title,
           categoryId,
           subcategoryId,
-          coverImageUrl: study.coverImageUrl || '',
+          coverImageUrl: getValidImageUrl(study.coverImageUrl) || '',
           tags: study.tags || [],
           description: study.description,
           targetAudience: study.targetAudience || '',

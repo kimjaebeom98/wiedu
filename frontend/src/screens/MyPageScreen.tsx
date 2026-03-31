@@ -26,6 +26,7 @@ import { StudyListResponse } from '../types/study';
 import { logout } from '../api/auth';
 import { getRefreshToken, clearTokens } from '../storage/token';
 import { formatLocationFromAddress } from '../utils/location';
+import { isValidImageUrl } from '../utils/image';
 import {
   APPLICATION_STATUS_LABELS,
   APPLICATION_STATUS_COLORS,
@@ -464,8 +465,8 @@ export default function MyPageScreen() {
                     style={styles.studyCard}
                     onPress={() => navigation.navigate('StudyDetail', { studyId: study.id })}
                   >
-                    {study.coverImageUrl ? (
-                      <Image source={{ uri: study.coverImageUrl }} style={styles.studyThumb} />
+                    {isValidImageUrl(study.coverImageUrl) ? (
+                      <Image source={{ uri: study.coverImageUrl! }} style={styles.studyThumb} />
                     ) : (
                       <View style={styles.studyThumbPlaceholder}>
                         <Feather name="bookmark" size={24} color="#8B5CF6" />
