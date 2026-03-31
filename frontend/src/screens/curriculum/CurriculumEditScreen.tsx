@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -22,8 +22,9 @@ import {
   deleteSession,
 } from '../../api/curriculum';
 import { CurriculumResponse, SessionResponse } from '../../types/curriculum';
-import { CustomAlert, AlertButton } from '../../components/common';
+import { CustomAlert } from '../../components/common';
 import { styles } from './styles';
+import { useAlert } from '../../hooks';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type CurriculumEditRouteProp = RouteProp<RootStackParamList, 'CurriculumEdit'>;
@@ -33,6 +34,7 @@ export default function CurriculumEditScreen() {
   const route = useRoute<CurriculumEditRouteProp>();
   const { studyId, studyTitle } = route.params;
   const insets = useSafeAreaInsets();
+  const alert = useAlert();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -41,45 +43,6 @@ export default function CurriculumEditScreen() {
   const [editingCurriculum, setEditingCurriculum] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [editContent, setEditContent] = useState('');
-
-  // Alert 상태
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<{
-    title: string;
-    message: string;
-    icon?: 'alert-circle' | 'check-circle';
-    buttons?: AlertButton[];
-  }>({ title: '', message: '' });
-  const pendingDeleteAction = useRef<(() => Promise<void>) | null>(null);
-
-  const showAlert = (title: string, message: string, icon?: 'alert-circle' | 'check-circle') => {
-    setAlertConfig({ title, message, icon, buttons: undefined });
-    setAlertVisible(true);
-  };
-
-  const showConfirm = (title: string, message: string, onConfirm: () => Promise<void>) => {
-    pendingDeleteAction.current = onConfirm;
-    setAlertConfig({
-      title,
-      message,
-      icon: 'alert-circle',
-      buttons: [
-        { text: '취소', style: 'cancel', onPress: () => setAlertVisible(false) },
-        {
-          text: '삭제',
-          style: 'destructive',
-          onPress: async () => {
-            setAlertVisible(false);
-            if (pendingDeleteAction.current) {
-              await pendingDeleteAction.current();
-              pendingDeleteAction.current = null;
-            }
-          },
-        },
-      ],
-    });
-    setAlertVisible(true);
-  };
 
   const loadCurriculums = useCallback(async () => {
     try {
@@ -97,7 +60,7 @@ export default function CurriculumEditScreen() {
       setCurriculums(curriculumsWithSessions);
     } catch (error) {
       console.error('Failed to load curriculums:', error);
-      showAlert('오류', '커리큘럼을 불러오는데 실패했습니다.', 'alert-circle');
+      alert.show({ title: '오류', message: '커리큘럼을 불러오는데 실패했습니다.', icon: 'alert-circle' });
     } finally {
       setLoading(false);
     }
@@ -147,14 +110,14 @@ export default function CurriculumEditScreen() {
       setEditTitle(newCurriculum.title);
       setEditContent(newCurriculum.content || '');
     } catch (error: any) {
-      showAlert('오류', error.message || '주차 추가에 실패했습니다.', 'alert-circle');
+      alert.show({ title: '오류', message: error.message || '주차 추가에 실패했습니다.', icon: 'alert-circle' });
     } finally {
       setSaving(false);
     }
   };
 
   const handleDeleteWeek = (curriculum: CurriculumResponse) => {
-    showConfirm(
+    alert.confirm(
       '주차 삭제',
       `${curriculum.weekNumber}주차를 삭제하시겠습니까?\n해당 주차의 모든 회차도 함께 삭제됩니다.`,
       async () => {
@@ -162,9 +125,10 @@ export default function CurriculumEditScreen() {
           await deleteCurriculum(curriculum.id);
           setCurriculums((prev) => prev.filter((c) => c.id !== curriculum.id));
         } catch (error: any) {
-          showAlert('오류', error.message || '주차 삭제에 실패했습니다.', 'alert-circle');
+          alert.show({ title: '오류', message: error.message || '주차 삭제에 실패했습니다.', icon: 'alert-circle' });
         }
-      }
+      },
+      { confirmText: '삭제' }
     );
   };
 
@@ -186,7 +150,7 @@ export default function CurriculumEditScreen() {
         )
       );
     } catch (error: any) {
-      showAlert('오류', error.message || '주차 수정에 실패했습니다.', 'alert-circle');
+      alert.show({ title: '오류', message: error.message || '주차 수정에 실패했습니다.', icon: 'alert-circle' });
     } finally {
       setEditingCurriculum(null);
     }
@@ -195,7 +159,7 @@ export default function CurriculumEditScreen() {
   const handleAddSession = (curriculum: CurriculumResponse) => {
     const nextSessionNumber = (curriculum.sessions?.length || 0) + 1;
     if (nextSessionNumber > 7) {
-      showAlert('알림', '주당 최대 7회차까지 추가할 수 있습니다.', 'alert-circle');
+      alert.show({ title: '알림', message: '주당 최대 7회차까지 추가할 수 있습니다.', icon: 'alert-circle' });
       return;
     }
     navigation.navigate('SessionEdit', {
@@ -217,7 +181,7 @@ export default function CurriculumEditScreen() {
   };
 
   const handleDeleteSession = (session: SessionResponse) => {
-    showConfirm(
+    alert.confirm(
       '회차 삭제',
       `${session.sessionNumber}회차를 삭제하시겠습니까?`,
       async () => {
@@ -229,9 +193,10 @@ export default function CurriculumEditScreen() {
             prev.map((c) => (c.id === session.curriculumId ? detail : c))
           );
         } catch (error: any) {
-          showAlert('오류', error.message || '회차 삭제에 실패했습니다.', 'alert-circle');
+          alert.show({ title: '오류', message: error.message || '회차 삭제에 실패했습니다.', icon: 'alert-circle' });
         }
-      }
+      },
+      { confirmText: '삭제' }
     );
   };
 
@@ -429,14 +394,7 @@ export default function CurriculumEditScreen() {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      <CustomAlert
-        visible={alertVisible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        icon={alertConfig.icon}
-        buttons={alertConfig.buttons}
-        onClose={() => setAlertVisible(false)}
-      />
+      <CustomAlert {...alert.alertProps} />
     </View>
   );
 }

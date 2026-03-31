@@ -9,7 +9,7 @@ import {
   Switch,
   ActivityIndicator,
 } from 'react-native';
-import { CustomAlert, AlertButton } from '../components/common';
+import { CustomAlert } from '../components/common';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -22,30 +22,20 @@ import {
 } from '../api/settings';
 import { logout } from '../api/auth';
 import { getRefreshToken, clearTokens } from '../storage/token';
+import { useAlert } from '../hooks';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function SettingsScreen() {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
+  const alert = useAlert();
 
   const [pushEnabled, setPushEnabled] = useState(true);
   const [chatEnabled, setChatEnabled] = useState(true);
   const [studyEnabled, setStudyEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<{
-    title: string;
-    message?: string;
-    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'help-circle' | 'trash-2' | 'log-out';
-    buttons?: AlertButton[];
-  }>({ title: '' });
-
-  const showAlert = (config: typeof alertConfig) => {
-    setAlertConfig(config);
-    setAlertVisible(true);
-  };
 
   useEffect(() => {
     loadNotificationSettings();
@@ -59,7 +49,7 @@ export default function SettingsScreen() {
       setChatEnabled(settings.chat);
       setStudyEnabled(settings.study);
     } catch (error) {
-      showAlert({ title: '오류', message: '알림 설정을 불러오지 못했습니다.', icon: 'x-circle' });
+      alert.show({ title: '오류', message: '알림 설정을 불러오지 못했습니다.', icon: 'x-circle' });
     } finally {
       setLoading(false);
     }
@@ -85,7 +75,7 @@ export default function SettingsScreen() {
       if (key === 'push') setPushEnabled(prev.push);
       if (key === 'chat') setChatEnabled(prev.chat);
       if (key === 'study') setStudyEnabled(prev.study);
-      showAlert({ title: '오류', message: '알림 설정을 변경하지 못했습니다.', icon: 'x-circle' });
+      alert.show({ title: '오류', message: '알림 설정을 변경하지 못했습니다.', icon: 'x-circle' });
     } finally {
       setUpdating(false);
     }
@@ -105,26 +95,19 @@ export default function SettingsScreen() {
   };
 
   const handleWithdraw = () => {
-    showAlert({
-      title: '회원 탈퇴',
-      message: '정말로 탈퇴하시겠어요? 이 작업은 되돌릴 수 없습니다.',
-      icon: 'trash-2',
-      buttons: [
-        { text: '취소', style: 'cancel' },
-        {
-          text: '탈퇴',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await withdrawAccount();
-              await handleLogout();
-            } catch (error) {
-              showAlert({ title: '오류', message: '회원 탈퇴에 실패했습니다. 다시 시도해주세요.', icon: 'x-circle' });
-            }
-          },
-        },
-      ],
-    });
+    alert.confirm(
+      '회원 탈퇴',
+      '정말로 탈퇴하시겠어요? 이 작업은 되돌릴 수 없습니다.',
+      async () => {
+        try {
+          await withdrawAccount();
+          await handleLogout();
+        } catch (error) {
+          alert.show({ title: '오류', message: '회원 탈퇴에 실패했습니다. 다시 시도해주세요.', icon: 'x-circle' });
+        }
+      },
+      { icon: 'trash-2', confirmText: '탈퇴' }
+    );
   };
 
   return (
@@ -249,14 +232,7 @@ export default function SettingsScreen() {
           <View style={styles.bottomSpacer} />
         </ScrollView>
       )}
-      <CustomAlert
-        visible={alertVisible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        icon={alertConfig.icon}
-        buttons={alertConfig.buttons}
-        onClose={() => setAlertVisible(false)}
-      />
+      <CustomAlert {...alert.alertProps} />
     </View>
   );
 }

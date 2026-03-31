@@ -21,6 +21,7 @@ import { SessionMode, SessionRequest } from '../../types/curriculum';
 import { CustomAlert } from '../../components/common';
 import { styles } from './styles';
 import LocationMapPickerScreen, { LocationResult } from '../LocationMapPickerScreen';
+import { useAlert } from '../../hooks';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type SessionEditRouteProp = RouteProp<RootStackParamList, 'SessionEdit'>;
@@ -30,6 +31,7 @@ export default function SessionEditScreen() {
   const route = useRoute<SessionEditRouteProp>();
   const { curriculumId, weekNumber, sessionId, sessionNumber, isNew } = route.params;
   const insets = useSafeAreaInsets();
+  const alert = useAlert();
 
   const [loading, setLoading] = useState(!isNew);
   const [saving, setSaving] = useState(false);
@@ -58,15 +60,6 @@ export default function SessionEditScreen() {
     d.setHours(20, 0, 0, 0);
     return d;
   });
-
-  // Alert 상태
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertMessage, setAlertMessage] = useState({ title: '', message: '' });
-
-  const showAlert = (title: string, message: string) => {
-    setAlertMessage({ title, message });
-    setAlertVisible(true);
-  };
 
   useEffect(() => {
     if (!isNew && sessionId) {
@@ -99,7 +92,7 @@ export default function SessionEditScreen() {
       setMeetingPlaceName(session.meetingPlaceName || '');
     } catch (error) {
       console.error('Failed to load session:', error);
-      showAlert('오류', '회차 정보를 불러오는데 실패했습니다.');
+      alert.show({ title: '오류', message: '회차 정보를 불러오는데 실패했습니다.', icon: 'alert-circle' });
     } finally {
       setLoading(false);
     }
@@ -126,7 +119,7 @@ export default function SessionEditScreen() {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      showAlert('알림', '제목을 입력해주세요.');
+      alert.show({ title: '알림', message: '제목을 입력해주세요.', icon: 'alert-circle' });
       return;
     }
 
@@ -156,7 +149,7 @@ export default function SessionEditScreen() {
 
       navigation.goBack();
     } catch (error: any) {
-      showAlert('오류', error.message || '회차 저장에 실패했습니다.');
+      alert.show({ title: '오류', message: error.message || '회차 저장에 실패했습니다.', icon: 'alert-circle' });
     } finally {
       setSaving(false);
     }
@@ -465,13 +458,7 @@ export default function SessionEditScreen() {
         />
       </Modal>
 
-      <CustomAlert
-        visible={alertVisible}
-        title={alertMessage.title}
-        message={alertMessage.message}
-        icon="alert-circle"
-        onClose={() => setAlertVisible(false)}
-      />
+      <CustomAlert {...alert.alertProps} />
     </View>
   );
 }

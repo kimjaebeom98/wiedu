@@ -12,7 +12,7 @@ import {
   Platform,
   Image,
 } from 'react-native';
-import { CustomAlert, AlertButton } from '../components/common';
+import { CustomAlert } from '../components/common';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -22,6 +22,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { getMyProfile, updateMyProfile } from '../api/profile';
 import { getAuthClient } from '../api/client';
 import { formatLocationFromAddress } from '../utils/location';
+import { useAlert } from '../hooks';
 
 const INTEREST_OPTIONS = [
   { key: 'IT_DEV', label: 'IT/개발', color: '#8B5CF6' },
@@ -37,6 +38,7 @@ const INTEREST_OPTIONS = [
 export default function ProfileEditScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const insets = useSafeAreaInsets();
+  const alert = useAlert();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -47,18 +49,6 @@ export default function ProfileEditScreen() {
   const [longitude, setLongitude] = useState<number | null>(null);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
   const [profileImage, setProfileImage] = useState<string | null>(null);
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<{
-    title: string;
-    message?: string;
-    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'edit-2' | 'lock';
-    buttons?: AlertButton[];
-  }>({ title: '' });
-
-  const showAlert = (config: typeof alertConfig) => {
-    setAlertConfig(config);
-    setAlertVisible(true);
-  };
 
   useEffect(() => {
     loadProfile();
@@ -76,7 +66,7 @@ export default function ProfileEditScreen() {
       setProfileImage(data.profileImage || null);
     } catch (err) {
       console.error('Failed to load profile:', err);
-      showAlert({ title: '오류', message: '프로필을 불러오지 못했어요.', icon: 'x-circle' });
+      alert.show({ title: '오류', message: '프로필을 불러오지 못했어요.', icon: 'x-circle' });
     } finally {
       setLoading(false);
     }
@@ -85,7 +75,7 @@ export default function ProfileEditScreen() {
   const pickImage = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
-      showAlert({ title: '권한 필요', message: '사진 접근 권한이 필요합니다.', icon: 'lock' });
+      alert.show({ title: '권한 필요', message: '사진 접근 권한이 필요합니다.', icon: 'lock' });
       return;
     }
 
@@ -126,10 +116,10 @@ export default function ProfileEditScreen() {
       });
 
       setProfileImage(response.data.imageUrl);
-      showAlert({ title: '완료', message: '프로필 사진이 변경되었습니다.', icon: 'check-circle' });
+      alert.show({ title: '완료', message: '프로필 사진이 변경되었습니다.', icon: 'check-circle' });
     } catch (err: any) {
       console.error('Failed to upload image:', err);
-      showAlert({ title: '오류', message: '이미지 업로드에 실패했어요.', icon: 'x-circle' });
+      alert.show({ title: '오류', message: '이미지 업로드에 실패했어요.', icon: 'x-circle' });
     } finally {
       setUploading(false);
     }
@@ -151,9 +141,9 @@ export default function ProfileEditScreen() {
         longitude: region.trim() ? longitude : null,
         interests: selectedInterests,
       });
-      showAlert({ title: '완료', message: '프로필이 저장되었습니다.', icon: 'check-circle', buttons: [{ text: '확인', onPress: () => navigation.goBack() }] });
+      alert.show({ title: '완료', message: '프로필이 저장되었습니다.', icon: 'check-circle', buttons: [{ text: '확인', onPress: () => navigation.goBack() }] });
     } catch (err: any) {
-      showAlert({ title: '오류', message: err.message || '프로필 저장에 실패했어요.', icon: 'x-circle' });
+      alert.show({ title: '오류', message: err.message || '프로필 저장에 실패했어요.', icon: 'x-circle' });
     } finally {
       setSaving(false);
     }
@@ -313,14 +303,7 @@ export default function ProfileEditScreen() {
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
-      <CustomAlert
-        visible={alertVisible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        icon={alertConfig.icon}
-        buttons={alertConfig.buttons}
-        onClose={() => setAlertVisible(false)}
-      />
+      <CustomAlert {...alert.alertProps} />
     </KeyboardAvoidingView>
   );
 }
