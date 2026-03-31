@@ -7,7 +7,6 @@ import {
   StatusBar,
   ActivityIndicator,
   TextInput,
-  Alert,
   Platform,
   Modal,
 } from 'react-native';
@@ -19,6 +18,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { RootStackParamList } from '../../navigation/types';
 import { getSession, addSession, updateSession } from '../../api/curriculum';
 import { SessionMode, SessionRequest } from '../../types/curriculum';
+import { CustomAlert } from '../../components/common';
 import { styles } from './styles';
 import LocationMapPickerScreen, { LocationResult } from '../LocationMapPickerScreen';
 
@@ -59,6 +59,15 @@ export default function SessionEditScreen() {
     return d;
   });
 
+  // Alert 상태
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState({ title: '', message: '' });
+
+  const showAlert = (title: string, message: string) => {
+    setAlertMessage({ title, message });
+    setAlertVisible(true);
+  };
+
   useEffect(() => {
     if (!isNew && sessionId) {
       loadSession();
@@ -90,7 +99,7 @@ export default function SessionEditScreen() {
       setMeetingPlaceName(session.meetingPlaceName || '');
     } catch (error) {
       console.error('Failed to load session:', error);
-      Alert.alert('오류', '회차 정보를 불러오는데 실패했습니다.');
+      showAlert('오류', '회차 정보를 불러오는데 실패했습니다.');
     } finally {
       setLoading(false);
     }
@@ -117,7 +126,7 @@ export default function SessionEditScreen() {
 
   const handleSave = async () => {
     if (!title.trim()) {
-      Alert.alert('알림', '제목을 입력해주세요.');
+      showAlert('알림', '제목을 입력해주세요.');
       return;
     }
 
@@ -147,7 +156,7 @@ export default function SessionEditScreen() {
 
       navigation.goBack();
     } catch (error: any) {
-      Alert.alert('오류', error.message || '회차 저장에 실패했습니다.');
+      showAlert('오류', error.message || '회차 저장에 실패했습니다.');
     } finally {
       setSaving(false);
     }
@@ -455,6 +464,14 @@ export default function SessionEditScreen() {
           }
         />
       </Modal>
+
+      <CustomAlert
+        visible={alertVisible}
+        title={alertMessage.title}
+        message={alertMessage.message}
+        icon="alert-circle"
+        onClose={() => setAlertVisible(false)}
+      />
     </View>
   );
 }

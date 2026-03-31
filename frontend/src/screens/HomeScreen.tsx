@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
   RefreshControl,
   Image,
-  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -73,6 +72,7 @@ export default function HomeScreen() {
   const [nearbyMembers, setNearbyMembers] = useState<NearbyMember[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
   const [comingSoonAlert, setComingSoonAlert] = useState(false);
+  const [studyLimitAlert, setStudyLimitAlert] = useState<{ visible: boolean; count: number }>({ visible: false, count: 0 });
   const isInitialized = useRef(false);
 
   // 프로필 활동지역 로드 (앱 시작 시 항상 프로필 기준)
@@ -196,11 +196,7 @@ export default function HomeScreen() {
     try {
       const { exceeded, count } = await checkStudyLimitExceeded();
       if (exceeded) {
-        Alert.alert(
-          '스터디 생성 불가',
-          `현재 ${count}개의 활성 스터디에 참여 중입니다.\n스터디는 최대 3개까지만 참여할 수 있습니다.`,
-          [{ text: '확인' }]
-        );
+        setStudyLimitAlert({ visible: true, count });
         return;
       }
       navigation.navigate('StudyCreate');
@@ -706,6 +702,16 @@ export default function HomeScreen() {
         message="해당 기능은 준비 중입니다."
         icon="info"
         onClose={() => setComingSoonAlert(false)}
+        buttons={[{ text: '확인', style: 'default' }]}
+      />
+
+      {/* Study Limit Alert */}
+      <CustomAlert
+        visible={studyLimitAlert.visible}
+        title="스터디 생성 불가"
+        message={`현재 ${studyLimitAlert.count}개의 활성 스터디에 참여 중입니다.\n스터디는 최대 3개까지만 참여할 수 있습니다.`}
+        icon="alert-circle"
+        onClose={() => setStudyLimitAlert({ visible: false, count: 0 })}
         buttons={[{ text: '확인', style: 'default' }]}
       />
     </View>
