@@ -8,6 +8,7 @@ import {
   StatusBar,
   ActivityIndicator,
   Image,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -255,7 +256,7 @@ export default function StudyLeaderScreen() {
         <View style={styles.section}>
           <View style={styles.reviewHeader}>
             <Text style={styles.sectionTitle}>리뷰 {totalReviewCount}개</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => Alert.alert('준비 중', '리뷰 전체보기 기능은 준비 중입니다.')}>
               <Text style={styles.seeAllText}>전체보기</Text>
             </TouchableOpacity>
           </View>

@@ -35,7 +35,7 @@ export default function Step4Recruitment({ data, updateData }: Step4Props) {
             style={[styles.textInput, styles.feeInput]}
             placeholder="0"
             placeholderTextColor="#52525B"
-            value={String(data.deposit)}
+            value={data.deposit === 0 ? '' : String(data.deposit)}
             onChangeText={v => {
               const num = v.replace(/[^0-9]/g, '');
               updateData('deposit', num === '' ? 0 : Number(num));
