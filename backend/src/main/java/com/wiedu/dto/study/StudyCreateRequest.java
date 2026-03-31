@@ -5,7 +5,6 @@ import com.wiedu.domain.enums.StudyMethod;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 public record StudyCreateRequest(
@@ -70,10 +69,6 @@ public record StudyCreateRequest(
     @Size(max = 10, message = "규칙은 최대 10개까지 가능합니다")
     @Valid
     List<RuleRequest> rules,
-
-    // Optional dates
-    LocalDateTime startDate,
-    LocalDateTime endDate,
 
     // Location (구조화된 위치 정보)
     String meetingRegion,        // 시/도 (서울특별시)

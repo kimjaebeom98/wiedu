@@ -99,8 +99,6 @@ export interface StudyCreateRequest {
   requirements?: string;
   curriculums?: CurriculumItem[];
   rules?: RuleItem[];
-  startDate?: string;
-  endDate?: string;
 }
 
 export interface LeaderInfo {
@@ -145,8 +143,6 @@ export interface StudyDetailResponse {
   requirements?: string;
   curriculums: CurriculumItem[];
   rules: RuleItem[];
-  startDate?: string;
-  endDate?: string;
   createdAt: string;
   // 멤버십 정보 (로그인 사용자 기준)
   isMember?: boolean;

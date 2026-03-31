@@ -109,8 +109,6 @@ public class StudyService {
                 .deposit(request.deposit())
                 .depositRefundPolicy(request.depositRefundPolicy())
                 .requirements(request.requirements())
-                .startDate(request.startDate())
-                .endDate(request.endDate())
                 .meetingRegion(request.meetingRegion())
                 .meetingCity(request.meetingCity())
                 .meetingLatitude(request.meetingLatitude())

@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.Comment;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -146,20 +145,13 @@ public class Study extends BaseEntity {
     @Comment("상태: RECRUITING, IN_PROGRESS, COMPLETED, CLOSED")
     private StudyStatus status = StudyStatus.RECRUITING;
 
-    @Comment("스터디 시작 예정일")
-    private LocalDateTime startDate;
-
-    @Comment("스터디 종료 예정일")
-    private LocalDateTime endDate;
-
     @Builder
     public Study(String title, String description, StudyCategory category, StudySubcategory subcategory,
                  String coverImageUrl, String targetAudience, String goals,
                  StudyMethod studyMethod, String daysOfWeek, String time, DurationType durationType, String platform,
                  String meetingRegion, String meetingCity,
                  Double meetingLatitude, Double meetingLongitude,
-                 User leader, Integer maxMembers, Integer deposit, String depositRefundPolicy, String requirements,
-                 LocalDateTime startDate, LocalDateTime endDate) {
+                 User leader, Integer maxMembers, Integer deposit, String depositRefundPolicy, String requirements) {
         this.title = title;
         this.description = description;
         this.category = category;
@@ -181,8 +173,6 @@ public class Study extends BaseEntity {
         this.deposit = deposit;
         this.depositRefundPolicy = depositRefundPolicy;
         this.requirements = requirements;
-        this.startDate = startDate;
-        this.endDate = endDate;
     }
 
     // Helper methods for child entities

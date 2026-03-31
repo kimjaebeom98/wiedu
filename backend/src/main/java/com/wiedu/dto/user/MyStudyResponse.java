@@ -2,9 +2,6 @@ package com.wiedu.dto.user;
 
 import com.wiedu.domain.entity.StudyMember;
 import com.wiedu.domain.enums.MemberRole;
-import com.wiedu.domain.enums.StudyStatus;
-
-import java.time.LocalDate;
 
 /**
  * 내 스터디 목록 응답 DTO
@@ -17,9 +14,7 @@ public record MyStudyResponse(
         String status,
         String myRole,
         int currentMembers,
-        int maxMembers,
-        LocalDate startDate,
-        LocalDate endDate
+        int maxMembers
 ) {
     public static MyStudyResponse from(StudyMember studyMember) {
         var study = studyMember.getStudy();
@@ -36,14 +31,6 @@ public record MyStudyResponse(
                 ? studyMember.getRole().name()
                 : MemberRole.MEMBER.name();
 
-        LocalDate start = study.getStartDate() != null
-                ? study.getStartDate().toLocalDate()
-                : null;
-
-        LocalDate end = study.getEndDate() != null
-                ? study.getEndDate().toLocalDate()
-                : null;
-
         return new MyStudyResponse(
                 study.getId(),
                 study.getTitle(),
@@ -52,9 +39,7 @@ public record MyStudyResponse(
                 statusStr,
                 roleStr,
                 study.getCurrentMembers() != null ? study.getCurrentMembers() : 0,
-                study.getMaxMembers() != null ? study.getMaxMembers() : 0,
-                start,
-                end
+                study.getMaxMembers() != null ? study.getMaxMembers() : 0
         );
     }
 }

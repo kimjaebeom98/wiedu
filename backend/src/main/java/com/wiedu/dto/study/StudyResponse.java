@@ -2,7 +2,6 @@ package com.wiedu.dto.study;
 
 import com.wiedu.domain.entity.Study;
 import com.wiedu.domain.entity.StudyMember;
-import com.wiedu.domain.entity.StudyRule;
 import com.wiedu.domain.entity.StudyTag;
 import com.wiedu.domain.enums.MemberRole;
 import com.wiedu.domain.enums.MemberStatus;
@@ -41,8 +40,6 @@ public record StudyResponse(
         String requirements,
         List<CurriculumResponse> curriculums,
         List<RuleResponse> rules,
-        LocalDateTime startDate,
-        LocalDateTime endDate,
         LocalDateTime createdAt,
         // 멤버십 정보 (로그인 사용자 기준)
         Boolean isMember,
@@ -112,8 +109,6 @@ public record StudyResponse(
                 study.getRules().stream()
                         .map(r -> new RuleResponse(r.getRuleOrder(), r.getContent()))
                         .toList(),
-                study.getStartDate(),
-                study.getEndDate(),
                 study.getCreatedAt(),
                 isMember,
                 memberRole != null ? memberRole.name() : null,

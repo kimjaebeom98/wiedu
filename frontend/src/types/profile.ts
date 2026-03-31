@@ -32,6 +32,4 @@ export interface MyStudy {
   myRole: 'LEADER' | 'MEMBER';
   currentMembers: number;
   maxMembers: number;
-  startDate: string | null;
-  endDate: string | null;
 }
