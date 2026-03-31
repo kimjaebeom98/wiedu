@@ -34,6 +34,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 /**
  * 스터디 서비스
  */
@@ -211,20 +213,24 @@ public class StudyService {
 
     /**
      * 카테고리별 스터디 목록 조회 (N+1 방지)
+     * 정책: RECRUITING/IN_PROGRESS는 항상 표시, CLOSED/COMPLETED는 7일 이내만 표시
      */
     public Page<StudyListResponse> findByCategory(Long categoryId, Pageable pageable) {
-        return studyRepository.findByCategoryIdWithLeader(categoryId, pageable)
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(7);
+        return studyRepository.findByCategoryIdWithLeader(categoryId, cutoffDate, pageable)
                 .map(StudyListResponse::from);
     }
 
     /**
      * 카테고리 + 서브카테고리별 스터디 목록 조회 (N+1 방지)
+     * 정책: RECRUITING/IN_PROGRESS는 항상 표시, CLOSED/COMPLETED는 7일 이내만 표시
      */
     public Page<StudyListResponse> findByCategoryAndSubcategory(Long categoryId, Long subcategoryId, Pageable pageable) {
+        LocalDateTime cutoffDate = LocalDateTime.now().minusDays(7);
         if (subcategoryId == null) {
             return findByCategory(categoryId, pageable);
         }
-        return studyRepository.findByCategoryIdAndSubcategoryIdWithLeader(categoryId, subcategoryId, pageable)
+        return studyRepository.findByCategoryIdAndSubcategoryIdWithLeader(categoryId, subcategoryId, cutoffDate, pageable)
                 .map(StudyListResponse::from);
     }
 

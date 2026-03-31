@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -41,14 +42,28 @@ public interface StudyRepository extends JpaRepository<Study, Long> {
     Page<Study> findByStatusWithLeader(@Param("status") StudyStatus status, Pageable pageable);
 
     // 카테고리별 스터디 목록 (리더, 카테고리 포함, 페이징)
-    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category WHERE s.category.id = :categoryId",
-           countQuery = "SELECT COUNT(s) FROM Study s WHERE s.category.id = :categoryId")
-    Page<Study> findByCategoryIdWithLeader(@Param("categoryId") Long categoryId, Pageable pageable);
+    // 정책: RECRUITING/IN_PROGRESS는 항상 표시, CLOSED/COMPLETED는 7일 이내만 표시
+    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category " +
+                   "WHERE s.category.id = :categoryId " +
+                   "AND (s.status IN ('RECRUITING', 'IN_PROGRESS') " +
+                   "     OR (s.status IN ('CLOSED', 'COMPLETED') AND s.updatedAt >= :cutoffDate))",
+           countQuery = "SELECT COUNT(s) FROM Study s " +
+                        "WHERE s.category.id = :categoryId " +
+                        "AND (s.status IN ('RECRUITING', 'IN_PROGRESS') " +
+                        "     OR (s.status IN ('CLOSED', 'COMPLETED') AND s.updatedAt >= :cutoffDate))")
+    Page<Study> findByCategoryIdWithLeader(@Param("categoryId") Long categoryId, @Param("cutoffDate") LocalDateTime cutoffDate, Pageable pageable);
 
     // 카테고리 + 서브카테고리별 스터디 목록 (리더, 카테고리 포함, 페이징)
-    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category WHERE s.category.id = :categoryId AND s.subcategory.id = :subcategoryId",
-           countQuery = "SELECT COUNT(s) FROM Study s WHERE s.category.id = :categoryId AND s.subcategory.id = :subcategoryId")
-    Page<Study> findByCategoryIdAndSubcategoryIdWithLeader(@Param("categoryId") Long categoryId, @Param("subcategoryId") Long subcategoryId, Pageable pageable);
+    // 정책: RECRUITING/IN_PROGRESS는 항상 표시, CLOSED/COMPLETED는 7일 이내만 표시
+    @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category " +
+                   "WHERE s.category.id = :categoryId AND s.subcategory.id = :subcategoryId " +
+                   "AND (s.status IN ('RECRUITING', 'IN_PROGRESS') " +
+                   "     OR (s.status IN ('CLOSED', 'COMPLETED') AND s.updatedAt >= :cutoffDate))",
+           countQuery = "SELECT COUNT(s) FROM Study s " +
+                        "WHERE s.category.id = :categoryId AND s.subcategory.id = :subcategoryId " +
+                        "AND (s.status IN ('RECRUITING', 'IN_PROGRESS') " +
+                        "     OR (s.status IN ('CLOSED', 'COMPLETED') AND s.updatedAt >= :cutoffDate))")
+    Page<Study> findByCategoryIdAndSubcategoryIdWithLeader(@Param("categoryId") Long categoryId, @Param("subcategoryId") Long subcategoryId, @Param("cutoffDate") LocalDateTime cutoffDate, Pageable pageable);
 
     // 제목 또는 설명으로 검색 (리더, 카테고리 포함, 페이징)
     @Query(value = "SELECT s FROM Study s JOIN FETCH s.leader JOIN FETCH s.category WHERE s.title LIKE %:keyword% OR s.description LIKE %:keyword%",
