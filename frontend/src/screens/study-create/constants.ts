@@ -20,7 +20,9 @@ export const STUDY_METHOD_OPTIONS: { key: StudyMethod; label: string; icon: stri
   { key: 'HYBRID', label: '\uC628/\uC624\uD504\uB77C\uC778 \uBCD1\uD589', icon: 'refresh-cw' },
 ];
 
-// Duration weeks mapping - exact 1:1 mapping for clear UX
+// Duration weeks mapping - 가장 가까운 DurationType으로 매핑
+// 7주 → EIGHT_WEEKS (6주보다 8주가 더 가까움)
+// 9주 → TEN_WEEKS (8주보다 10주가 더 가까움)
 export const WEEKS_TO_DURATION: Record<number, DurationType> = {
   1: 'ONE_WEEK',
   2: 'TWO_WEEKS',
@@ -28,23 +30,23 @@ export const WEEKS_TO_DURATION: Record<number, DurationType> = {
   4: 'FOUR_WEEKS',
   5: 'FIVE_WEEKS',
   6: 'SIX_WEEKS',
-  7: 'SIX_WEEKS',
+  7: 'EIGHT_WEEKS',    // 7주 → 8주 (수정됨)
   8: 'EIGHT_WEEKS',
-  9: 'EIGHT_WEEKS',
+  9: 'TEN_WEEKS',      // 9주 → 10주 (수정됨)
   10: 'TEN_WEEKS',
-  11: 'TEN_WEEKS',
+  11: 'TWELVE_WEEKS',  // 11주 → 12주 (수정됨)
   12: 'TWELVE_WEEKS',
   13: 'TWELVE_WEEKS',
-  14: 'TWELVE_WEEKS',
-  15: 'TWELVE_WEEKS',
+  14: 'SIXTEEN_WEEKS', // 14주 → 16주 (수정됨)
+  15: 'SIXTEEN_WEEKS', // 15주 → 16주 (수정됨)
   16: 'SIXTEEN_WEEKS',
-  17: 'SIXTEEN_WEEKS',
-  18: 'SIXTEEN_WEEKS',
-  19: 'SIXTEEN_WEEKS',
+  17: 'TWENTY_WEEKS',  // 17주 → 20주 (수정됨)
+  18: 'TWENTY_WEEKS',  // 18주 → 20주 (수정됨)
+  19: 'TWENTY_WEEKS',  // 19주 → 20주 (수정됨)
   20: 'TWENTY_WEEKS',
-  21: 'TWENTY_WEEKS',
-  22: 'TWENTY_WEEKS',
-  23: 'TWENTY_WEEKS',
+  21: 'TWENTY_FOUR_WEEKS', // 21주 → 24주 (수정됨)
+  22: 'TWENTY_FOUR_WEEKS', // 22주 → 24주 (수정됨)
+  23: 'TWENTY_FOUR_WEEKS', // 23주 → 24주 (수정됨)
   24: 'TWENTY_FOUR_WEEKS',
 };
 

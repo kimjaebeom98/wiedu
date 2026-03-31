@@ -9,6 +9,8 @@ import {
   KeyboardAvoidingView,
   Platform,
   Keyboard,
+  Alert,
+  BackHandler,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -38,6 +40,7 @@ export default function StudyCreateScreen() {
   const isEditMode = !!studyId;
 
   const scrollViewRef = useRef<ScrollView>(null);
+  const dataLoadedRef = useRef(false); // 수정 모드에서 데이터 로드 완료 플래그
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(isEditMode);
@@ -46,6 +49,7 @@ export default function StudyCreateScreen() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [data, setData] = useState<StudyCreateData>(INITIAL_DATA);
   const [tagInput, setTagInput] = useState('');
+  const hasUnsavedChanges = useRef(false); // 변경사항 추적
 
   // Load categories on mount
   useEffect(() => {
@@ -65,7 +69,8 @@ export default function StudyCreateScreen() {
 
   // Load existing study data in edit mode
   useEffect(() => {
-    if (!isEditMode || !studyId) return;
+    // 이미 데이터를 로드했으면 다시 로드하지 않음 (race condition 방지)
+    if (!isEditMode || !studyId || dataLoadedRef.current) return;
 
     const loadStudyData = async () => {
       setInitialLoading(true);
@@ -115,6 +120,7 @@ export default function StudyCreateScreen() {
           curriculums: study.curriculums || [],
           rules: study.rules || [],
         });
+        dataLoadedRef.current = true; // 데이터 로드 완료 표시
       } catch (err) {
         console.error('Failed to load study:', err);
         setError('스터디 정보를 불러오는데 실패했습니다.');
@@ -128,6 +134,52 @@ export default function StudyCreateScreen() {
       loadStudyData();
     }
   }, [isEditMode, studyId, categories]);
+
+  // 뒤로가기 확인 다이얼로그 (데이터 유실 방지)
+  useEffect(() => {
+    const hasData = data.title.trim() !== '' ||
+                    data.description.trim() !== '' ||
+                    data.categoryId !== null;
+    hasUnsavedChanges.current = hasData;
+  }, [data]);
+
+  useEffect(() => {
+    // Android 하드웨어 백 버튼 처리
+    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (hasUnsavedChanges.current && currentStep === 1) {
+        Alert.alert(
+          '작성 중인 내용이 있습니다',
+          '이 페이지를 나가면 입력한 내용이 모두 사라집니다. 나가시겠습니까?',
+          [
+            { text: '취소', style: 'cancel' },
+            { text: '나가기', style: 'destructive', onPress: () => navigation.goBack() },
+          ]
+        );
+        return true; // 기본 동작 방지
+      }
+      return false;
+    });
+
+    // iOS 스와이프 백 및 네비게이션 처리
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      if (!hasUnsavedChanges.current || currentStep > 1) return;
+
+      e.preventDefault();
+      Alert.alert(
+        '작성 중인 내용이 있습니다',
+        '이 페이지를 나가면 입력한 내용이 모두 사라집니다. 나가시겠습니까?',
+        [
+          { text: '취소', style: 'cancel' },
+          { text: '나가기', style: 'destructive', onPress: () => navigation.dispatch(e.data.action) },
+        ]
+      );
+    });
+
+    return () => {
+      backHandler.remove();
+      unsubscribe();
+    };
+  }, [navigation, currentStep]);
 
   // ─── Updaters ─────────────────────────────────────────────────────────
 
@@ -253,50 +305,8 @@ export default function StudyCreateScreen() {
 
   // ─── Navigation ───────────────────────────────────────────────────────
 
-  const handleNext = useCallback(async () => {
-    Keyboard.dismiss();
-    setError('');
-
-    if (currentStep === 1) {
-      if (data.title.trim().length < 2) {
-        setError('스터디 제목은 2자 이상 입력해주세요.');
-        return;
-      }
-      if (data.categoryId === null) {
-        setError('카테고리를 선택해주세요.');
-        return;
-      }
-    }
-    if (currentStep === 2 && data.description.trim().length < 10) {
-      setError('스터디 설명은 10자 이상 입력해주세요.');
-      return;
-    }
-    if (currentStep === 3 && data.studyMethod === null) {
-      setError('진행 방식을 선택해주세요.');
-      return;
-    }
-    if (currentStep === 4 && data.maxMembers < 2) {
-      setError('최소 2명 이상으로 설정해주세요.');
-      return;
-    }
-
-    if (currentStep < TOTAL_STEPS) {
-      setCurrentStep(prev => prev + 1);
-    } else {
-      await handlePublish();
-    }
-  }, [currentStep, data]);
-
-  const handleBack = useCallback(() => {
-    if (currentStep > 1) {
-      setCurrentStep(prev => prev - 1);
-      setError('');
-    } else {
-      navigation.goBack();
-    }
-  }, [currentStep, navigation]);
-
-  const handlePublish = async () => {
+  // 스터디 등록/수정 처리
+  const handlePublish = useCallback(async () => {
     if (data.categoryId === null || data.studyMethod === null) {
       setError('필수 항목을 모두 입력해주세요.');
       return;
@@ -346,7 +356,51 @@ export default function StudyCreateScreen() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [data, isEditMode, studyId, navigation]);
+
+  const handleNext = useCallback(async () => {
+    Keyboard.dismiss();
+    setError('');
+
+    if (currentStep === 1) {
+      if (data.title.trim().length < 2) {
+        setError('스터디 제목은 2자 이상 입력해주세요.');
+        return;
+      }
+      if (data.categoryId === null) {
+        setError('카테고리를 선택해주세요.');
+        return;
+      }
+    }
+    if (currentStep === 2 && data.description.trim().length < 10) {
+      setError('스터디 설명은 10자 이상 입력해주세요.');
+      return;
+    }
+    if (currentStep === 3 && data.studyMethod === null) {
+      setError('진행 방식을 선택해주세요.');
+      return;
+    }
+    if (currentStep === 4 && data.maxMembers < 2) {
+      setError('최소 2명 이상으로 설정해주세요.');
+      return;
+    }
+
+    if (currentStep < TOTAL_STEPS) {
+      setCurrentStep(prev => prev + 1);
+    } else {
+      await handlePublish();
+    }
+  }, [currentStep, data, handlePublish]);
+
+  const handleBack = useCallback(() => {
+    if (currentStep > 1) {
+      setCurrentStep(prev => prev - 1);
+      setError('');
+    } else {
+      // 뒤로가기 확인은 beforeRemove 리스너에서 처리
+      navigation.goBack();
+    }
+  }, [currentStep, navigation]);
 
   // ─── Progress ─────────────────────────────────────────────────────────
 
