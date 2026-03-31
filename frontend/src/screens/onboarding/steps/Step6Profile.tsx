@@ -85,7 +85,7 @@ export default function Step6Profile({ data, updateData }: StepProps) {
             maxLength={10}
           />
         </View>
-        <Text style={{ color: '#F97316', fontSize: 12, marginTop: 8 }}>
+        <Text style={styles.warningText}>
           ⚠️ 한 번 설정한 이름은 변경할 수 없습니다
         </Text>
       </View>

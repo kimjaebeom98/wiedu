@@ -103,7 +103,7 @@ export default function Step6Preview({ data, categories }: Step6Props) {
           ) : null}
           {data.goals ? (
             <>
-              <Text style={[styles.previewSectionTitle, { marginTop: 12 }]}>스터디 목표</Text>
+              <Text style={[styles.previewSectionTitle, styles.previewSectionTitleSpaced]}>스터디 목표</Text>
               <Text style={styles.previewBody}>{data.goals}</Text>
             </>
           ) : null}
@@ -119,7 +119,7 @@ export default function Step6Preview({ data, categories }: Step6Props) {
               <View style={styles.weekBadge}>
                 <Text style={styles.weekBadgeText}>{item.weekNumber}주차</Text>
               </View>
-              <View style={{ flex: 1 }}>
+              <View style={styles.flexOne}>
                 <Text style={styles.previewCurriculumTitle}>{item.title}</Text>
                 {item.content ? (
                   <Text style={styles.previewCurriculumContent}>{item.content}</Text>

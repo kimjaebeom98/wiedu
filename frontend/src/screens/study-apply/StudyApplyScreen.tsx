@@ -206,7 +206,7 @@ export default function StudyApplyScreen() {
         </View>
 
         {/* Spacer for bottom bar */}
-        <View style={{ height: 120 }} />
+        <View style={styles.bottomSpacer} />
       </ScrollView>
 
       {/* Bottom Bar */}

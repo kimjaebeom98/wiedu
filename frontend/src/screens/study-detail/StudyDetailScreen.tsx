@@ -1111,9 +1111,9 @@ export default function StudyDetailScreen() {
                             <View style={[styles.weekBadge, idx === 0 ? styles.weekBadgeActive : styles.weekBadgeInactive]}>
                               <Text style={styles.weekBadgeText}>{curriculum.weekNumber}</Text>
                             </View>
-                            <View style={{ flex: 1 }}>
+                            <View style={styles.flexOne}>
                               <Text style={styles.curriculumText}>{curriculum.title}</Text>
-                              <Text style={{ fontSize: 12, color: '#71717A', marginTop: 2 }}>
+                              <Text style={styles.sessionCountText}>
                                 {curriculum.sessionCount}회차
                               </Text>
                             </View>
@@ -1132,16 +1132,11 @@ export default function StudyDetailScreen() {
                               </Text>
                             ) : null}
                             {isLoading ? (
-                              <ActivityIndicator size="small" color="#8B5CF6" style={{ marginVertical: 12 }} />
+                              <ActivityIndicator size="small" color="#8B5CF6" style={styles.curriculumLoadingIndicator} />
                             ) : isAccessDenied ? (
-                              <View style={{
-                                backgroundColor: '#3F3F4620',
-                                borderRadius: 8,
-                                padding: 16,
-                                alignItems: 'center',
-                              }}>
-                                <Feather name="lock" size={20} color="#71717A" style={{ marginBottom: 8 }} />
-                                <Text style={{ fontSize: 13, color: '#71717A', textAlign: 'center' }}>
+                              <View style={styles.accessDeniedContainer}>
+                                <Feather name="lock" size={20} color="#71717A" style={styles.accessDeniedIcon} />
+                                <Text style={styles.accessDeniedText}>
                                   스터디 멤버만 회차 정보를 볼 수 있습니다
                                 </Text>
                               </View>
@@ -1149,12 +1144,7 @@ export default function StudyDetailScreen() {
                               sessions.map((session) => (
                                 <TouchableOpacity
                                   key={session.id}
-                                  style={{
-                                    backgroundColor: '#1F1F23',
-                                    borderRadius: 12,
-                                    padding: 14,
-                                    marginTop: 8,
-                                  }}
+                                  style={styles.sessionCard}
                                   activeOpacity={0.7}
                                   onPress={() => {
                                     if (session.sessionDate && study) {
@@ -1168,38 +1158,21 @@ export default function StudyDetailScreen() {
                                   }}
                                 >
                                   {/* 헤더: 회차 번호, 제목, 온/오프라인 배지 */}
-                                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                                    <View style={{
-                                      width: 28,
-                                      height: 28,
-                                      borderRadius: 14,
-                                      backgroundColor: session.sessionMode === 'ONLINE' ? '#22C55E20' : '#F59E0B20',
-                                      justifyContent: 'center',
-                                      alignItems: 'center',
-                                      marginRight: 10,
-                                    }}>
+                                  <View style={styles.sessionHeaderRow}>
+                                    <View style={[styles.sessionModeIcon, session.sessionMode === 'ONLINE' ? styles.sessionModeIconOnline : styles.sessionModeIconOffline]}>
                                       <Feather
                                         name={session.sessionMode === 'ONLINE' ? 'video' : 'map-pin'}
                                         size={14}
                                         color={session.sessionMode === 'ONLINE' ? '#22C55E' : '#F59E0B'}
                                       />
                                     </View>
-                                    <View style={{ flex: 1 }}>
-                                      <Text style={{ fontSize: 15, color: '#FFFFFF', fontWeight: '600' }}>
+                                    <View style={styles.flexOne}>
+                                      <Text style={styles.sessionTitleText}>
                                         {session.sessionNumber}회차: {session.title || '제목 없음'}
                                       </Text>
                                     </View>
-                                    <View style={{
-                                      backgroundColor: session.sessionMode === 'ONLINE' ? '#22C55E20' : '#F59E0B20',
-                                      paddingHorizontal: 8,
-                                      paddingVertical: 4,
-                                      borderRadius: 6,
-                                    }}>
-                                      <Text style={{
-                                        fontSize: 11,
-                                        fontWeight: '600',
-                                        color: session.sessionMode === 'ONLINE' ? '#22C55E' : '#F59E0B',
-                                      }}>
+                                    <View style={[styles.sessionModeBadge, session.sessionMode === 'ONLINE' ? styles.sessionModeBadgeOnline : styles.sessionModeBadgeOffline]}>
+                                      <Text style={[styles.sessionModeBadgeText, session.sessionMode === 'ONLINE' ? styles.sessionModeBadgeTextOnline : styles.sessionModeBadgeTextOffline]}>
                                         {session.sessionMode === 'ONLINE' ? '온라인' : '오프라인'}
                                       </Text>
                                     </View>
@@ -1207,9 +1180,9 @@ export default function StudyDetailScreen() {
 
                                   {/* 일시 */}
                                   {session.sessionDate && (
-                                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 6 }}>
-                                      <Feather name="calendar" size={12} color="#71717A" style={{ marginRight: 6 }} />
-                                      <Text style={{ fontSize: 13, color: '#A1A1AA' }}>
+                                    <View style={styles.sessionInfoRow}>
+                                      <Feather name="calendar" size={12} color="#71717A" style={styles.sessionInfoIcon} />
+                                      <Text style={styles.sessionInfoText}>
                                         {session.sessionDate} {session.sessionTime || ''}
                                       </Text>
                                     </View>
@@ -1217,8 +1190,8 @@ export default function StudyDetailScreen() {
 
                                   {/* 내용 */}
                                   {session.content && (
-                                    <View style={{ marginBottom: 6 }}>
-                                      <Text style={{ fontSize: 13, color: '#E4E4E7', lineHeight: 20 }}>
+                                    <View style={styles.sessionContentContainer}>
+                                      <Text style={styles.sessionContentText}>
                                         {session.content}
                                       </Text>
                                     </View>
@@ -1231,34 +1204,20 @@ export default function StudyDetailScreen() {
                                         Clipboard.setStringAsync(session.meetingLink!);
                                       }}
                                       activeOpacity={0.7}
-                                      style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        backgroundColor: '#22C55E10',
-                                        borderRadius: 8,
-                                        padding: 10,
-                                        marginTop: 6,
-                                      }}
+                                      style={styles.meetingLinkContainer}
                                     >
-                                      <Feather name="link" size={14} color="#22C55E" style={{ marginRight: 8 }} />
-                                      <Text style={{ fontSize: 13, color: '#22C55E', flex: 1 }} numberOfLines={1}>
+                                      <Feather name="link" size={14} color="#22C55E" style={styles.meetingLinkIcon} />
+                                      <Text style={styles.meetingLinkText} numberOfLines={1}>
                                         {session.meetingLink}
                                       </Text>
-                                      <Feather name="copy" size={14} color="#22C55E" style={{ marginLeft: 8 }} />
+                                      <Feather name="copy" size={14} color="#22C55E" style={styles.meetingLinkCopyIcon} />
                                     </TouchableOpacity>
                                   )}
 
                                   {/* 장소 (오프라인) */}
                                   {session.sessionMode === 'OFFLINE' && session.meetingLocation && (
                                     <TouchableOpacity
-                                      style={{
-                                        flexDirection: 'row',
-                                        alignItems: 'center',
-                                        backgroundColor: '#F59E0B10',
-                                        borderRadius: 8,
-                                        padding: 10,
-                                        marginTop: 6,
-                                      }}
+                                      style={styles.locationContainer}
                                       onPress={() => {
                                         if (session.meetingLatitude && session.meetingLongitude) {
                                           const placeName = encodeURIComponent(session.meetingPlaceName || session.meetingLocation || '');
@@ -1271,26 +1230,26 @@ export default function StudyDetailScreen() {
                                       }}
                                       activeOpacity={session.meetingLatitude ? 0.7 : 1}
                                     >
-                                      <Feather name="map-pin" size={14} color="#F59E0B" style={{ marginRight: 8 }} />
-                                      <View style={{ flex: 1 }}>
+                                      <Feather name="map-pin" size={14} color="#F59E0B" style={styles.locationIcon} />
+                                      <View style={styles.flexOne}>
                                         {session.meetingPlaceName && (
-                                          <Text style={{ fontSize: 13, color: '#F59E0B', fontWeight: '600' }}>
+                                          <Text style={styles.locationPlaceName}>
                                             {session.meetingPlaceName}
                                           </Text>
                                         )}
-                                        <Text style={{ fontSize: 12, color: '#F59E0B', opacity: 0.8 }}>
+                                        <Text style={styles.locationAddress}>
                                           {session.meetingLocation}
                                         </Text>
                                       </View>
                                       {session.meetingLatitude && (
-                                        <Feather name="external-link" size={14} color="#F59E0B" style={{ marginLeft: 8 }} />
+                                        <Feather name="external-link" size={14} color="#F59E0B" style={styles.locationExternalIcon} />
                                       )}
                                     </TouchableOpacity>
                                   )}
                                 </TouchableOpacity>
                               ))
                             ) : (
-                              <Text style={{ fontSize: 13, color: '#71717A', textAlign: 'center', paddingVertical: 8 }}>
+                              <Text style={styles.noSessionsText}>
                                 등록된 회차가 없습니다
                               </Text>
                             )}
@@ -1378,7 +1337,7 @@ export default function StudyDetailScreen() {
             )}
 
             {/* Spacer for bottom bar */}
-            <View style={{ height: 200 }} />
+            <View style={styles.bottomSpacer} />
           </>
         )}
 
@@ -1394,22 +1353,11 @@ export default function StudyDetailScreen() {
               {/* 탈퇴 신청 관리 버튼 (대기 중인 신청이 있을 때) */}
               {withdrawalRequests.length > 0 && (study.status === 'RECRUITING' || study.status === 'IN_PROGRESS') && (
                 <TouchableOpacity
-                  style={{
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: '#27272A',
-                    borderRadius: 12,
-                    paddingVertical: 10,
-                    paddingHorizontal: 16,
-                    marginBottom: 8,
-                    borderWidth: 1,
-                    borderColor: '#EF4444',
-                  }}
+                  style={styles.withdrawalRequestBtn}
                   onPress={() => setShowWithdrawalListModal(true)}
                 >
                   <Feather name="user-minus" size={16} color="#EF4444" />
-                  <Text style={{ fontSize: 14, fontWeight: '600', color: '#EF4444', marginLeft: 8 }}>
+                  <Text style={styles.withdrawalRequestBtnText}>
                     탈퇴 신청 {withdrawalRequests.length}건
                   </Text>
                 </TouchableOpacity>
@@ -1458,7 +1406,7 @@ export default function StudyDetailScreen() {
                     <ActivityIndicator size="small" color="#FFFFFF" />
                   ) : (
                     <>
-                      <Feather name="check-circle" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                      <Feather name="check-circle" size={18} color="#FFFFFF" style={styles.btnIconRight} />
                       <Text style={styles.joinBtnText}>스터디 종료하기</Text>
                     </>
                   )}
@@ -1473,7 +1421,7 @@ export default function StudyDetailScreen() {
               {study.status === 'COMPLETED' && (
                 <View style={styles.statusMessage}>
                   <Feather name="check" size={18} color="#22C55E" />
-                  <Text style={[styles.statusMessageText, { color: '#22C55E' }]}>완료된 스터디입니다</Text>
+                  <Text style={[styles.statusMessageText, styles.statusCompletedText]}>완료된 스터디입니다</Text>
                 </View>
               )}
             </View>
@@ -1482,24 +1430,20 @@ export default function StudyDetailScreen() {
             study.status !== 'COMPLETED' && myWithdrawalRequest ? (
               <View style={styles.applicationStatusContainer}>
                 <View style={[styles.applicationStatusBtn, styles.pendingBtn]}>
-                  <Feather name="clock" size={18} color="#F59E0B" style={{ marginRight: 8 }} />
-                  <Text style={[styles.applicationStatusBtnText, { color: '#F59E0B' }]}>
+                  <Feather name="clock" size={18} color="#F59E0B" style={styles.btnIconRight} />
+                  <Text style={[styles.applicationStatusBtnText, styles.pendingText]}>
                     탈퇴 승인 대기 중
                   </Text>
                 </View>
                 <TouchableOpacity
-                  style={{
-                    height: 44,
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                  }}
+                  style={styles.withdrawalCancelBtn}
                   onPress={handleCancelWithdrawal}
                   disabled={withdrawalProcessing}
                 >
                   {withdrawalProcessing ? (
                     <ActivityIndicator size="small" color="#71717A" />
                   ) : (
-                    <Text style={{ fontSize: 14, color: '#71717A' }}>신청 취소</Text>
+                    <Text style={styles.withdrawalCancelBtnText}>신청 취소</Text>
                   )}
                 </TouchableOpacity>
               </View>
@@ -1511,7 +1455,7 @@ export default function StudyDetailScreen() {
                 // 대기중인 신청
                 <View style={styles.applicationStatusContainer}>
                   <View style={[styles.applicationStatusBtn, styles.pendingBtn]}>
-                    <Feather name="clock" size={18} color="#F59E0B" style={{ marginRight: 8 }} />
+                    <Feather name="clock" size={18} color="#F59E0B" style={styles.btnIconRight} />
                     <Text style={[styles.applicationStatusBtnText, styles.pendingText]}>
                       신청 대기중
                     </Text>
@@ -1530,24 +1474,19 @@ export default function StudyDetailScreen() {
                     // 쿨다운 종료 - 재신청 가능
                     return (
                       <View style={styles.applicationStatusContainer}>
-                        <View style={{
-                          backgroundColor: '#27272A',
-                          borderRadius: 12,
-                          padding: 12,
-                          marginBottom: 8,
-                        }}>
-                          <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 4 }}>
-                            <Feather name="info" size={14} color="#71717A" style={{ marginRight: 6 }} />
-                            <Text style={{ fontSize: 13, color: '#71717A' }}>이전 신청이 거절되었습니다</Text>
+                        <View style={styles.rejectedInfoContainer}>
+                          <View style={styles.rejectedInfoHeaderRow}>
+                            <Feather name="info" size={14} color="#71717A" style={styles.rejectedInfoIcon} />
+                            <Text style={styles.rejectedInfoText}>이전 신청이 거절되었습니다</Text>
                           </View>
                           {myApplication.rejectReason && (
-                            <Text style={{ fontSize: 12, color: '#52525B', marginLeft: 20 }}>
+                            <Text style={styles.rejectReasonDetail}>
                               사유: {myApplication.rejectReason}
                             </Text>
                           )}
                         </View>
                         <TouchableOpacity style={styles.joinBtn} onPress={handleJoinStudy}>
-                          <Feather name="refresh-cw" size={18} color="#FFFFFF" style={{ marginRight: 8 }} />
+                          <Feather name="refresh-cw" size={18} color="#FFFFFF" style={styles.btnIconRight} />
                           <Text style={styles.joinBtnText}>다시 신청하기</Text>
                         </TouchableOpacity>
                       </View>
@@ -1557,7 +1496,7 @@ export default function StudyDetailScreen() {
                     return (
                       <View style={styles.applicationStatusContainer}>
                         <View style={[styles.applicationStatusBtn, styles.rejectedBtn]}>
-                          <Feather name="x-circle" size={18} color="#EF4444" style={{ marginRight: 8 }} />
+                          <Feather name="x-circle" size={18} color="#EF4444" style={styles.btnIconRight} />
                           <Text style={[styles.applicationStatusBtnText, styles.rejectedText]}>
                             신청 거절됨
                           </Text>
@@ -1565,7 +1504,7 @@ export default function StudyDetailScreen() {
                         {myApplication.rejectReason && (
                           <Text style={styles.rejectReasonText}>사유: {myApplication.rejectReason}</Text>
                         )}
-                        <Text style={{ fontSize: 12, color: '#71717A', textAlign: 'center', marginTop: 4 }}>
+                        <Text style={styles.cooldownText}>
                           {remainingDays}일 후 재신청 가능
                         </Text>
                       </View>
@@ -1642,17 +1581,9 @@ export default function StudyDetailScreen() {
                 <Feather name="x" size={24} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
-            <View style={{ padding: 16 }}>
+            <View style={styles.modalPadding}>
               <TextInput
-                style={{
-                  backgroundColor: '#3F3F46',
-                  borderRadius: 12,
-                  padding: 14,
-                  color: '#FFFFFF',
-                  fontSize: 15,
-                  minHeight: 120,
-                  textAlignVertical: 'top',
-                }}
+                style={styles.withdrawalReasonInput}
                 placeholder="탈퇴 사유를 입력해주세요"
                 placeholderTextColor="#71717A"
                 value={withdrawalReason}
@@ -1660,40 +1591,29 @@ export default function StudyDetailScreen() {
                 multiline
                 maxLength={500}
               />
-              <Text style={{ color: '#71717A', fontSize: 12, marginTop: 8, textAlign: 'right' }}>
+              <Text style={styles.charCountText}>
                 {withdrawalReason.length}/500
               </Text>
               {study?.deposit && (
-                <View style={{
-                  flexDirection: 'row',
-                  alignItems: 'flex-start',
-                  backgroundColor: '#EF444420',
-                  borderRadius: 10,
-                  padding: 12,
-                  marginTop: 12,
-                  gap: 8,
-                }}>
-                  <Feather name="alert-triangle" size={16} color="#EF4444" style={{ marginTop: 2 }} />
-                  <Text style={{ flex: 1, fontSize: 13, color: '#EF4444', lineHeight: 18 }}>
+                <View style={styles.depositWarningContainer}>
+                  <Feather name="alert-triangle" size={16} color="#EF4444" style={styles.depositWarningIcon} />
+                  <Text style={styles.depositWarningText}>
                     보증금 {study.deposit.toLocaleString()}원은 탈퇴 시 환불이 어려울 수 있습니다. 스터디장에게 직접 문의해주세요.
                   </Text>
                 </View>
               )}
               <TouchableOpacity
-                style={{
-                  backgroundColor: withdrawalReason.trim() ? '#EF4444' : '#3F3F46',
-                  borderRadius: 12,
-                  paddingVertical: 14,
-                  alignItems: 'center',
-                  marginTop: 16,
-                }}
+                style={[
+                  styles.submitWithdrawalBtn,
+                  withdrawalReason.trim() ? styles.submitWithdrawalBtnActive : styles.submitWithdrawalBtnDisabled
+                ]}
                 onPress={submitWithdrawalRequest}
                 disabled={!withdrawalReason.trim() || withdrawalProcessing}
               >
                 {withdrawalProcessing ? (
                   <ActivityIndicator size="small" color="#FFFFFF" />
                 ) : (
-                  <Text style={{ color: '#FFFFFF', fontSize: 16, fontWeight: '600' }}>
+                  <Text style={styles.submitBtnText}>
                     탈퇴 신청하기
                   </Text>
                 )}
@@ -1711,84 +1631,56 @@ export default function StudyDetailScreen() {
         onRequestClose={() => setShowWithdrawalListModal(false)}
       >
         <View style={[styles.modalOverlay, { paddingBottom: insets.bottom }]}>
-          <View style={[styles.modalContent, { maxHeight: '70%' }]}>
+          <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>탈퇴 신청 관리</Text>
               <TouchableOpacity onPress={() => setShowWithdrawalListModal(false)}>
                 <Feather name="x" size={24} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
-            <ScrollView style={{ maxHeight: 400 }} showsVerticalScrollIndicator={false}>
+            <ScrollView style={styles.modalScrollView} showsVerticalScrollIndicator={false}>
               {withdrawalRequests.length === 0 ? (
-                <View style={{ padding: 32, alignItems: 'center' }}>
+                <View style={styles.emptyWithdrawalContainer}>
                   <Feather name="inbox" size={40} color="#3F3F46" />
-                  <Text style={{ fontSize: 14, color: '#71717A', marginTop: 12 }}>
+                  <Text style={styles.emptyWithdrawalText}>
                     대기 중인 탈퇴 신청이 없습니다
                   </Text>
                 </View>
               ) : (
-                <View style={{ padding: 16, gap: 12 }}>
+                <View style={styles.withdrawalListContainer}>
                   {withdrawalRequests.map((request) => (
-                    <View
-                      key={request.id}
-                      style={{
-                        backgroundColor: '#27272A',
-                        borderRadius: 12,
-                        padding: 14,
-                      }}
-                    >
+                    <View key={request.id} style={styles.withdrawalRequestCard}>
                       {/* User info */}
-                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 10 }}>
+                      <View style={styles.withdrawalUserInfoRow}>
                         {request.userProfileImage ? (
                           <Image
                             source={{ uri: request.userProfileImage }}
-                            style={{ width: 36, height: 36, borderRadius: 18, marginRight: 10 }}
+                            style={styles.withdrawalUserAvatar}
                           />
                         ) : (
-                          <View style={{
-                            width: 36,
-                            height: 36,
-                            borderRadius: 18,
-                            backgroundColor: '#8B5CF630',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            marginRight: 10,
-                          }}>
+                          <View style={styles.withdrawalUserAvatarPlaceholder}>
                             <Feather name="user" size={18} color="#8B5CF6" />
                           </View>
                         )}
-                        <View style={{ flex: 1 }}>
-                          <Text style={{ fontSize: 15, fontWeight: '600', color: '#FFFFFF' }}>
+                        <View style={styles.flexOne}>
+                          <Text style={styles.withdrawalUserName}>
                             {request.userNickname}
                           </Text>
-                          <Text style={{ fontSize: 12, color: '#71717A', marginTop: 2 }}>
+                          <Text style={styles.withdrawalRequestDate}>
                             {new Date(request.createdAt).toLocaleDateString('ko-KR')} 신청
                           </Text>
                         </View>
                       </View>
                       {/* Reason */}
-                      <View style={{
-                        backgroundColor: '#18181B',
-                        borderRadius: 8,
-                        padding: 12,
-                        marginBottom: 12,
-                      }}>
-                        <Text style={{ fontSize: 12, color: '#71717A', marginBottom: 4 }}>탈퇴 사유</Text>
-                        <Text style={{ fontSize: 14, color: '#E4E4E7', lineHeight: 20 }}>
+                      <View style={styles.withdrawalReasonContainer}>
+                        <Text style={styles.withdrawalReasonLabel}>탈퇴 사유</Text>
+                        <Text style={styles.withdrawalReasonText}>
                           {request.reason}
                         </Text>
                       </View>
                       {/* Approve button */}
                       <TouchableOpacity
-                        style={{
-                          backgroundColor: '#EF4444',
-                          borderRadius: 8,
-                          paddingVertical: 10,
-                          alignItems: 'center',
-                          flexDirection: 'row',
-                          justifyContent: 'center',
-                          gap: 6,
-                        }}
+                        style={styles.approveWithdrawalBtn}
                         onPress={() => handleApproveWithdrawal(request.id, request.userNickname)}
                         disabled={approvalProcessing === request.id}
                       >
@@ -1797,7 +1689,7 @@ export default function StudyDetailScreen() {
                         ) : (
                           <>
                             <Feather name="check" size={16} color="#FFFFFF" />
-                            <Text style={{ fontSize: 14, fontWeight: '600', color: '#FFFFFF' }}>
+                            <Text style={styles.approveWithdrawalBtnText}>
                               탈퇴 승인
                             </Text>
                           </>

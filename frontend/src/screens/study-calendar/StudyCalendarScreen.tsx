@@ -234,7 +234,7 @@ export default function StudyCalendarScreen() {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {studyTitle} 캘린더
         </Text>
-        <View style={{ width: 40 }} />
+        <View style={styles.headerSpacer} />
       </View>
 
       {/* Pending Absences Banner for Leader */}
@@ -309,7 +309,7 @@ export default function StudyCalendarScreen() {
             </Text>
 
             {loadingAttendances ? (
-              <ActivityIndicator size="small" color="#8B5CF6" style={{ marginTop: 20 }} />
+              <ActivityIndicator size="small" color="#8B5CF6" style={styles.loadingIndicator} />
             ) : attendances.length === 0 ? (
               <Text style={styles.emptyText}>해당 날짜에 회차가 없습니다.</Text>
             ) : (
@@ -357,7 +357,7 @@ export default function StudyCalendarScreen() {
                     {summary.attendances.slice(0, 5).map((att, index) => (
                       <View
                         key={att.id}
-                        style={[styles.avatar, { marginLeft: index > 0 ? -8 : 0 }]}
+                        style={[styles.avatar, index > 0 && styles.avatarOverlap]}
                       >
                         {att.userProfileImage ? (
                           <Image source={{ uri: att.userProfileImage }} style={styles.avatarImage} />
@@ -377,7 +377,7 @@ export default function StudyCalendarScreen() {
                       </View>
                     ))}
                     {summary.attendances.length > 5 && (
-                      <View style={[styles.avatar, styles.avatarMore, { marginLeft: -8 }]}>
+                      <View style={[styles.avatar, styles.avatarMore, styles.avatarOverlap]}>
                         <Text style={styles.avatarMoreText}>
                           +{summary.attendances.length - 5}
                         </Text>
@@ -390,7 +390,7 @@ export default function StudyCalendarScreen() {
           </View>
         )}
 
-        <View style={{ height: 40 }} />
+        <View style={styles.bottomSpacer} />
       </ScrollView>
     </View>
   );
@@ -422,6 +422,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     textAlign: 'center',
+  },
+  headerSpacer: {
+    width: 40,
   },
   pendingBanner: {
     flexDirection: 'row',
@@ -528,6 +531,9 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
     alignItems: 'center',
   },
+  loadingIndicator: {
+    marginTop: 20,
+  },
   sessionsSection: {
     paddingHorizontal: 16,
     paddingTop: 24,
@@ -593,6 +599,9 @@ const styles = StyleSheet.create({
     borderColor: '#27272A',
     position: 'relative',
   },
+  avatarOverlap: {
+    marginLeft: -8,
+  },
   avatarImage: {
     width: '100%',
     height: '100%',
@@ -630,5 +639,8 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     borderWidth: 2,
     borderColor: '#27272A',
+  },
+  bottomSpacer: {
+    height: 40,
   },
 });

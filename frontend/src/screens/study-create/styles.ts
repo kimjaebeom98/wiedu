@@ -79,6 +79,16 @@ export const styles = StyleSheet.create({
   stepInner: {
     gap: 20,
   },
+  flexOne: {
+    flex: 1,
+  },
+  loadingIndicator: {
+    marginTop: 8,
+  },
+  loadingText: {
+    color: '#A1A1AA',
+    marginTop: 16,
+  },
 
   // Field
   fieldGroup: {
@@ -634,6 +644,9 @@ export const styles = StyleSheet.create({
     color: '#71717A',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  previewSectionTitleSpaced: {
+    marginTop: 12,
   },
   previewBody: {
     fontSize: 14,

@@ -419,7 +419,7 @@ export default function StudyCreateScreen() {
         <StatusBar barStyle="light-content" backgroundColor="#18181B" />
         <View style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: insets.bottom, justifyContent: 'center', alignItems: 'center' }]}>
           <ActivityIndicator size="large" color="#8B5CF6" />
-          <Text style={{ color: '#A1A1AA', marginTop: 16 }}>스터디 정보를 불러오는 중...</Text>
+          <Text style={styles.loadingText}>스터디 정보를 불러오는 중...</Text>
         </View>
       </View>
     );

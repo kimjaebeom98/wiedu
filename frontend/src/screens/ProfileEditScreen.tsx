@@ -217,11 +217,11 @@ export default function ProfileEditScreen() {
           {/* Name - 수정 불가 */}
           <View style={styles.field}>
             <Text style={styles.fieldLabel}>이름</Text>
-            <View style={[styles.inputContainer, { backgroundColor: '#1F1F23' }]}>
-              <Text style={[styles.input, { color: '#71717A' }]}>{nickname}</Text>
+            <View style={[styles.inputContainer, styles.inputContainerDisabled]}>
+              <Text style={[styles.input, styles.inputDisabled]}>{nickname}</Text>
               <Feather name="lock" size={16} color="#52525B" />
             </View>
-            <Text style={{ color: '#52525B', fontSize: 12, marginTop: 4 }}>
+            <Text style={styles.lockedFieldHint}>
               이름은 변경할 수 없습니다
             </Text>
           </View>
@@ -425,6 +425,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 16,
   },
+  inputContainerDisabled: {
+    backgroundColor: '#1F1F23',
+  },
   placeholderText: {
     color: '#52525B',
   },
@@ -432,6 +435,14 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 16,
     color: '#FFFFFF',
+  },
+  inputDisabled: {
+    color: '#71717A',
+  },
+  lockedFieldHint: {
+    color: '#52525B',
+    fontSize: 12,
+    marginTop: 4,
   },
   bioInputContainer: {
     backgroundColor: '#27272A',

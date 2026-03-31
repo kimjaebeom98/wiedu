@@ -276,7 +276,7 @@ export default function SessionAttendanceScreen() {
             <Feather name="x-circle" size={20} color="#EF4444" />
           </TouchableOpacity>
         ) : (
-          <View style={{ width: 40 }} />
+          <View style={styles.headerSpacer} />
         )}
       </View>
 
@@ -427,7 +427,7 @@ export default function SessionAttendanceScreen() {
           ))}
         </View>
 
-        <View style={{ height: 40 }} />
+        <View style={styles.bottomSpacer} />
       </ScrollView>
 
       {/* Absence Reason Modal */}
@@ -616,6 +616,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#FFFFFF',
     textAlign: 'center',
+  },
+  headerSpacer: {
+    width: 40,
   },
   content: {
     flex: 1,
@@ -942,5 +945,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#A1A1AA',
     marginTop: 4,
+  },
+  bottomSpacer: {
+    height: 40,
   },
 });

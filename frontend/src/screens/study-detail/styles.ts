@@ -924,6 +924,9 @@ export const styles = StyleSheet.create({
   rejectedText: {
     color: '#EF4444',
   },
+  statusCompletedText: {
+    color: '#22C55E',
+  },
   rejectReasonText: {
     fontSize: 13,
     color: '#71717A',
@@ -1054,6 +1057,361 @@ export const styles = StyleSheet.create({
   },
   approveButtonText: {
     fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+
+  // Common
+  flexOne: {
+    flex: 1,
+  },
+  bottomSpacer: {
+    height: 200,
+  },
+
+  // Curriculum
+  sessionCountText: {
+    fontSize: 12,
+    color: '#71717A',
+    marginTop: 2,
+  },
+  curriculumLoadingIndicator: {
+    marginVertical: 12,
+  },
+  accessDeniedContainer: {
+    backgroundColor: '#3F3F4620',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+  },
+  accessDeniedIcon: {
+    marginBottom: 8,
+  },
+  accessDeniedText: {
+    fontSize: 13,
+    color: '#71717A',
+    textAlign: 'center',
+  },
+
+  // Session
+  sessionCard: {
+    backgroundColor: '#1F1F23',
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 8,
+  },
+  sessionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  sessionModeIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  sessionModeIconOnline: {
+    backgroundColor: '#22C55E20',
+  },
+  sessionModeIconOffline: {
+    backgroundColor: '#F59E0B20',
+  },
+  sessionTitleText: {
+    fontSize: 15,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  sessionModeBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  sessionModeBadgeOnline: {
+    backgroundColor: '#22C55E20',
+  },
+  sessionModeBadgeOffline: {
+    backgroundColor: '#F59E0B20',
+  },
+  sessionModeBadgeText: {
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  sessionModeBadgeTextOnline: {
+    color: '#22C55E',
+  },
+  sessionModeBadgeTextOffline: {
+    color: '#F59E0B',
+  },
+  sessionInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  sessionInfoIcon: {
+    marginRight: 6,
+  },
+  sessionInfoText: {
+    fontSize: 13,
+    color: '#A1A1AA',
+  },
+  sessionContentContainer: {
+    marginBottom: 6,
+  },
+  sessionContentText: {
+    fontSize: 13,
+    color: '#E4E4E7',
+    lineHeight: 20,
+  },
+  meetingLinkContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#22C55E10',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 6,
+  },
+  meetingLinkIcon: {
+    marginRight: 8,
+  },
+  meetingLinkText: {
+    fontSize: 13,
+    color: '#22C55E',
+    flex: 1,
+  },
+  meetingLinkCopyIcon: {
+    marginLeft: 8,
+  },
+  locationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F59E0B10',
+    borderRadius: 8,
+    padding: 10,
+    marginTop: 6,
+  },
+  locationIcon: {
+    marginRight: 8,
+  },
+  locationPlaceName: {
+    fontSize: 13,
+    color: '#F59E0B',
+    fontWeight: '600',
+  },
+  locationAddress: {
+    fontSize: 12,
+    color: '#F59E0B',
+    opacity: 0.8,
+  },
+  locationExternalIcon: {
+    marginLeft: 8,
+  },
+  noSessionsText: {
+    fontSize: 13,
+    color: '#71717A',
+    textAlign: 'center',
+    paddingVertical: 8,
+  },
+
+  // Withdrawal (Leader)
+  withdrawalRequestBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#27272A',
+    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: '#EF4444',
+  },
+  withdrawalRequestBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#EF4444',
+    marginLeft: 8,
+  },
+  btnIconRight: {
+    marginRight: 8,
+  },
+  withdrawalCancelBtn: {
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  withdrawalCancelBtnText: {
+    fontSize: 14,
+    color: '#71717A',
+  },
+
+  // Rejected Application
+  rejectedInfoContainer: {
+    backgroundColor: '#27272A',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+  },
+  rejectedInfoHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  rejectedInfoIcon: {
+    marginRight: 6,
+  },
+  rejectedInfoText: {
+    fontSize: 13,
+    color: '#71717A',
+  },
+  rejectReasonDetail: {
+    fontSize: 12,
+    color: '#52525B',
+    marginLeft: 20,
+  },
+  cooldownText: {
+    fontSize: 12,
+    color: '#71717A',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+
+  // Withdrawal Modal
+  modalPadding: {
+    padding: 16,
+  },
+  withdrawalReasonInput: {
+    backgroundColor: '#3F3F46',
+    borderRadius: 12,
+    padding: 14,
+    color: '#FFFFFF',
+    fontSize: 15,
+    minHeight: 120,
+    textAlignVertical: 'top',
+  },
+  charCountText: {
+    color: '#71717A',
+    fontSize: 12,
+    marginTop: 8,
+    textAlign: 'right',
+  },
+  depositWarningContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: '#EF444420',
+    borderRadius: 10,
+    padding: 12,
+    marginTop: 12,
+    gap: 8,
+  },
+  depositWarningIcon: {
+    marginTop: 2,
+  },
+  depositWarningText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#EF4444',
+    lineHeight: 18,
+  },
+  submitWithdrawalBtn: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 16,
+  },
+  submitWithdrawalBtnActive: {
+    backgroundColor: '#EF4444',
+  },
+  submitWithdrawalBtnDisabled: {
+    backgroundColor: '#3F3F46',
+  },
+  submitBtnText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  // Withdrawal List Modal
+  modalScrollView: {
+    maxHeight: 400,
+  },
+  emptyWithdrawalContainer: {
+    padding: 32,
+    alignItems: 'center',
+  },
+  emptyWithdrawalText: {
+    fontSize: 14,
+    color: '#71717A',
+    marginTop: 12,
+  },
+  withdrawalListContainer: {
+    padding: 16,
+    gap: 12,
+  },
+  withdrawalRequestCard: {
+    backgroundColor: '#27272A',
+    borderRadius: 12,
+    padding: 14,
+  },
+  withdrawalUserInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  withdrawalUserAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    marginRight: 10,
+  },
+  withdrawalUserAvatarPlaceholder: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#8B5CF630',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+  withdrawalUserName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  withdrawalRequestDate: {
+    fontSize: 12,
+    color: '#71717A',
+    marginTop: 2,
+  },
+  withdrawalReasonContainer: {
+    backgroundColor: '#18181B',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+  },
+  withdrawalReasonLabel: {
+    fontSize: 12,
+    color: '#71717A',
+    marginBottom: 4,
+  },
+  withdrawalReasonText: {
+    fontSize: 14,
+    color: '#E4E4E7',
+    lineHeight: 20,
+  },
+  approveWithdrawalBtn: {
+    backgroundColor: '#EF4444',
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
+  },
+  approveWithdrawalBtnText: {
+    fontSize: 14,
     fontWeight: '600',
     color: '#FFFFFF',
   },

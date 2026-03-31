@@ -86,7 +86,7 @@ export default function Step1BasicInfo({
       <View style={styles.fieldGroup}>
         <Text style={styles.fieldLabel}>카테고리 <Text style={styles.required}>*</Text></Text>
         {categoriesLoading ? (
-          <ActivityIndicator color="#8B5CF6" style={{ marginTop: 8 }} />
+          <ActivityIndicator color="#8B5CF6" style={styles.loadingIndicator} />
         ) : (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <View style={styles.categoryRow}>

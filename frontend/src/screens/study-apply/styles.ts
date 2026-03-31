@@ -274,4 +274,7 @@ export const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
   },
+  bottomSpacer: {
+    height: 120,
+  },
 });

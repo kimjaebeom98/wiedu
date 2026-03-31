@@ -405,6 +405,11 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF',
   },
+  warningText: {
+    color: '#F97316',
+    fontSize: 12,
+    marginTop: 8,
+  },
 
   // ─── Step 7: Complete (design.pen 기준) ────────────────────────────────
   completeContainer: {
