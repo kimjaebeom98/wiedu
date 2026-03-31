@@ -16,6 +16,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -41,6 +43,7 @@ public class LocalFileStorageService implements FileStorageService {
     private String baseUrl;
 
     private static final int THUMBNAIL_SIZE = 300;
+    private static final DateTimeFormatter DATE_PATH_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd");
 
     @Override
     public String store(MultipartFile file, String subdirectory) throws IOException {
@@ -50,9 +53,13 @@ public class LocalFileStorageService implements FileStorageService {
         // subdirectory 검증 (Path Traversal 방지)
         String sanitizedSubdir = sanitizePath(subdirectory);
 
+        // 날짜 기반 하위 디렉토리 생성 (예: covers/2026/03/31)
+        String datePath = LocalDate.now().format(DATE_PATH_FORMATTER);
+        String fullSubdir = sanitizedSubdir + "/" + datePath;
+
         // 업로드 디렉토리 생성
         Path baseUploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
-        Path uploadPath = baseUploadPath.resolve(sanitizedSubdir).normalize();
+        Path uploadPath = baseUploadPath.resolve(fullSubdir).normalize();
 
         // 경로가 업로드 디렉토리 내부인지 확인
         if (!uploadPath.startsWith(baseUploadPath)) {
@@ -80,8 +87,8 @@ public class LocalFileStorageService implements FileStorageService {
             createThumbnail(filePath, uploadPath.resolve("thumb_" + storedFilename));
         }
 
-        // URL 반환
-        String relativePath = subdirectory + "/" + storedFilename;
+        // URL 반환 (날짜 경로 포함)
+        String relativePath = fullSubdir + "/" + storedFilename;
         log.info("파일 저장 완료: {}", relativePath);
         return resolveUrl(relativePath);
     }
