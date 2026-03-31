@@ -46,8 +46,9 @@ import { StudyLeaderReviewsResponse } from '../../types/review';
 import { CurriculumResponse, SessionResponse } from '../../types/curriculum';
 import { formatLocationDisplay } from '../../utils/location';
 import { isValidImageUrl } from '../../utils/image';
-import { CustomAlert, AlertButton } from '../../components/common';
+import { CustomAlert } from '../../components/common';
 import { styles } from './styles';
+import { useAlert } from '../../hooks';
 import { TabType } from './types';
 import BoardListView from '../study-board/BoardListView';
 import GalleryListView from '../study-gallery/GalleryListView';
@@ -190,20 +191,7 @@ export default function StudyDetailScreen() {
     }
   }, [studyId]);
 
-  // Custom Alert State
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<{
-    title: string;
-    message?: string;
-    buttons?: AlertButton[];
-    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'user-check' | 'user-x' | 'lock' | 'calendar';
-    iconColor?: string;
-  }>({ title: '' });
-
-  const showAlert = (config: typeof alertConfig) => {
-    setAlertConfig(config);
-    setAlertVisible(true);
-  };
+  const alert = useAlert();
 
   const loadMyApplication = async () => {
     try {
@@ -263,7 +251,7 @@ export default function StudyDetailScreen() {
   );
 
   const handleApproveApplicant = async (requestId: number) => {
-    showAlert({
+    alert.show({
       title: '승인 확인',
       message: '이 신청자를 승인하시겠습니까?',
       icon: 'user-check',
@@ -275,7 +263,7 @@ export default function StudyDetailScreen() {
           onPress: async () => {
             try {
               await approveStudyRequest(requestId);
-              showAlert({
+              alert.show({
                 title: '승인 완료',
                 message: '신청이 승인되었습니다.',
                 icon: 'check-circle',
@@ -284,7 +272,7 @@ export default function StudyDetailScreen() {
               loadApplicants();
               loadStudyDetail();
             } catch (error: any) {
-              showAlert({
+              alert.show({
                 title: '오류',
                 message: error.response?.data?.message || '승인에 실패했습니다.',
                 icon: 'alert-circle',
@@ -298,7 +286,7 @@ export default function StudyDetailScreen() {
   };
 
   const handleRejectApplicant = async (requestId: number) => {
-    showAlert({
+    alert.show({
       title: '거절 확인',
       message: '이 신청자를 거절하시겠습니까?',
       icon: 'user-x',
@@ -310,7 +298,7 @@ export default function StudyDetailScreen() {
           onPress: async () => {
             try {
               await rejectStudyRequest(requestId);
-              showAlert({
+              alert.show({
                 title: '거절 완료',
                 message: '신청이 거절되었습니다.',
                 icon: 'check-circle',
@@ -318,7 +306,7 @@ export default function StudyDetailScreen() {
               });
               loadApplicants();
             } catch (error: any) {
-              showAlert({
+              alert.show({
                 title: '오류',
                 message: error.response?.data?.message || '거절에 실패했습니다.',
                 icon: 'alert-circle',
@@ -375,7 +363,7 @@ export default function StudyDetailScreen() {
       }
     } catch (error) {
       console.error('Failed to load study detail:', error);
-      showAlert({
+      alert.show({
         title: '오류',
         message: '스터디 정보를 불러오는데 실패했습니다.',
         icon: 'alert-circle',
@@ -406,10 +394,10 @@ export default function StudyDetailScreen() {
   const handleJoinStudy = async () => {
     // 정원 체크
     if (study && study.currentMembers >= study.maxMembers) {
-      showAlert({
+      alert.show({
         title: '신청 불가',
         message: '스터디 정원이 가득 찼습니다.',
-        buttons: [{ text: '확인', onPress: () => setAlertVisible(false) }],
+        buttons: [{ text: '확인', onPress: () => alert.hide() }],
         icon: 'alert-circle',
         iconColor: '#EF4444',
       });
@@ -419,10 +407,10 @@ export default function StudyDetailScreen() {
     try {
       const { exceeded, count } = await checkStudyLimitExceeded();
       if (exceeded) {
-        showAlert({
+        alert.show({
           title: '신청 불가',
           message: `현재 ${count}개의 활성 스터디에 참여 중입니다.\n스터디는 최대 3개까지만 참여할 수 있습니다.`,
-          buttons: [{ text: '확인', onPress: () => setAlertVisible(false) }],
+          buttons: [{ text: '확인', onPress: () => alert.hide() }],
           icon: 'alert-circle',
           iconColor: '#EF4444',
         });
@@ -475,7 +463,7 @@ export default function StudyDetailScreen() {
   };
 
   const handleCloseStudy = () => {
-    showAlert({
+    alert.show({
       title: '모집 마감',
       message: '스터디 모집을 마감하시겠습니까?\n마감 후에는 새로운 멤버를 받을 수 없습니다.',
       icon: 'lock',
@@ -488,7 +476,7 @@ export default function StudyDetailScreen() {
             setProcessing(true);
             try {
               await closeStudy(studyId);
-              showAlert({
+              alert.show({
                 title: '마감 완료',
                 message: '스터디 모집이 마감되었습니다.',
                 icon: 'check-circle',
@@ -497,7 +485,7 @@ export default function StudyDetailScreen() {
               loadStudyDetail();
             } catch (error: any) {
               console.error('Failed to close study:', error);
-              showAlert({
+              alert.show({
                 title: '오류',
                 message: error.response?.data?.message || '스터디 마감에 실패했습니다.',
                 icon: 'alert-circle',
@@ -513,7 +501,7 @@ export default function StudyDetailScreen() {
   };
 
   const handleCompleteStudy = () => {
-    showAlert({
+    alert.show({
       title: '스터디 종료',
       message: '스터디를 종료하시겠습니까?\n종료 후에는 멤버들이 리뷰를 작성할 수 있습니다.',
       icon: 'calendar',
@@ -526,7 +514,7 @@ export default function StudyDetailScreen() {
             setProcessing(true);
             try {
               await completeStudy(studyId);
-              showAlert({
+              alert.show({
                 title: '종료 완료',
                 message: '스터디가 종료되었습니다.\n멤버들에게 리뷰 작성을 요청해보세요!',
                 icon: 'check-circle',
@@ -535,7 +523,7 @@ export default function StudyDetailScreen() {
               loadStudyDetail();
             } catch (error: any) {
               console.error('Failed to complete study:', error);
-              showAlert({
+              alert.show({
                 title: '오류',
                 message: error.response?.data?.message || '스터디 종료에 실패했습니다.',
                 icon: 'alert-circle',
@@ -582,7 +570,7 @@ export default function StudyDetailScreen() {
 
   // Handle approve withdrawal (leader)
   const handleApproveWithdrawal = async (requestId: number, userNickname: string) => {
-    showAlert({
+    alert.show({
       title: '탈퇴 승인',
       message: `${userNickname}님의 탈퇴를 승인하시겠습니까?\n\n승인 후에는 취소할 수 없습니다.`,
       icon: 'user-x',
@@ -596,7 +584,7 @@ export default function StudyDetailScreen() {
             setApprovalProcessing(requestId);
             try {
               await approveWithdrawalRequest(requestId);
-              showAlert({
+              alert.show({
                 title: '승인 완료',
                 message: `${userNickname}님의 탈퇴가 승인되었습니다.`,
                 icon: 'check-circle',
@@ -607,7 +595,7 @@ export default function StudyDetailScreen() {
               loadStudyDetail();
             } catch (error: any) {
               console.error('Failed to approve withdrawal:', error);
-              showAlert({
+              alert.show({
                 title: '오류',
                 message: error.message || '탈퇴 승인에 실패했습니다.',
                 icon: 'alert-circle',
@@ -629,7 +617,7 @@ export default function StudyDetailScreen() {
       ? `\n\n⚠️ 보증금 ${study.deposit.toLocaleString()}원은 탈퇴 시 환불이 어려울 수 있습니다. 스터디장에게 직접 문의해주세요.`
       : '';
 
-    showAlert({
+    alert.show({
       title: '스터디 탈퇴 신청',
       message: `탈퇴 사유를 입력해주세요.${depositWarning}`,
       icon: 'alert-circle',
@@ -648,7 +636,7 @@ export default function StudyDetailScreen() {
   // Submit withdrawal request
   const submitWithdrawalRequest = async () => {
     if (!withdrawalReason.trim()) {
-      showAlert({
+      alert.show({
         title: '오류',
         message: '탈퇴 사유를 입력해주세요.',
         icon: 'alert-circle',
@@ -658,7 +646,7 @@ export default function StudyDetailScreen() {
     }
 
     // Final confirmation
-    showAlert({
+    alert.show({
       title: '정말 탈퇴하시겠습니까?',
       message: study?.deposit
         ? `탈퇴 신청 후 스터디장의 승인이 필요합니다.\n\n⚠️ 보증금 환불은 스터디장에게 직접 문의해주세요.`
@@ -677,7 +665,7 @@ export default function StudyDetailScreen() {
               setMyWithdrawalRequest(request);
               setShowWithdrawalModal(false);
               setWithdrawalReason('');
-              showAlert({
+              alert.show({
                 title: '탈퇴 신청 완료',
                 message: '스터디장에게 탈퇴 신청이 전달되었습니다.\n승인되면 알림으로 안내드립니다.',
                 icon: 'check-circle',
@@ -685,7 +673,7 @@ export default function StudyDetailScreen() {
               });
             } catch (error: any) {
               console.error('Failed to request withdrawal:', error);
-              showAlert({
+              alert.show({
                 title: '오류',
                 message: error.message || '탈퇴 신청에 실패했습니다.',
                 icon: 'alert-circle',
@@ -704,7 +692,7 @@ export default function StudyDetailScreen() {
   const handleCancelWithdrawal = () => {
     if (!myWithdrawalRequest) return;
 
-    showAlert({
+    alert.show({
       title: '탈퇴 신청 취소',
       message: '탈퇴 신청을 취소하시겠습니까?',
       icon: 'info',
@@ -718,7 +706,7 @@ export default function StudyDetailScreen() {
             try {
               await cancelWithdrawalRequest(myWithdrawalRequest.id);
               setMyWithdrawalRequest(null);
-              showAlert({
+              alert.show({
                 title: '취소 완료',
                 message: '탈퇴 신청이 취소되었습니다.',
                 icon: 'check-circle',
@@ -726,7 +714,7 @@ export default function StudyDetailScreen() {
               });
             } catch (error: any) {
               console.error('Failed to cancel withdrawal:', error);
-              showAlert({
+              alert.show({
                 title: '오류',
                 message: error.message || '탈퇴 신청 취소에 실패했습니다.',
                 icon: 'alert-circle',
@@ -1602,16 +1590,7 @@ export default function StudyDetailScreen() {
         </View>
       )}
 
-      {/* Custom Alert */}
-      <CustomAlert
-        visible={alertVisible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        buttons={alertConfig.buttons}
-        icon={alertConfig.icon}
-        iconColor={alertConfig.iconColor}
-        onClose={() => setAlertVisible(false)}
-      />
+      <CustomAlert {...alert.alertProps} />
 
       {/* Deposit Refund Policy Modal */}
       <Modal

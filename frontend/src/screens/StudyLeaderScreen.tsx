@@ -10,6 +10,7 @@ import {
   Image,
 } from 'react-native';
 import { CustomAlert } from '../components/common';
+import { useAlert } from '../hooks';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -39,12 +40,12 @@ const CATEGORY_COLORS: Record<string, string> = {
 export default function StudyLeaderScreen() {
   const navigation = useNavigation<NavigationProp>();
   const insets = useSafeAreaInsets();
+  const alert = useAlert();
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [reviewsData, setReviewsData] = useState<StudyLeaderReviewsResponse | null>(null);
   const [categoryTemps, setCategoryTemps] = useState<CategoryTemperature[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [alertVisible, setAlertVisible] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -257,7 +258,7 @@ export default function StudyLeaderScreen() {
         <View style={styles.section}>
           <View style={styles.reviewHeader}>
             <Text style={styles.sectionTitle}>리뷰 {totalReviewCount}개</Text>
-            <TouchableOpacity onPress={() => setAlertVisible(true)}>
+            <TouchableOpacity onPress={() => alert.show({ title: '준비 중', message: '리뷰 전체보기 기능은 준비 중입니다.', icon: 'alert-circle' })}>
               <Text style={styles.seeAllText}>전체보기</Text>
             </TouchableOpacity>
           </View>
@@ -276,13 +277,7 @@ export default function StudyLeaderScreen() {
         <View style={styles.bottomSpacer} />
       </ScrollView>
 
-      <CustomAlert
-        visible={alertVisible}
-        title="준비 중"
-        message="리뷰 전체보기 기능은 준비 중입니다."
-        icon="alert-circle"
-        onClose={() => setAlertVisible(false)}
-      />
+      <CustomAlert {...alert.alertProps} />
     </View>
   );
 }

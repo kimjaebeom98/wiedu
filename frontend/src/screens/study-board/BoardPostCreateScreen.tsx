@@ -12,12 +12,13 @@ import {
   StatusBar,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CustomAlert, AlertButton } from '../../components/common';
+import { CustomAlert } from '../../components/common';
 import { Feather } from '@expo/vector-icons';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/types';
 import { PostCategory, BoardPostCreateRequest, CATEGORY_LABELS } from '../../types/board';
 import { createBoardPost } from '../../api/board';
+import { useAlert } from '../../hooks';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'BoardPostCreate'>;
 
@@ -26,23 +27,12 @@ const TITLE_MAX_LENGTH = 100;
 export default function BoardPostCreateScreen({ navigation, route }: Props) {
   const { studyId, isLeader = false } = route.params;
   const insets = useSafeAreaInsets();
+  const alert = useAlert();
 
   const [selectedCategory, setSelectedCategory] = useState<PostCategory>('CHAT');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<{
-    title: string;
-    message?: string;
-    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'send';
-    buttons?: AlertButton[];
-  }>({ title: '' });
-
-  const showAlert = (config: typeof alertConfig) => {
-    setAlertConfig(config);
-    setAlertVisible(true);
-  };
 
   const categories: PostCategory[] = isLeader
     ? ['NOTICE', 'CHAT', 'QNA']
@@ -54,7 +44,7 @@ export default function BoardPostCreateScreen({ navigation, route }: Props) {
 
   const handleSubmit = async () => {
     if (!isFormValid()) {
-      showAlert({
+      alert.show({
         title: '알림',
         message: '제목과 내용을 모두 입력해주세요.',
         icon: 'alert-circle',
@@ -73,7 +63,7 @@ export default function BoardPostCreateScreen({ navigation, route }: Props) {
 
       await createBoardPost(studyId, requestData);
 
-      showAlert({
+      alert.show({
         title: '게시글이 작성되었습니다.',
         icon: 'check-circle',
         buttons: [
@@ -87,7 +77,7 @@ export default function BoardPostCreateScreen({ navigation, route }: Props) {
       });
     } catch (error: any) {
       console.error('Failed to create post:', error);
-      showAlert({
+      alert.show({
         title: '오류',
         message: error.response?.data?.message || '게시글 작성에 실패했습니다.',
         icon: 'x-circle',
@@ -203,14 +193,7 @@ export default function BoardPostCreateScreen({ navigation, route }: Props) {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-      <CustomAlert
-        visible={alertVisible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        icon={alertConfig.icon}
-        buttons={alertConfig.buttons}
-        onClose={() => setAlertVisible(false)}
-      />
+      <CustomAlert {...alert.alertProps} />
     </View>
   );
 }

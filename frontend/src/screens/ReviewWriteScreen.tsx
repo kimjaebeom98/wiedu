@@ -14,12 +14,13 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { CustomAlert, AlertButton } from '../components/common';
+import { CustomAlert } from '../components/common';
 import { Feather } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/types';
 import { createReview } from '../api/review';
+import { useAlert } from '../hooks';
 
 type ReviewWriteScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'ReviewWrite'>;
 type ReviewWriteScreenRouteProp = RouteProp<RootStackParamList, 'ReviewWrite'>;
@@ -51,24 +52,13 @@ export default function ReviewWriteScreen() {
   const navigation = useNavigation<ReviewWriteScreenNavigationProp>();
   const route = useRoute<ReviewWriteScreenRouteProp>();
   const insets = useSafeAreaInsets();
+  const alert = useAlert();
   const { studyId, studyTitle, leaderName, leaderProfileImage } = route.params;
 
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<{
-    title: string;
-    message?: string;
-    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'edit-2';
-    buttons?: AlertButton[];
-  }>({ title: '' });
-
-  const showAlert = (config: typeof alertConfig) => {
-    setAlertConfig(config);
-    setAlertVisible(true);
-  };
 
   const toggleTag = (tagId: string) => {
     setSelectedTags(prev =>
@@ -80,12 +70,12 @@ export default function ReviewWriteScreen() {
 
   const handleSubmit = async () => {
     if (!selectedRating) {
-      showAlert({ title: '알림', message: '만족도를 선택해주세요.', icon: 'alert-circle' });
+      alert.show({ title: '알림', message: '만족도를 선택해주세요.', icon: 'alert-circle' });
       return;
     }
 
     if (!content.trim()) {
-      showAlert({ title: '알림', message: '리뷰 내용을 작성해주세요.', icon: 'alert-circle' });
+      alert.show({ title: '알림', message: '리뷰 내용을 작성해주세요.', icon: 'alert-circle' });
       return;
     }
 
@@ -104,7 +94,7 @@ export default function ReviewWriteScreen() {
         content: fullContent,
       });
 
-      showAlert({
+      alert.show({
         title: '완료',
         message: '리뷰가 등록되었습니다.',
         icon: 'check-circle',
@@ -112,7 +102,7 @@ export default function ReviewWriteScreen() {
       });
     } catch (error: any) {
       const message = error.response?.data?.message || '리뷰 등록에 실패했습니다.';
-      showAlert({ title: '오류', message, icon: 'x-circle' });
+      alert.show({ title: '오류', message, icon: 'x-circle' });
     } finally {
       setIsSubmitting(false);
     }
@@ -258,14 +248,7 @@ export default function ReviewWriteScreen() {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-      <CustomAlert
-        visible={alertVisible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        icon={alertConfig.icon}
-        buttons={alertConfig.buttons}
-        onClose={() => setAlertVisible(false)}
-      />
+      <CustomAlert {...alert.alertProps} />
     </View>
   );
 }

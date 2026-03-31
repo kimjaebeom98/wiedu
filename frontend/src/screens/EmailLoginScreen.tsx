@@ -19,6 +19,7 @@ import { Feather } from '@expo/vector-icons';
 import { login } from '../api/auth';
 import { saveTokens } from '../storage/token';
 import { CustomAlert } from '../components/common';
+import { useAlert } from '../hooks';
 
 const { height } = Dimensions.get('window');
 
@@ -28,12 +29,12 @@ interface EmailLoginScreenProps {
 
 export default function EmailLoginScreen({ navigation }: EmailLoginScreenProps) {
   const insets = useSafeAreaInsets();
+  const alert = useAlert();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [alertVisible, setAlertVisible] = useState(false);
 
   const passwordRef = useRef<TextInput>(null);
 
@@ -42,7 +43,7 @@ export default function EmailLoginScreen({ navigation }: EmailLoginScreenProps) 
   };
 
   const handleForgotPassword = () => {
-    setAlertVisible(true);
+    alert.show({ title: '준비 중', message: '비밀번호 찾기 기능은 준비 중입니다.', icon: 'info' });
   };
 
   const handleLogin = async () => {
@@ -216,13 +217,7 @@ export default function EmailLoginScreen({ navigation }: EmailLoginScreenProps) 
         </KeyboardAvoidingView>
       </View>
     </TouchableWithoutFeedback>
-    <CustomAlert
-      visible={alertVisible}
-      title="준비 중"
-      message="비밀번호 찾기 기능은 준비 중입니다."
-      icon="info"
-      onClose={() => setAlertVisible(false)}
-    />
+    <CustomAlert {...alert.alertProps} />
   </>
   );
 }

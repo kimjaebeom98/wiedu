@@ -11,13 +11,14 @@ import {
   StatusBar,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CustomAlert, AlertButton } from '../components/common';
+import { CustomAlert } from '../components/common';
 import { Feather } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { RootStackParamList } from '../navigation/types';
 import { getMembersToReview, createMemberReview } from '../api/review';
 import { StudyMemberToReview } from '../types/review';
+import { useAlert } from '../hooks';
 
 type MemberReviewScreenNavigationProp = NativeStackNavigationProp<RootStackParamList, 'MemberReview'>;
 type MemberReviewScreenRouteProp = RouteProp<RootStackParamList, 'MemberReview'>;
@@ -40,6 +41,7 @@ export default function MemberReviewScreen() {
   const navigation = useNavigation<MemberReviewScreenNavigationProp>();
   const route = useRoute<MemberReviewScreenRouteProp>();
   const insets = useSafeAreaInsets();
+  const alert = useAlert();
   const { studyId, studyTitle } = route.params;
 
   const [members, setMembers] = useState<StudyMemberToReview[]>([]);
@@ -48,18 +50,6 @@ export default function MemberReviewScreen() {
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<{
-    title: string;
-    message?: string;
-    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'user-check';
-    buttons?: AlertButton[];
-  }>({ title: '' });
-
-  const showAlert = (config: typeof alertConfig) => {
-    setAlertConfig(config);
-    setAlertVisible(true);
-  };
 
   useEffect(() => {
     loadMembers();
@@ -71,7 +61,7 @@ export default function MemberReviewScreen() {
       setMembers(data);
     } catch (error: any) {
       const message = error.response?.data?.message || '멤버 목록을 불러오는데 실패했습니다.';
-      showAlert({ title: '오류', message, icon: 'x-circle' });
+      alert.show({ title: '오류', message, icon: 'x-circle' });
     } finally {
       setLoading(false);
     }
@@ -79,7 +69,7 @@ export default function MemberReviewScreen() {
 
   const handleSubmitReview = async () => {
     if (!selectedMember || !selectedRating) {
-      showAlert({ title: '알림', message: '평점을 선택해주세요.', icon: 'alert-circle' });
+      alert.show({ title: '알림', message: '평점을 선택해주세요.', icon: 'alert-circle' });
       return;
     }
 
@@ -104,10 +94,10 @@ export default function MemberReviewScreen() {
       setSelectedRating(null);
       setContent('');
 
-      showAlert({ title: '완료', message: '리뷰가 등록되었습니다.', icon: 'check-circle' });
+      alert.show({ title: '완료', message: '리뷰가 등록되었습니다.', icon: 'check-circle' });
     } catch (error: any) {
       const message = error.response?.data?.message || '리뷰 등록에 실패했습니다.';
-      showAlert({ title: '오류', message, icon: 'x-circle' });
+      alert.show({ title: '오류', message, icon: 'x-circle' });
     } finally {
       setIsSubmitting(false);
     }
@@ -263,14 +253,7 @@ export default function MemberReviewScreen() {
           </View>
         )}
       </ScrollView>
-      <CustomAlert
-        visible={alertVisible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        icon={alertConfig.icon}
-        buttons={alertConfig.buttons}
-        onClose={() => setAlertVisible(false)}
-      />
+      <CustomAlert {...alert.alertProps} />
     </View>
   );
 }

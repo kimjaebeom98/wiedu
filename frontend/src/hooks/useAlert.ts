@@ -20,6 +20,7 @@ export interface AlertConfig {
   title: string;
   message?: string;
   icon?: AlertIcon;
+  iconColor?: string;
   buttons?: AlertButton[];
 }
 
@@ -43,6 +44,7 @@ export interface UseAlertReturn {
     title: string;
     message?: string;
     icon?: AlertIcon;
+    iconColor?: string;
     buttons?: AlertButton[];
     onClose: () => void;
   };
@@ -103,6 +105,7 @@ export function useAlert(): UseAlertReturn {
       title: config.title,
       message: config.message,
       icon: config.icon,
+      iconColor: config.iconColor,
       buttons: config.buttons,
       onClose: hide,
     },

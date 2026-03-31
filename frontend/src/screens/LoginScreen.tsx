@@ -8,11 +8,12 @@ import {
   StatusBar,
   ActivityIndicator,
 } from 'react-native';
-import { CustomAlert, AlertButton } from '../components/common';
+import { CustomAlert } from '../components/common';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { startKakaoLogin } from '../services/kakaoAuth';
 import { saveTokens } from '../storage/token';
+import { useAlert } from '../hooks';
 
 const { height } = Dimensions.get('window');
 
@@ -22,19 +23,8 @@ interface LoginScreenProps {
 
 export default function LoginScreen({ navigation }: LoginScreenProps) {
   const insets = useSafeAreaInsets();
+  const alert = useAlert();
   const [loading, setLoading] = useState(false);
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<{
-    title: string;
-    message?: string;
-    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'help-circle';
-    buttons?: AlertButton[];
-  }>({ title: '' });
-
-  const showAlert = (config: typeof alertConfig) => {
-    setAlertConfig(config);
-    setAlertVisible(true);
-  };
 
   const handleEmailLogin = () => {
     navigation.navigate('EmailLogin');
@@ -61,11 +51,11 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
       } else {
         // 에러 발생
         console.error('[Login] Kakao login error:', result.error);
-        showAlert({ title: '로그인 실패', message: result.error || '카카오 로그인에 실패했습니다.', icon: 'x-circle' });
+        alert.show({ title: '로그인 실패', message: result.error || '카카오 로그인에 실패했습니다.', icon: 'x-circle' });
       }
     } catch (error: any) {
       console.error('[Login] Unexpected error:', error);
-      showAlert({ title: '로그인 실패', message: error.message || '카카오 로그인에 실패했습니다.', icon: 'x-circle' });
+      alert.show({ title: '로그인 실패', message: error.message || '카카오 로그인에 실패했습니다.', icon: 'x-circle' });
     } finally {
       setLoading(false);
     }
@@ -73,7 +63,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
 
   const handleSocialLogin = (provider: string) => {
     // TODO: Implement other social logins
-    showAlert({ title: '준비 중', message: `${provider} 로그인은 준비 중입니다.`, icon: 'info' });
+    alert.show({ title: '준비 중', message: `${provider} 로그인은 준비 중입니다.`, icon: 'info' });
   };
 
   return (
@@ -162,14 +152,7 @@ export default function LoginScreen({ navigation }: LoginScreenProps) {
           <Text style={styles.footerLinks}>개인정보처리방침 | 이용약관</Text>
         </View>
       </View>
-      <CustomAlert
-        visible={alertVisible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        icon={alertConfig.icon}
-        buttons={alertConfig.buttons}
-        onClose={() => setAlertVisible(false)}
-      />
+      <CustomAlert {...alert.alertProps} />
     </View>
   );
 }

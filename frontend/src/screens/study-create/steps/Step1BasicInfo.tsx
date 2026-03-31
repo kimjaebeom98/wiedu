@@ -8,12 +8,13 @@ import {
   ActivityIndicator,
   Image,
 } from 'react-native';
-import { CustomAlert, AlertButton } from '../../../components/common';
+import { CustomAlert } from '../../../components/common';
 import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Step1Props } from '../types';
 import { styles } from '../styles';
 import { uploadCoverImage } from '../../../api/file';
+import { useAlert } from '../../../hooks';
 
 export default function Step1BasicInfo({
   data,
@@ -26,25 +27,13 @@ export default function Step1BasicInfo({
   removeTag,
 }: Step1Props) {
   const selectedCategory = categories.find(c => c.id === data.categoryId);
-
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<{
-    title: string;
-    message?: string;
-    icon?: 'alert-circle' | 'lock';
-    buttons?: AlertButton[];
-  }>({ title: '' });
+  const alert = useAlert();
   const [isUploading, setIsUploading] = useState(false);
-
-  const showAlert = (config: typeof alertConfig) => {
-    setAlertConfig(config);
-    setAlertVisible(true);
-  };
 
   const handleImagePick = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
-      showAlert({ title: '권한 필요', message: '이미지를 선택하려면 갤러리 접근 권한이 필요합니다.', icon: 'lock' });
+      alert.show({ title: '권한 필요', message: '이미지를 선택하려면 갤러리 접근 권한이 필요합니다.', icon: 'lock' });
       return;
     }
 
@@ -65,7 +54,7 @@ export default function Step1BasicInfo({
         updateData('coverImageUrl', serverUrl);
       } catch (error) {
         console.error('Cover image upload failed:', error);
-        showAlert({
+        alert.show({
           title: '업로드 실패',
           message: '이미지 업로드에 실패했습니다. 다시 시도해주세요.',
           icon: 'alert-circle',
@@ -210,14 +199,7 @@ export default function Step1BasicInfo({
           </View>
         )}
       </View>
-      <CustomAlert
-        visible={alertVisible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        icon={alertConfig.icon}
-        buttons={alertConfig.buttons}
-        onClose={() => setAlertVisible(false)}
-      />
+      <CustomAlert {...alert.alertProps} />
     </View>
   );
 }

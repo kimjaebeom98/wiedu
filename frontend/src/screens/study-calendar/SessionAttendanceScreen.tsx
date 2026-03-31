@@ -30,7 +30,8 @@ import {
   AttendanceStatus,
 } from '../../types/attendance';
 import { SessionResponse } from '../../types/curriculum';
-import CustomAlert, { AlertButton } from '../../components/common/CustomAlert';
+import CustomAlert from '../../components/common/CustomAlert';
+import { useAlert } from '../../hooks';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type SessionAttendanceRouteProp = RouteProp<RootStackParamList, 'SessionAttendance'>;
@@ -40,6 +41,7 @@ export default function SessionAttendanceScreen() {
   const route = useRoute<SessionAttendanceRouteProp>();
   const { sessionId, sessionTitle, studyId, isLeader } = route.params;
   const insets = useSafeAreaInsets();
+  const alert = useAlert();
 
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<SessionResponse | null>(null);
@@ -59,21 +61,6 @@ export default function SessionAttendanceScreen() {
   // Cancel session modal for leader
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
-
-  // Custom Alert State
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<{
-    title: string;
-    message?: string;
-    buttons?: AlertButton[];
-    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info';
-    iconColor?: string;
-  }>({ title: '' });
-
-  const showAlert = (config: typeof alertConfig) => {
-    setAlertConfig(config);
-    setAlertVisible(true);
-  };
 
   useFocusEffect(
     useCallback(() => {
@@ -103,14 +90,14 @@ export default function SessionAttendanceScreen() {
     try {
       setSubmitting(true);
       await respondAttendance(sessionId, { attending: true });
-      showAlert({
+      alert.show({
         title: '완료',
         message: '참석으로 응답했습니다.',
         icon: 'check-circle',
       });
       loadData();
     } catch (error: any) {
-      showAlert({
+      alert.show({
         title: '오류',
         message: error.message || '응답에 실패했습니다.',
         icon: 'x-circle',
@@ -122,7 +109,7 @@ export default function SessionAttendanceScreen() {
 
   const handleAbsence = async () => {
     if (!absenceReason.trim()) {
-      showAlert({
+      alert.show({
         title: '알림',
         message: '불참 사유를 입력해주세요.',
         icon: 'alert-circle',
@@ -138,14 +125,14 @@ export default function SessionAttendanceScreen() {
       });
       setShowAbsenceModal(false);
       setAbsenceReason('');
-      showAlert({
+      alert.show({
         title: '완료',
         message: '불참 신청이 접수되었습니다. 스터디장의 승인을 기다려주세요.',
         icon: 'check-circle',
       });
       loadData();
     } catch (error: any) {
-      showAlert({
+      alert.show({
         title: '오류',
         message: error.message || '응답에 실패했습니다.',
         icon: 'x-circle',
@@ -167,14 +154,14 @@ export default function SessionAttendanceScreen() {
       setShowApprovalModal(false);
       setSelectedAttendance(null);
       setApprovalComment('');
-      showAlert({
+      alert.show({
         title: '완료',
         message: approved ? '불참을 승인했습니다.' : '불참을 거절했습니다.',
         icon: approved ? 'check-circle' : 'x-circle',
       });
       loadData();
     } catch (error: any) {
-      showAlert({
+      alert.show({
         title: '오류',
         message: error.message || '처리에 실패했습니다.',
         icon: 'x-circle',
@@ -186,7 +173,7 @@ export default function SessionAttendanceScreen() {
 
   const handleCancelSession = async () => {
     if (!cancelReason.trim()) {
-      showAlert({
+      alert.show({
         title: '알림',
         message: '취소 사유를 입력해주세요.',
         icon: 'alert-circle',
@@ -194,7 +181,7 @@ export default function SessionAttendanceScreen() {
       return;
     }
 
-    showAlert({
+    alert.show({
       title: '회차 취소',
       message: '정말로 이 회차를 취소하시겠습니까?\n취소하면 모든 스터디원에게 알림이 발송됩니다.',
       icon: 'alert-circle',
@@ -209,14 +196,14 @@ export default function SessionAttendanceScreen() {
               await cancelSession(sessionId, cancelReason.trim());
               setShowCancelModal(false);
               setCancelReason('');
-              showAlert({
+              alert.show({
                 title: '완료',
                 message: '회차가 취소되었습니다.',
                 icon: 'check-circle',
                 buttons: [{ text: '확인', onPress: () => navigation.goBack() }],
               });
             } catch (error: any) {
-              showAlert({
+              alert.show({
                 title: '오류',
                 message: error.message || '취소에 실패했습니다.',
                 icon: 'x-circle',
@@ -586,16 +573,7 @@ export default function SessionAttendanceScreen() {
         </View>
       </Modal>
 
-      {/* Custom Alert */}
-      <CustomAlert
-        visible={alertVisible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        buttons={alertConfig.buttons}
-        icon={alertConfig.icon}
-        iconColor={alertConfig.iconColor}
-        onClose={() => setAlertVisible(false)}
-      />
+      <CustomAlert {...alert.alertProps} />
     </View>
   );
 }

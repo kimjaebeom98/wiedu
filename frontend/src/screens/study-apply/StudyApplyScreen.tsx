@@ -11,7 +11,7 @@ import {
   Platform,
   Modal,
 } from 'react-native';
-import { CustomAlert, AlertButton } from '../../components/common';
+import { CustomAlert } from '../../components/common';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -20,6 +20,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { applyToStudy } from '../../api/study';
 import { handleApiError } from '../../api/apiError';
 import { styles } from './styles';
+import { useAlert } from '../../hooks';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type StudyApplyRouteProp = RouteProp<RootStackParamList, 'StudyApply'>;
@@ -28,6 +29,7 @@ export default function StudyApplyScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<StudyApplyRouteProp>();
   const insets = useSafeAreaInsets();
+  const alert = useAlert();
   const { studyId, studyTitle, leaderName, currentMembers, maxMembers, rules, depositRefundPolicy } = route.params;
 
   const [introduction, setIntroduction] = useState('');
@@ -39,18 +41,6 @@ export default function StudyApplyScreen() {
   const [loading, setLoading] = useState(false);
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [showPolicyModal, setShowPolicyModal] = useState(false);
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<{
-    title: string;
-    message?: string;
-    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'send';
-    buttons?: AlertButton[];
-  }>({ title: '' });
-
-  const showAlert = (config: typeof alertConfig) => {
-    setAlertConfig(config);
-    setAlertVisible(true);
-  };
 
   // 보증금이 없거나 환불정책이 없으면 자동 동의 처리
   const hasDepositPolicy = !!depositRefundPolicy;
@@ -58,7 +48,7 @@ export default function StudyApplyScreen() {
 
   const handleSubmit = async () => {
     if (!canSubmit) {
-      showAlert({ title: '알림', message: '필수 항목을 모두 입력하고 동의해주세요.', icon: 'alert-circle' });
+      alert.show({ title: '알림', message: '필수 항목을 모두 입력하고 동의해주세요.', icon: 'alert-circle' });
       return;
     }
 
@@ -74,7 +64,7 @@ export default function StudyApplyScreen() {
         handleApiError(error, { defaultMessage: '가입 신청에 실패했습니다.' });
       } catch (e) {
         const errorMessage = e instanceof Error ? e.message : '가입 신청에 실패했습니다.';
-        showAlert({ title: '오류', message: errorMessage, icon: 'x-circle' });
+        alert.show({ title: '오류', message: errorMessage, icon: 'x-circle' });
       }
     } finally {
       setLoading(false);
@@ -304,14 +294,7 @@ export default function StudyApplyScreen() {
           </View>
         </View>
       </Modal>
-      <CustomAlert
-        visible={alertVisible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        icon={alertConfig.icon}
-        buttons={alertConfig.buttons}
-        onClose={() => setAlertVisible(false)}
-      />
+      <CustomAlert {...alert.alertProps} />
     </KeyboardAvoidingView>
   );
 }

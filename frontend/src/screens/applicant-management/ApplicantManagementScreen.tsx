@@ -22,8 +22,9 @@ import {
   rejectStudyRequest,
   StudyRequestResponse,
 } from '../../api/study';
-import { CustomAlert, AlertButton } from '../../components/common';
+import { CustomAlert } from '../../components/common';
 import { styles } from './styles';
+import { useAlert } from '../../hooks';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type ApplicantManagementRouteProp = RouteProp<RootStackParamList, 'ApplicantManagement'>;
@@ -37,6 +38,7 @@ export default function ApplicantManagementScreen() {
   const route = useRoute<ApplicantManagementRouteProp>();
   const { studyId, studyTitle } = route.params;
   const insets = useSafeAreaInsets();
+  const alert = useAlert();
 
   const [requests, setRequests] = useState<StudyRequestResponse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -49,28 +51,13 @@ export default function ApplicantManagementScreen() {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<StudyRequestResponse | null>(null);
 
-  // Custom Alert State
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertConfig, setAlertConfig] = useState<{
-    title: string;
-    message?: string;
-    buttons?: AlertButton[];
-    icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'user-check' | 'user-x';
-    iconColor?: string;
-  }>({ title: '' });
-
-  const showAlert = (config: typeof alertConfig) => {
-    setAlertConfig(config);
-    setAlertVisible(true);
-  };
-
   const loadRequests = useCallback(async () => {
     try {
       const data = await getStudyRequests(studyId);
       setRequests(data);
     } catch (error) {
       console.error('Failed to load requests:', error);
-      showAlert({
+      alert.show({
         title: '오류',
         message: '신청 목록을 불러오는데 실패했습니다.',
         icon: 'alert-circle',
@@ -100,7 +87,7 @@ export default function ApplicantManagementScreen() {
   };
 
   const handleApprove = async (requestId: number) => {
-    showAlert({
+    alert.show({
       title: '승인 확인',
       message: '이 신청자를 승인하시겠습니까?',
       icon: 'user-check',
@@ -113,7 +100,7 @@ export default function ApplicantManagementScreen() {
             setProcessing(requestId);
             try {
               await approveStudyRequest(requestId);
-              showAlert({
+              alert.show({
                 title: '승인 완료',
                 message: '신청이 승인되었습니다.',
                 icon: 'check-circle',
@@ -121,7 +108,7 @@ export default function ApplicantManagementScreen() {
               });
               loadRequests();
             } catch (error: any) {
-              showAlert({
+              alert.show({
                 title: '오류',
                 message: error.response?.data?.message || '승인에 실패했습니다.',
                 icon: 'alert-circle',
@@ -150,7 +137,7 @@ export default function ApplicantManagementScreen() {
 
     try {
       await rejectStudyRequest(rejectTargetId, rejectReason || undefined);
-      showAlert({
+      alert.show({
         title: '거절 완료',
         message: '신청이 거절되었습니다.',
         icon: 'user-x',
@@ -158,7 +145,7 @@ export default function ApplicantManagementScreen() {
       });
       loadRequests();
     } catch (error: any) {
-      showAlert({
+      alert.show({
         title: '오류',
         message: error.response?.data?.message || '거절에 실패했습니다.',
         icon: 'alert-circle',
@@ -587,16 +574,7 @@ export default function ApplicantManagementScreen() {
         </View>
       </Modal>
 
-      {/* Custom Alert */}
-      <CustomAlert
-        visible={alertVisible}
-        title={alertConfig.title}
-        message={alertConfig.message}
-        buttons={alertConfig.buttons}
-        icon={alertConfig.icon}
-        iconColor={alertConfig.iconColor}
-        onClose={() => setAlertVisible(false)}
-      />
+      <CustomAlert {...alert.alertProps} />
     </View>
   );
 }
