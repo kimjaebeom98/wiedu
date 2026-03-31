@@ -31,8 +31,8 @@ export default function ApplyCompleteScreen() {
   };
 
   const handleClose = () => {
-    navigation.goBack();
-    navigation.goBack(); // Go back twice to skip apply form
+    // 신청 폼을 건너뛰고 스터디 상세 화면으로 돌아감
+    navigation.pop(2);
   };
 
   return (
