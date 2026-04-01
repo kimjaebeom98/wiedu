@@ -48,6 +48,7 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [commentText, setCommentText] = useState('');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -78,11 +79,12 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
   const loadPost = async () => {
     try {
       setLoading(true);
+      setError(false);
       const data = await getBoardPostDetail(studyId, postId);
       setPost(data);
-    } catch (error) {
-      console.error('Failed to load post:', error);
-      alert.show({ title: '게시글을 불러오는데 실패했습니다.', icon: 'x-circle', buttons: [{ text: '확인', onPress: () => navigation.goBack() }] });
+    } catch (err) {
+      console.error('Failed to load post:', err);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -322,8 +324,24 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
     );
   }
 
-  if (!post) {
-    return null;
+  if (error || !post) {
+    return (
+      <View style={styles.errorContainer}>
+        <Feather name="alert-circle" size={48} color="#71717A" />
+        <Text style={styles.errorTitle}>게시글을 불러올 수 없습니다</Text>
+        <Text style={styles.errorMessage}>네트워크 연결을 확인하고 다시 시도해주세요.</Text>
+        <View style={styles.errorButtons}>
+          <TouchableOpacity style={styles.retryButton} onPress={loadPost}>
+            <Feather name="refresh-cw" size={18} color="#FFFFFF" />
+            <Text style={styles.retryButtonText}>다시 시도</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.backButtonError} onPress={() => navigation.goBack()}>
+            <Feather name="arrow-left" size={18} color="#A1A1AA" />
+            <Text style={styles.backButtonErrorText}>뒤로 가기</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
   }
 
   const isAuthor = currentUserId === post.authorId;
@@ -602,6 +620,58 @@ const styles = StyleSheet.create({
     backgroundColor: '#18181B',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    backgroundColor: '#18181B',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: '#71717A',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  errorButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#8B5CF6',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  retryButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  backButtonError: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#27272A',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  backButtonErrorText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#A1A1AA',
   },
   header: {
     flexDirection: 'row',
