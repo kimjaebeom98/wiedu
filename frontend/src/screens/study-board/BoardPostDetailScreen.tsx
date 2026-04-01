@@ -104,6 +104,31 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
     setEditingPost(true);
   };
 
+  const handleCancelEdit = () => {
+    // 변경 사항이 있는지 확인
+    const hasChanges = post && (
+      editPostTitle !== post.title || editPostContent !== post.content
+    );
+
+    if (hasChanges) {
+      alert.show({
+        title: '수정 취소',
+        message: '변경 사항이 삭제됩니다. 취소하시겠습니까?',
+        icon: 'alert-circle',
+        buttons: [
+          { text: '계속 수정', style: 'cancel' },
+          {
+            text: '취소',
+            style: 'destructive',
+            onPress: () => setEditingPost(false),
+          },
+        ],
+      });
+    } else {
+      setEditingPost(false);
+    }
+  };
+
   const handleSavePost = async () => {
     if (!editPostTitle.trim() || !editPostContent.trim()) {
       alert.show({ title: '제목과 내용을 입력해주세요.', icon: 'alert-circle' });
@@ -186,6 +211,10 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
           : null
       );
       setCommentText('');
+      // 새 댓글로 스크롤 이동
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
     } catch (error) {
       console.error('Failed to create comment:', error);
       alert.show({ title: '댓글 작성에 실패했습니다.', icon: 'x-circle' });
@@ -575,7 +604,7 @@ export default function BoardPostDetailScreen({ route, navigation }: Props) {
       <Modal visible={editingPost} animationType="slide" presentationStyle="pageSheet">
         <View style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setEditingPost(false)}>
+            <TouchableOpacity onPress={handleCancelEdit}>
               <Text style={styles.modalCancelText}>취소</Text>
             </TouchableOpacity>
             <Text style={styles.modalTitle}>게시글 수정</Text>
