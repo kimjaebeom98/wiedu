@@ -6,6 +6,7 @@ import com.wiedu.domain.entity.Study;
 import com.wiedu.domain.entity.User;
 import com.wiedu.domain.enums.AttendanceStatus;
 import com.wiedu.domain.enums.MemberStatus;
+import com.wiedu.domain.enums.StudyStatus;
 import com.wiedu.dto.attendance.*;
 import com.wiedu.exception.BusinessException;
 import com.wiedu.exception.ErrorCode;
@@ -75,6 +76,11 @@ public class SessionAttendanceService {
         CurriculumSession session = findSessionById(sessionId);
         Study study = session.getCurriculum().getStudy();
         validateStudyMember(study, userId);
+
+        // 종료된 스터디에서는 출석 응답 불가
+        if (study.getStatus() == StudyStatus.COMPLETED) {
+            throw new BusinessException(ErrorCode.STUDY_ALREADY_COMPLETED);
+        }
 
         // 취소된 세션 확인
         if (session.isCancelled()) {

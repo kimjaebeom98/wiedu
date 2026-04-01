@@ -5,6 +5,7 @@ import com.wiedu.domain.entity.Study;
 import com.wiedu.domain.entity.User;
 import com.wiedu.domain.enums.MemberRole;
 import com.wiedu.domain.enums.MemberStatus;
+import com.wiedu.domain.enums.StudyStatus;
 import com.wiedu.dto.gallery.GalleryPhotoResponse;
 import com.wiedu.dto.gallery.GalleryPhotoUpdateRequest;
 import com.wiedu.exception.BusinessException;
@@ -20,6 +21,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -76,6 +79,11 @@ public class GalleryService {
         User user = userService.findUserEntityById(userId);
         validateMembership(study, userId);
 
+        // 종료된 스터디에서는 사진 업로드 불가
+        if (study.getStatus() == StudyStatus.COMPLETED) {
+            throw new BusinessException(ErrorCode.STUDY_ALREADY_COMPLETED);
+        }
+
         // 파일 검증
         validateFile(file);
 
@@ -87,6 +95,17 @@ public class GalleryService {
             // 예: /uploads/gallery/1/abc.jpg -> /uploads/gallery/1/thumb_abc.jpg
             int lastSlashIndex = storedUrl.lastIndexOf('/');
             String thumbnailUrl = storedUrl.substring(0, lastSlashIndex + 1) + "thumb_" + storedUrl.substring(lastSlashIndex + 1);
+
+            // 트랜잭션 롤백 시 파일 삭제 (고아 파일 방지)
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    if (status == STATUS_ROLLED_BACK) {
+                        fileStorageService.delete(storedUrl);
+                        fileStorageService.delete(thumbnailUrl);
+                    }
+                }
+            });
 
             GalleryPhoto photo = GalleryPhoto.builder()
                     .study(study)

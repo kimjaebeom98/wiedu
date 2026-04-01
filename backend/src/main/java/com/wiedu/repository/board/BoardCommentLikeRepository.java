@@ -2,6 +2,7 @@ package com.wiedu.repository.board;
 
 import com.wiedu.domain.entity.BoardComment;
 import com.wiedu.domain.entity.BoardCommentLike;
+import com.wiedu.domain.entity.BoardPost;
 import com.wiedu.domain.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -37,4 +38,11 @@ public interface BoardCommentLikeRepository extends JpaRepository<BoardCommentLi
     @Modifying
     @Query("DELETE FROM BoardCommentLike l WHERE l.user.id = :userId")
     void deleteByUserId(@Param("userId") Long userId);
+
+    /**
+     * 게시글 삭제 시 해당 게시글의 모든 댓글 좋아요 삭제
+     */
+    @Modifying
+    @Query("DELETE FROM BoardCommentLike l WHERE l.comment.post = :post")
+    void deleteAllByPost(@Param("post") BoardPost post);
 }

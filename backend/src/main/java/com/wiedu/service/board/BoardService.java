@@ -4,6 +4,7 @@ import com.wiedu.domain.entity.*;
 import com.wiedu.domain.enums.MemberRole;
 import com.wiedu.domain.enums.MemberStatus;
 import com.wiedu.domain.enums.PostCategory;
+import com.wiedu.domain.enums.StudyStatus;
 import com.wiedu.dto.board.*;
 import com.wiedu.exception.BusinessException;
 import com.wiedu.exception.ErrorCode;
@@ -92,8 +93,12 @@ public class BoardService {
             throw new BusinessException(ErrorCode.BOARD_POST_NOT_FOUND);
         }
 
-        // 조회수 증가 (clearAutomatically=true로 persistence context 클리어)
-        boardPostRepository.incrementViewCount(postId);
+        // 조회수 증가 (본인 조회 제외)
+        boolean isAuthor = postForValidation.getAuthor() != null
+                && postForValidation.getAuthor().getId().equals(userId);
+        if (!isAuthor) {
+            boardPostRepository.incrementViewCount(postId);
+        }
 
         // 조회수 증가 후 다시 조회하여 정확한 viewCount 반영
         BoardPost post = boardPostRepository.findByIdWithDetails(postId)
@@ -125,6 +130,11 @@ public class BoardService {
         Study study = studyService.findStudyEntityById(studyId);
         User user = userService.findUserEntityById(userId);
         StudyMember member = validateMembershipAndGet(study, user);
+
+        // 종료된 스터디에서는 게시글 작성 불가
+        if (study.getStatus() == StudyStatus.COMPLETED) {
+            throw new BusinessException(ErrorCode.STUDY_ALREADY_COMPLETED);
+        }
 
         // NOTICE는 리더만 작성 가능
         if (request.category() == PostCategory.NOTICE && member.getRole() != MemberRole.LEADER) {
@@ -206,6 +216,9 @@ public class BoardService {
             throw new BusinessException(ErrorCode.NOT_POST_AUTHOR);
         }
 
+        // FK 제약조건 순서대로 삭제: 댓글좋아요 → 게시글좋아요 → 댓글 → 게시글
+        boardCommentLikeRepository.deleteAllByPost(post);
+        boardPostLikeRepository.deleteAllByPost(post);
         boardCommentRepository.deleteAllByPost(post);
         boardPostRepository.delete(post);
     }
@@ -254,6 +267,11 @@ public class BoardService {
         Study study = studyService.findStudyEntityById(studyId);
         User user = userService.findUserEntityById(userId);
         validateMembership(study, userId);
+
+        // 종료된 스터디에서는 댓글 작성 불가
+        if (study.getStatus() == StudyStatus.COMPLETED) {
+            throw new BusinessException(ErrorCode.STUDY_ALREADY_COMPLETED);
+        }
 
         BoardPost post = boardPostRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_POST_NOT_FOUND));

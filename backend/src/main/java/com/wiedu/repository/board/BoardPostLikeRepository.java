@@ -37,4 +37,11 @@ public interface BoardPostLikeRepository extends JpaRepository<BoardPostLike, Lo
     @Modifying
     @Query("DELETE FROM BoardPostLike l WHERE l.user.id = :userId")
     void deleteByUserId(@Param("userId") Long userId);
+
+    /**
+     * 게시글 삭제 시 해당 게시글의 모든 좋아요 삭제
+     */
+    @Modifying
+    @Query("DELETE FROM BoardPostLike l WHERE l.post = :post")
+    void deleteAllByPost(@Param("post") BoardPost post);
 }
