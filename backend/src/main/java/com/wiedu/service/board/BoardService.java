@@ -288,6 +288,11 @@ public class BoardService {
             throw new BusinessException(ErrorCode.BOARD_COMMENT_NOT_FOUND);
         }
 
+        // 댓글이 해당 스터디에 속하는지 검증
+        if (!comment.getPost().getStudy().getId().equals(studyId)) {
+            throw new BusinessException(ErrorCode.BOARD_COMMENT_NOT_FOUND);
+        }
+
         if (!comment.getAuthor().getId().equals(userId)) {
             throw new BusinessException(ErrorCode.NOT_COMMENT_AUTHOR);
         }
@@ -309,6 +314,11 @@ public class BoardService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_COMMENT_NOT_FOUND));
 
         if (!comment.getPost().getId().equals(postId)) {
+            throw new BusinessException(ErrorCode.BOARD_COMMENT_NOT_FOUND);
+        }
+
+        // 댓글이 해당 스터디에 속하는지 검증
+        if (!comment.getPost().getStudy().getId().equals(studyId)) {
             throw new BusinessException(ErrorCode.BOARD_COMMENT_NOT_FOUND);
         }
 
@@ -338,6 +348,11 @@ public class BoardService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.BOARD_COMMENT_NOT_FOUND));
 
         if (!comment.getPost().getId().equals(postId)) {
+            throw new BusinessException(ErrorCode.BOARD_COMMENT_NOT_FOUND);
+        }
+
+        // 댓글이 해당 스터디에 속하는지 검증
+        if (!comment.getPost().getStudy().getId().equals(studyId)) {
             throw new BusinessException(ErrorCode.BOARD_COMMENT_NOT_FOUND);
         }
 
