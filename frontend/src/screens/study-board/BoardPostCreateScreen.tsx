@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CustomAlert } from '../../components/common';
@@ -37,6 +38,35 @@ export default function BoardPostCreateScreen({ navigation, route }: Props) {
   const categories: PostCategory[] = isLeader
     ? ['NOTICE', 'CHAT', 'QNA']
     : ['CHAT', 'QNA'];
+
+  // 뒤로가기 시 작성 중인 내용 유실 경고
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('beforeRemove', (e) => {
+      // 작성 중인 내용이 없으면 그냥 나가기
+      if (!title.trim() && !content.trim()) {
+        return;
+      }
+
+      // 이벤트 방지
+      e.preventDefault();
+
+      // 확인 다이얼로그
+      Alert.alert(
+        '작성 취소',
+        '작성 중인 내용이 삭제됩니다. 나가시겠습니까?',
+        [
+          { text: '계속 작성', style: 'cancel' },
+          {
+            text: '나가기',
+            style: 'destructive',
+            onPress: () => navigation.dispatch(e.data.action),
+          },
+        ]
+      );
+    });
+
+    return unsubscribe;
+  }, [navigation, title, content]);
 
   const isFormValid = () => {
     return title.trim().length > 0 && content.trim().length > 0;
