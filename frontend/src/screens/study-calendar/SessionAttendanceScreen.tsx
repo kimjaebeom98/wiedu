@@ -44,6 +44,7 @@ export default function SessionAttendanceScreen() {
   const alert = useAlert();
 
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [session, setSession] = useState<SessionResponse | null>(null);
   const [summary, setSummary] = useState<AttendanceSummaryResponse | null>(null);
   const [myAttendance, setMyAttendance] = useState<AttendanceResponse | null>(null);
@@ -71,6 +72,7 @@ export default function SessionAttendanceScreen() {
   const loadData = async () => {
     try {
       setLoading(true);
+      setError(false);
       const [sessionData, summaryData, myData] = await Promise.all([
         getSession(sessionId),
         getAttendanceSummary(sessionId),
@@ -79,8 +81,9 @@ export default function SessionAttendanceScreen() {
       setSession(sessionData);
       setSummary(summaryData);
       setMyAttendance(myData);
-    } catch (error) {
-      console.error('Failed to load attendance:', error);
+    } catch (err) {
+      console.error('Failed to load attendance:', err);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -252,6 +255,21 @@ export default function SessionAttendanceScreen() {
       <View style={styles.loadingContainer}>
         <StatusBar barStyle="light-content" backgroundColor="#18181B" />
         <ActivityIndicator size="large" color="#8B5CF6" />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <StatusBar barStyle="light-content" backgroundColor="#18181B" />
+        <Feather name="wifi-off" size={48} color="#71717A" />
+        <Text style={styles.errorTitle}>데이터를 불러올 수 없습니다</Text>
+        <Text style={styles.errorMessage}>네트워크 연결을 확인하고 다시 시도해주세요.</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={loadData}>
+          <Feather name="refresh-cw" size={18} color="#FFFFFF" />
+          <Text style={styles.retryButtonText}>다시 시도</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -588,6 +606,40 @@ const styles = StyleSheet.create({
     backgroundColor: '#18181B',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    backgroundColor: '#18181B',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: '#71717A',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#8B5CF6',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  retryButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
