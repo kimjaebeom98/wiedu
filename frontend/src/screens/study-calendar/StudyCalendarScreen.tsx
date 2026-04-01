@@ -126,6 +126,11 @@ export default function StudyCalendarScreen() {
   };
 
   const renderCalendar = () => {
+    const today = new Date();
+    const todayYear = today.getFullYear();
+    const todayMonth = today.getMonth() + 1;
+    const todayDate = today.getDate();
+
     const firstDay = new Date(year, month - 1, 1).getDay();
     const lastDate = new Date(year, month, 0).getDate();
     const days: (number | null)[] = [];
@@ -158,9 +163,9 @@ export default function StudyCalendarScreen() {
           const hasSession = sessionDates.includes(dateStr);
           const isSelected = selectedDate === dateStr;
           const isToday =
-            new Date().getFullYear() === year &&
-            new Date().getMonth() + 1 === month &&
-            new Date().getDate() === day;
+            todayYear === year &&
+            todayMonth === month &&
+            todayDate === day;
 
           return (
             <TouchableOpacity
