@@ -23,9 +23,9 @@ public record AttendanceResponse(
         return new AttendanceResponse(
             attendance.getId(),
             attendance.getSession().getId(),
-            attendance.getUser().getId(),
-            attendance.getUser().getNickname(),
-            attendance.getUser().getProfileImage(),
+            attendance.getUser() != null ? attendance.getUser().getId() : null,
+            attendance.getUser() != null ? attendance.getUser().getNickname() : "탈퇴한 사용자",
+            attendance.getUser() != null ? attendance.getUser().getProfileImage() : null,
             attendance.getStatus(),
             attendance.getAbsenceReason(),
             attendance.getRespondedAt(),

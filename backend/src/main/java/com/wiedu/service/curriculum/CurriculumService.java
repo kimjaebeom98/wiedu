@@ -40,6 +40,7 @@ public class CurriculumService {
 
     /**
      * 스터디의 모든 커리큘럼 조회 (세션 카운트 포함)
+     * 공개 API - 비멤버도 조회 가능 (스터디 상세 미리보기용)
      */
     public List<CurriculumResponse> getCurriculums(Long studyId) {
         List<StudyCurriculum> curriculums = curriculumRepository.findByStudyIdOrderByWeekNumber(studyId);

@@ -26,6 +26,9 @@ public class CurriculumController {
     /**
      * 스터디 커리큘럼 목록 조회
      * GET /api/studies/{studyId}/curriculums
+     *
+     * 공개 API - 비멤버도 조회 가능 (스터디 상세 미리보기용)
+     * 세션 상세 내용은 포함되지 않음
      */
     @GetMapping("/studies/{studyId}/curriculums")
     public ResponseEntity<List<CurriculumResponse>> getCurriculums(@PathVariable Long studyId) {
