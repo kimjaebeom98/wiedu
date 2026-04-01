@@ -7,6 +7,7 @@ import {
   FlatList,
   StatusBar,
   ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
@@ -29,6 +30,7 @@ export default function BookmarkedStudiesScreen() {
   const insets = useSafeAreaInsets();
   const [studies, setStudies] = useState<StudyListResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -61,6 +63,12 @@ export default function BookmarkedStudiesScreen() {
       loadBookmarks(0);
     }, [loadBookmarks])
   );
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await loadBookmarks(0);
+    setRefreshing(false);
+  }, [loadBookmarks]);
 
   const handleLoadMore = () => {
     if (!loadingMore && hasMore) {
@@ -164,6 +172,14 @@ export default function BookmarkedStudiesScreen() {
         ListFooterComponent={renderFooter}
         onEndReached={handleLoadMore}
         onEndReachedThreshold={0.3}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor="#8B5CF6"
+            colors={['#8B5CF6']}
+          />
+        }
         showsVerticalScrollIndicator={false}
       />
     </View>

@@ -46,6 +46,7 @@ export default function MemberReviewScreen() {
 
   const [members, setMembers] = useState<StudyMemberToReview[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [selectedMember, setSelectedMember] = useState<StudyMemberToReview | null>(null);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [content, setContent] = useState('');
@@ -57,11 +58,13 @@ export default function MemberReviewScreen() {
 
   const loadMembers = async () => {
     try {
+      setLoading(true);
+      setError(false);
       const data = await getMembersToReview(studyId);
       setMembers(data);
-    } catch (error: any) {
-      const message = error.response?.data?.message || '멤버 목록을 불러오는데 실패했습니다.';
-      alert.show({ title: '오류', message, icon: 'x-circle' });
+    } catch (err) {
+      console.error('Failed to load members:', err);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -111,6 +114,23 @@ export default function MemberReviewScreen() {
         <StatusBar barStyle="light-content" backgroundColor="#18181B" />
         <View style={[styles.loadingContainer, { paddingTop: insets.top }]}>
           <ActivityIndicator size="large" color="#8B5CF6" />
+        </View>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#18181B" />
+        <View style={[styles.errorContainer, { paddingTop: insets.top }]}>
+          <Feather name="wifi-off" size={48} color="#71717A" />
+          <Text style={styles.errorTitle}>멤버 목록을 불러올 수 없습니다</Text>
+          <Text style={styles.errorMessage}>네트워크 연결을 확인하고 다시 시도해주세요.</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadMembers}>
+            <Feather name="refresh-cw" size={18} color="#FFFFFF" />
+            <Text style={styles.retryButtonText}>다시 시도</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -267,6 +287,39 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  errorTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#FFFFFF',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: '#71717A',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  retryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#8B5CF6',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 8,
+    gap: 8,
+  },
+  retryButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   header: {
     flexDirection: 'row',
