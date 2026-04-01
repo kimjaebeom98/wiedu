@@ -20,6 +20,8 @@ public class ReviewController {
     /**
      * 스터디장이 받은 리뷰 목록 조회
      * GET /api/users/{userId}/reviews
+     *
+     * 공개 API - 비로그인 사용자도 조회 가능 (스터디 가입 전 리더 평판 확인용)
      */
     @GetMapping("/api/users/{userId}/reviews")
     public ResponseEntity<StudyLeaderReviewsResponse> getLeaderReviews(

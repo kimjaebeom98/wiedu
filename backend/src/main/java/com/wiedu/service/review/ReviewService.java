@@ -77,6 +77,11 @@ public class ReviewService {
 
         User leader = study.getLeader();
 
+        // 스터디장 본인은 자기 리뷰 불가
+        if (reviewerId.equals(leader.getId())) {
+            throw new BusinessException(ErrorCode.REVIEW_SELF_NOT_ALLOWED);
+        }
+
         StudyLeaderReview review = StudyLeaderReview.builder()
                 .reviewer(reviewer)
                 .leader(leader)
