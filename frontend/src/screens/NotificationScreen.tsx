@@ -3,7 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  FlatList,
+  SectionList,
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
@@ -249,19 +249,11 @@ export default function NotificationScreen() {
           <Text style={styles.emptyText}>알림이 없습니다</Text>
         </View>
       ) : (
-        <FlatList
-          data={groupedNotifications}
-          keyExtractor={(item, index) => `section-${index}`}
-          renderItem={({ item: section }) => (
-            <View>
-              {renderSectionHeader(section.title)}
-              {section.data.map(notif => (
-                <View key={notif.id}>
-                  {renderNotificationItem({ item: notif })}
-                </View>
-              ))}
-            </View>
-          )}
+        <SectionList
+          sections={groupedNotifications}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderNotificationItem}
+          renderSectionHeader={({ section }) => renderSectionHeader(section.title)}
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
@@ -279,6 +271,7 @@ export default function NotificationScreen() {
               </View>
             ) : null
           }
+          stickySectionHeadersEnabled={false}
         />
       )}
     </View>
