@@ -303,7 +303,14 @@ export default function StudyCalendarScreen() {
             <ActivityIndicator size="large" color="#8B5CF6" />
           </View>
         ) : (
-          <View style={styles.calendarGrid}>{renderCalendar()}</View>
+          <>
+            <View style={styles.calendarGrid}>{renderCalendar()}</View>
+            {sessionDates.length === 0 && (
+              <View style={styles.emptyMonthContainer}>
+                <Text style={styles.emptyMonthText}>이 달에는 예정된 회차가 없습니다</Text>
+              </View>
+            )}
+          </>
         )}
 
         {/* Selected Date Sessions */}
@@ -535,6 +542,14 @@ const styles = StyleSheet.create({
   loadingContainer: {
     paddingVertical: 40,
     alignItems: 'center',
+  },
+  emptyMonthContainer: {
+    paddingVertical: 20,
+    alignItems: 'center',
+  },
+  emptyMonthText: {
+    fontSize: 14,
+    color: '#71717A',
   },
   loadingIndicator: {
     marginTop: 20,

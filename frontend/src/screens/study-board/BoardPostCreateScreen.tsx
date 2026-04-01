@@ -218,8 +218,9 @@ export default function BoardPostCreateScreen({ navigation, route }: Props) {
               multiline
               textAlignVertical="top"
               editable={!isSubmitting}
+              maxLength={5000}
             />
-            <Text style={styles.charCount}>{content.length}자</Text>
+            <Text style={styles.charCount}>{content.length}/5000자</Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>

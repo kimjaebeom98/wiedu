@@ -220,6 +220,7 @@ export default function ReviewWriteScreen() {
                 value={content}
                 onChangeText={setContent}
                 textAlignVertical="top"
+                maxLength={500}
               />
               <Text style={styles.charCount}>{content.length}/500</Text>
             </View>
