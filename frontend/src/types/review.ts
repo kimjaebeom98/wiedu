@@ -4,6 +4,7 @@ export interface StudyLeaderReview {
   reviewerProfileImage?: string;
   rating: number;
   content: string;
+  tags?: string[];
   studyTitle: string;
   createdAt: string;
 }
@@ -17,6 +18,7 @@ export interface StudyLeaderReviewsResponse {
 export interface CreateReviewRequest {
   rating: number;
   content: string;
+  tags?: string[];
 }
 
 export type SatisfactionLevel = 'very_satisfied' | 'satisfied' | 'neutral' | 'dissatisfied' | 'very_dissatisfied';
@@ -39,6 +41,7 @@ export interface CreateMemberReviewRequest {
   revieweeId: number;
   rating: number;
   content?: string;
+  tags?: string[];
 }
 
 export interface StudyMemberReview {
@@ -52,5 +55,6 @@ export interface StudyMemberReview {
   studyTitle: string;
   rating: number;
   content?: string;
+  tags?: string[];
   createdAt: string;
 }

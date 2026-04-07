@@ -455,7 +455,27 @@ public class StudyService {
     }
 
     /**
-     * 스터디 마감
+     * 스터디 시작 (모집 마감) - RECRUITING → IN_PROGRESS
+     */
+    @Transactional
+    public void startStudy(Long studyId, Long userId) {
+        Study study = findStudyEntityById(studyId);
+        validateLeaderPermission(study, userId);
+        study.start();
+    }
+
+    /**
+     * 재모집 - IN_PROGRESS → RECRUITING (빈자리 있을 때만)
+     */
+    @Transactional
+    public void reopenRecruitment(Long studyId, Long userId) {
+        Study study = findStudyEntityById(studyId);
+        validateLeaderPermission(study, userId);
+        study.reopenRecruitment();
+    }
+
+    /**
+     * 스터디 취소/폐쇄 (CLOSED 상태로 변경)
      */
     @Transactional
     public void closeStudy(Long studyId, Long userId) {

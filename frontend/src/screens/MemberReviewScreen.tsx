@@ -30,11 +30,20 @@ interface SatisfactionOption {
 }
 
 const SATISFACTION_OPTIONS: SatisfactionOption[] = [
-  { value: 5, emoji: '😍', label: '최고' },
-  { value: 4, emoji: '😊', label: '좋음' },
-  { value: 3, emoji: '😐', label: '보통' },
-  { value: 2, emoji: '😕', label: '아쉬움' },
-  { value: 1, emoji: '😞', label: '별로' },
+  { value: 5, emoji: '😍', label: '최고예요' },
+  { value: 4, emoji: '😊', label: '좋아요' },
+  { value: 3, emoji: '😐', label: '보통이에요' },
+  { value: 2, emoji: '😕', label: '아쉬워요' },
+  { value: 1, emoji: '😞', label: '별로예요' },
+];
+
+const MEMBER_TAGS = [
+  { id: 'active', label: '적극적인 참여', emoji: '🔥' },
+  { id: 'responsible', label: '책임감 있음', emoji: '💪' },
+  { id: 'kind', label: '친절하고 배려심', emoji: '💕' },
+  { id: 'prepared', label: '준비를 잘 해옴', emoji: '📝' },
+  { id: 'helpful', label: '도움을 많이 줌', emoji: '🤝' },
+  { id: 'positive', label: '긍정적인 에너지', emoji: '✨' },
 ];
 
 export default function MemberReviewScreen() {
@@ -49,8 +58,17 @@ export default function MemberReviewScreen() {
   const [error, setError] = useState(false);
   const [selectedMember, setSelectedMember] = useState<StudyMemberToReview | null>(null);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const toggleTag = (tagId: string) => {
+    setSelectedTags(prev =>
+      prev.includes(tagId)
+        ? prev.filter(id => id !== tagId)
+        : [...prev, tagId]
+    );
+  };
 
   useEffect(() => {
     loadMembers();
@@ -82,6 +100,7 @@ export default function MemberReviewScreen() {
         revieweeId: selectedMember.userId,
         rating: selectedRating,
         content: content.trim() || undefined,
+        tags: selectedTags.length > 0 ? selectedTags : undefined,
       });
 
       // 리뷰 완료 후 멤버 목록 새로고침
@@ -95,6 +114,7 @@ export default function MemberReviewScreen() {
 
       setSelectedMember(null);
       setSelectedRating(null);
+      setSelectedTags([]);
       setContent('');
 
       alert.show({ title: '완료', message: '리뷰가 등록되었습니다.', icon: 'check-circle' });
@@ -189,7 +209,7 @@ export default function MemberReviewScreen() {
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>평가</Text>
+              <Text style={styles.sectionTitle}>멤버 만족도</Text>
               <View style={styles.satisfactionOptions}>
                 {SATISFACTION_OPTIONS.map((option) => (
                   <TouchableOpacity
@@ -212,16 +232,49 @@ export default function MemberReviewScreen() {
               </View>
             </View>
 
+            {/* Tags Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>한줄평 (선택)</Text>
-              <TextInput
-                style={styles.textInput}
-                placeholder="함께 활동한 소감을 남겨주세요."
-                placeholderTextColor="#71717A"
-                value={content}
-                onChangeText={setContent}
-                maxLength={100}
-              />
+              <View style={styles.tagsHeader}>
+                <Text style={styles.sectionTitle}>어떤 점이 좋았나요?</Text>
+                <Text style={styles.tagsHint}>(선택 시 온도 보너스!)</Text>
+              </View>
+              <View style={styles.tagsContainer}>
+                {MEMBER_TAGS.map((tag) => (
+                  <TouchableOpacity
+                    key={tag.id}
+                    style={[
+                      styles.tag,
+                      selectedTags.includes(tag.id) && styles.tagSelected,
+                    ]}
+                    onPress={() => toggleTag(tag.id)}
+                  >
+                    <Text style={[
+                      styles.tagText,
+                      selectedTags.includes(tag.id) && styles.tagTextSelected,
+                    ]}>
+                      {tag.emoji} {tag.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>상세 리뷰</Text>
+              <Text style={styles.inputHint}>작성하신 내용은 다른 멤버들에게 공개됩니다.</Text>
+              <View style={styles.textInputContainer}>
+                <TextInput
+                  style={styles.textInputMultiline}
+                  placeholder="함께 활동한 소감을 자유롭게 작성해주세요."
+                  placeholderTextColor="#71717A"
+                  multiline
+                  value={content}
+                  onChangeText={setContent}
+                  textAlignVertical="top"
+                  maxLength={300}
+                />
+                <Text style={styles.charCount}>{content.length}/300</Text>
+              </View>
             </View>
 
             <TouchableOpacity
@@ -325,8 +378,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    height: 56,
+    minHeight: 56,
     paddingHorizontal: 16,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#27272A',
   },
@@ -499,6 +553,64 @@ const styles = StyleSheet.create({
   satisfactionLabelSelected: {
     color: '#8B5CF6',
     fontWeight: '600',
+  },
+  tagsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  tagsHint: {
+    fontSize: 12,
+    color: '#71717A',
+  },
+  tagsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  tag: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#27272A',
+    borderWidth: 1,
+    borderColor: '#3F3F46',
+  },
+  tagSelected: {
+    backgroundColor: '#8B5CF620',
+    borderColor: '#8B5CF6',
+  },
+  tagText: {
+    fontSize: 13,
+    color: '#A1A1AA',
+  },
+  tagTextSelected: {
+    color: '#8B5CF6',
+    fontWeight: '500',
+  },
+  inputHint: {
+    fontSize: 12,
+    color: '#71717A',
+    marginBottom: 8,
+  },
+  textInputContainer: {
+    backgroundColor: '#27272A',
+    borderRadius: 12,
+    padding: 14,
+    minHeight: 120,
+  },
+  textInputMultiline: {
+    flex: 1,
+    fontSize: 14,
+    color: '#FFFFFF',
+    minHeight: 80,
+  },
+  charCount: {
+    fontSize: 12,
+    color: '#71717A',
+    textAlign: 'right',
+    marginTop: 8,
   },
   textInput: {
     backgroundColor: '#27272A',

@@ -16,7 +16,5 @@ public record MyProfileResponse(
         Double longitude,
         List<String> interests,
         boolean onboardingCompleted,
-        ActivityStatsResponse stats,
-        boolean isStudyLeaderUnlocked,  // 온도 >= 40이면 true
-        BigDecimal temperatureToUnlock  // 40 - 현재온도 (이미 해금된 경우 0)
+        ActivityStatsResponse stats
 ) {}

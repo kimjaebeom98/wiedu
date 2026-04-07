@@ -40,6 +40,9 @@ public interface StudyMemberReviewRepository extends JpaRepository<StudyMemberRe
     @Query("SELECT r.reviewee.id FROM StudyMemberReview r WHERE r.study = :study AND r.reviewer = :reviewer")
     List<Long> findReviewedMemberIds(@Param("study") Study study, @Param("reviewer") User reviewer);
 
+    // 특정 스터디에서 특정 작성자가 작성한 리뷰 수
+    long countByReviewerAndStudy(User reviewer, Study study);
+
     /**
      * 사용자 삭제 시 리뷰어를 NULL로 설정 (알 수 없음 처리)
      */

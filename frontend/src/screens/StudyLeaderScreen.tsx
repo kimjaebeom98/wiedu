@@ -46,6 +46,7 @@ export default function StudyLeaderScreen() {
   const [categoryTemps, setCategoryTemps] = useState<CategoryTemperature[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reviewsExpanded, setReviewsExpanded] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -135,25 +136,31 @@ export default function StudyLeaderScreen() {
     .slice(0, 3);
 
   const averageRating = reviewsData?.averageRating ?? null;
-  const totalReviewCount = reviewsData?.totalCount ?? 0;
+  const reviewCount = reviewsData?.totalCount ?? 0;
   const reviews = reviewsData?.reviews ?? [];
 
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#18181B" />
 
-      {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Feather name="chevron-left" size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>스터디장 프로필</Text>
-        <TouchableOpacity style={styles.editBtn} onPress={() => navigation.navigate('ProfileEdit')}>
-          <Text style={styles.editBtnText}>편집</Text>
-        </TouchableOpacity>
-      </View>
-
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
+          <View style={styles.profileTabs}>
+            <TouchableOpacity
+              style={styles.profileTab}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.profileTabText}>마이 프로필</Text>
+            </TouchableOpacity>
+            <View style={styles.profileTabActive}>
+              <Text style={styles.profileTabTextActive}>스터디장 프로필</Text>
+            </View>
+          </View>
+          <TouchableOpacity style={styles.headerMoreBtn} onPress={() => navigation.navigate('Settings')}>
+            <Feather name="settings" size={24} color="#A1A1AA" />
+          </TouchableOpacity>
+        </View>
         {/* Profile Section */}
         <View style={styles.profileSection}>
           <View style={styles.avatarWrapper}>
@@ -213,7 +220,7 @@ export default function StudyLeaderScreen() {
             <Text style={styles.statLabel}>평점</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{totalReviewCount}</Text>
+            <Text style={styles.statNumber}>{reviewCount}</Text>
             <Text style={styles.statLabel}>리뷰</Text>
           </View>
         </View>
@@ -254,25 +261,41 @@ export default function StudyLeaderScreen() {
           </View>
         </View>
 
-        {/* Review Section */}
-        <View style={styles.section}>
-          <View style={styles.reviewHeader}>
-            <Text style={styles.sectionTitle}>리뷰 {totalReviewCount}개</Text>
-            <TouchableOpacity onPress={() => alert.show({ title: '준비 중', message: '리뷰 전체보기 기능은 준비 중입니다.', icon: 'alert-circle' })}>
-              <Text style={styles.seeAllText}>전체보기</Text>
+        {/* Review Section - Expandable */}
+        {reviewCount > 0 && (
+          <>
+            <TouchableOpacity
+              style={styles.reviewCardHeader}
+              onPress={() => setReviewsExpanded(!reviewsExpanded)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.reviewCardLeft}>
+                <View style={styles.reviewIconContainer}>
+                  <Feather name="message-square" size={20} color="#FBBF24" />
+                </View>
+                <View style={styles.reviewCardText}>
+                  <Text style={styles.reviewCardTitle}>스터디장으로서 받은 리뷰</Text>
+                  <Text style={styles.reviewCardSubtitle}>
+                    {reviewCount}개의 리뷰 · 평균 {averageRating?.toFixed(1) || '-'}점
+                  </Text>
+                </View>
+              </View>
+              <Feather
+                name={reviewsExpanded ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#A1A1AA"
+              />
             </TouchableOpacity>
-          </View>
-          {reviews.length === 0 ? (
-            <View style={styles.emptyReview}>
-              <Feather name="message-square" size={32} color="#3F3F46" />
-              <Text style={styles.emptyReviewText}>아직 리뷰가 없어요</Text>
-            </View>
-          ) : (
-            reviews.map((review) => (
-              <ReviewCard key={review.id} review={review} formatDate={formatDate} />
-            ))
-          )}
-        </View>
+
+            {reviewsExpanded && (
+              <View style={styles.reviewsExpanded}>
+                {reviews.map((review) => (
+                  <ReviewCard key={review.id} review={review} formatDate={formatDate} />
+                ))}
+              </View>
+            )}
+          </>
+        )}
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
@@ -307,12 +330,30 @@ interface ReviewCardProps {
   formatDate: (dateStr: string) => string;
 }
 
+const TAG_EMOJI_MAP: Record<string, string> = {
+  systematic: '📚',
+  friendly: '😊',
+  communication: '💬',
+  ontime: '⏰',
+  helpful: '💡',
+  atmosphere: '✨',
+};
+
+const TAG_LABEL_MAP: Record<string, string> = {
+  systematic: '체계적인 커리큘럼',
+  friendly: '친절한 스터디장',
+  communication: '원활한 소통',
+  ontime: '시간 약속 준수',
+  helpful: '많이 배움',
+  atmosphere: '좋은 분위기',
+};
+
 function ReviewCard({ review, formatDate }: ReviewCardProps) {
   const stars = Array.from({ length: 5 }, (_, i) => i < review.rating);
 
   return (
     <View style={styles.reviewCard}>
-      <View style={styles.reviewCardHeader}>
+      <View style={styles.reviewItemHeader}>
         <View style={styles.reviewerInfo}>
           {review.reviewerProfileImage ? (
             <Image source={{ uri: review.reviewerProfileImage }} style={styles.reviewerAvatar} />
@@ -334,7 +375,18 @@ function ReviewCard({ review, formatDate }: ReviewCardProps) {
           ))}
         </View>
       </View>
-      <Text style={styles.reviewContent}>{review.content}</Text>
+      {review.tags && review.tags.length > 0 && (
+        <View style={styles.reviewTagsRow}>
+          {review.tags.map((tagId) => (
+            <View key={tagId} style={styles.reviewTag}>
+              <Text style={styles.reviewTagText}>
+                {TAG_EMOJI_MAP[tagId] || ''} {TAG_LABEL_MAP[tagId] || tagId}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+      {review.content && <Text style={styles.reviewContent}>{review.content}</Text>}
       <View style={styles.reviewMeta}>
         <Text style={styles.reviewStudyTitle}>{review.studyTitle}</Text>
         <Text style={styles.reviewDate}>{formatDate(review.createdAt)}</Text>
@@ -376,25 +428,39 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingBottom: 12,
-    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
-  backBtn: {
+  headerMoreBtn: {
     width: 40,
     height: 40,
     justifyContent: 'center',
-    alignItems: 'flex-start',
+    alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#FFFFFF',
+  profileTabs: {
+    flexDirection: 'row',
+    gap: 12,
   },
-  editBtn: {
-    paddingHorizontal: 8,
+  profileTab: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#3F3F46',
   },
-  editBtnText: {
-    fontSize: 16,
+  profileTabActive: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#8B5CF6',
+  },
+  profileTabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#71717A',
+  },
+  profileTabTextActive: {
+    fontSize: 14,
     fontWeight: '600',
     color: '#8B5CF6',
   },
@@ -568,25 +634,45 @@ const styles = StyleSheet.create({
     color: '#E4E4E7',
     lineHeight: 21,
   },
-  reviewHeader: {
+  reviewCardHeader: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  seeAllText: {
-    fontSize: 14,
-    color: '#8B5CF6',
-  },
-  emptyReview: {
     backgroundColor: '#27272A',
-    borderRadius: 12,
-    padding: 32,
-    alignItems: 'center',
-    gap: 8,
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#FBBF2430',
   },
-  emptyReviewText: {
-    fontSize: 14,
-    color: '#71717A',
+  reviewCardLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  reviewIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FBBF2420',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reviewCardText: {
+    gap: 4,
+  },
+  reviewCardTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  reviewCardSubtitle: {
+    fontSize: 12,
+    color: '#A1A1AA',
+  },
+  reviewsExpanded: {
+    marginTop: 8,
+    gap: 12,
   },
   emptyCategory: {
     alignItems: 'center',
@@ -604,7 +690,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 10,
   },
-  reviewCardHeader: {
+  reviewItemHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -635,6 +721,21 @@ const styles = StyleSheet.create({
   starRow: {
     flexDirection: 'row',
     gap: 2,
+  },
+  reviewTagsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  reviewTag: {
+    backgroundColor: 'rgba(139, 92, 246, 0.15)',
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 8,
+  },
+  reviewTagText: {
+    fontSize: 12,
+    color: '#A78BFA',
   },
   reviewContent: {
     fontSize: 14,

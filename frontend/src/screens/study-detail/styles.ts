@@ -774,6 +774,15 @@ export const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#8B5CF6',
   },
+  writeReviewBtnDisabled: {
+    backgroundColor: '#27272A',
+    borderColor: '#3F3F46',
+  },
+  writeReviewBtnTextDisabled: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#71717A',
+  },
 
   // Leader Actions
   leaderActionsWrapper: {

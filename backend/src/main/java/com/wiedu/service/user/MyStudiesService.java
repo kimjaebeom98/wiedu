@@ -1,11 +1,14 @@
 package com.wiedu.service.user;
 
+import com.wiedu.domain.entity.Study;
 import com.wiedu.domain.entity.StudyMember;
 import com.wiedu.domain.entity.User;
 import com.wiedu.domain.enums.MemberRole;
 import com.wiedu.domain.enums.MemberStatus;
 import com.wiedu.domain.enums.StudyStatus;
 import com.wiedu.dto.user.MyStudyResponse;
+import com.wiedu.repository.review.StudyLeaderReviewRepository;
+import com.wiedu.repository.review.StudyMemberReviewRepository;
 import com.wiedu.repository.study.StudyMemberRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,6 +27,8 @@ public class MyStudiesService {
 
     private final UserService userService;
     private final StudyMemberRepository studyMemberRepository;
+    private final StudyLeaderReviewRepository leaderReviewRepository;
+    private final StudyMemberReviewRepository memberReviewRepository;
 
     /**
      * 내 스터디 목록 조회
@@ -58,7 +63,42 @@ public class MyStudiesService {
             }
         }
 
-        return stream.map(MyStudyResponse::from).toList();
+        return stream.map(sm -> {
+            // COMPLETED 스터디만 리뷰 완료 여부 체크
+            if (sm.getStudy().getStatus() == StudyStatus.COMPLETED) {
+                Boolean reviewCompleted = checkReviewCompleted(sm, user);
+                return MyStudyResponse.from(sm, reviewCompleted);
+            }
+            return MyStudyResponse.from(sm);
+        }).toList();
+    }
+
+    /**
+     * 해당 스터디에서 리뷰를 모두 완료했는지 확인
+     */
+    private Boolean checkReviewCompleted(StudyMember membership, User user) {
+        Study study = membership.getStudy();
+        boolean isLeader = membership.getRole() == MemberRole.LEADER;
+
+        // 1. 스터디장이 아닌 경우: 리더 리뷰 작성 여부 확인
+        if (!isLeader) {
+            boolean hasReviewedLeader = leaderReviewRepository.existsByReviewerAndStudy(user, study);
+            if (!hasReviewedLeader) {
+                return false;
+            }
+        }
+
+        // 2. 멤버 리뷰 완료 여부: 나를 제외한 멤버 수 vs 내가 작성한 리뷰 수 비교
+        List<StudyMember> activeMembers = studyMemberRepository.findByStudyAndStatus(study, MemberStatus.ACTIVE);
+        // 나와 리더를 제외한 멤버 수 (리더는 별도 리뷰 시스템)
+        long membersToReview = activeMembers.stream()
+                .filter(m -> !m.getUser().getId().equals(user.getId()))
+                .filter(m -> !m.getUser().getId().equals(study.getLeader().getId()))
+                .count();
+
+        long reviewedCount = memberReviewRepository.countByReviewerAndStudy(user, study);
+
+        return reviewedCount >= membersToReview;
     }
 
     /**

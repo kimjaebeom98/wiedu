@@ -36,6 +36,18 @@ export const createReview = async (studyId: number, request: CreateReviewRequest
   );
 };
 
+// Check if user has already reviewed the study leader
+export const checkLeaderReviewExists = async (studyId: number): Promise<boolean> => {
+  return withErrorHandling(
+    async () => {
+      const client = getAuthClient();
+      const response = await client.get(`/api/studies/${studyId}/reviews/check`);
+      return response.data.hasReviewed;
+    },
+    { defaultMessage: '리뷰 확인에 실패했습니다.' }
+  );
+};
+
 export const getMembersToReview = async (studyId: number): Promise<StudyMemberToReview[]> => {
   return withErrorHandling(
     async () => {

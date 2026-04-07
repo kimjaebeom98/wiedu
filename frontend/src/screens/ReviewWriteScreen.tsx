@@ -40,12 +40,12 @@ const SATISFACTION_OPTIONS: SatisfactionOption[] = [
 ];
 
 const REVIEW_TAGS = [
-  { id: 'systematic', label: '체계적인 커리큘럼' },
-  { id: 'friendly', label: '친절한 스터디장' },
-  { id: 'communication', label: '원활한 소통' },
-  { id: 'ontime', label: '시간 약속 준수' },
-  { id: 'helpful', label: '많이 배움' },
-  { id: 'atmosphere', label: '좋은 분위기' },
+  { id: 'systematic', label: '체계적인 커리큘럼', emoji: '📚' },
+  { id: 'friendly', label: '친절한 스터디장', emoji: '😊' },
+  { id: 'communication', label: '원활한 소통', emoji: '💬' },
+  { id: 'ontime', label: '시간 약속 준수', emoji: '⏰' },
+  { id: 'helpful', label: '많이 배움', emoji: '💡' },
+  { id: 'atmosphere', label: '좋은 분위기', emoji: '✨' },
 ];
 
 export default function ReviewWriteScreen() {
@@ -81,17 +81,10 @@ export default function ReviewWriteScreen() {
 
     setIsSubmitting(true);
     try {
-      // 선택된 태그를 content에 포함
-      const tagLabels = selectedTags.map(tagId => {
-        const tag = REVIEW_TAGS.find(t => t.id === tagId);
-        return tag ? `#${tag.label}` : '';
-      }).filter(Boolean).join(' ');
-
-      const fullContent = tagLabels ? `${tagLabels}\n\n${content}` : content;
-
       await createReview(studyId, {
         rating: selectedRating,
-        content: fullContent,
+        content: content.trim(),
+        tags: selectedTags.length > 0 ? selectedTags : undefined,
       });
 
       alert.show({
@@ -184,7 +177,7 @@ export default function ReviewWriteScreen() {
           <View style={styles.section}>
             <View style={styles.tagsHeader}>
               <Text style={styles.sectionTitle}>어떤 점이 좋았나요?</Text>
-              <Text style={styles.tagsHint}>(선택)</Text>
+              <Text style={styles.tagsHint}>(선택 시 온도 보너스!)</Text>
             </View>
             <View style={styles.tagsContainer}>
               {REVIEW_TAGS.map((tag) => (
@@ -200,7 +193,7 @@ export default function ReviewWriteScreen() {
                     styles.tagText,
                     selectedTags.includes(tag.id) && styles.tagTextSelected,
                   ]}>
-                    {tag.label}
+                    {tag.emoji} {tag.label}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -278,8 +271,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    height: 56,
+    minHeight: 56,
     paddingHorizontal: 16,
+    paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#27272A',
   },

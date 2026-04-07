@@ -229,6 +229,23 @@ export const completeStudy = async (studyId: number): Promise<void> => {
   );
 };
 
+// POST /api/studies/:studyId/reopen - Reopen recruitment (IN_PROGRESS → RECRUITING)
+export const reopenRecruitment = async (studyId: number): Promise<void> => {
+  return withErrorHandling(
+    async () => {
+      const client = getAuthClient();
+      await client.post(`/api/studies/${studyId}/reopen`);
+    },
+    {
+      defaultMessage: '재모집 요청에 실패했습니다.',
+      errorMessages: {
+        forbidden: '스터디 리더만 재모집할 수 있습니다.',
+        badRequest: '빈자리가 있을 때만 재모집할 수 있습니다.',
+      },
+    }
+  );
+};
+
 // GET /api/studies/:studyId/requests - Get all study requests (for leader)
 // Returns all requests including PENDING, APPROVED, and REJECTED
 export const getStudyRequests = async (studyId: number): Promise<StudyRequestResponse[]> => {

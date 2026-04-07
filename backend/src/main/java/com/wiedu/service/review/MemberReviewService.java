@@ -57,11 +57,13 @@ public class MemberReviewService {
         // 이미 리뷰한 멤버 ID 목록
         List<Long> reviewedMemberIds = memberReviewRepository.findReviewedMemberIds(study, reviewer);
 
-        // 스터디의 모든 멤버 조회 (본인 제외)
+        // 스터디의 모든 멤버 조회 (본인 및 스터디장 제외 - 스터디장은 별도 리뷰 시스템)
         List<StudyMember> members = studyMemberRepository.findByStudyAndStatus(study, MemberStatus.ACTIVE);
+        Long leaderId = study.getLeader().getId();
 
         return members.stream()
             .filter(m -> !m.getUser().getId().equals(reviewerId)) // 본인 제외
+            .filter(m -> !m.getUser().getId().equals(leaderId))   // 스터디장 제외
             .map(m -> new StudyMemberToReviewResponse(
                 m.getUser().getId(),
                 m.getUser().getNickname(),
@@ -107,23 +109,30 @@ public class MemberReviewService {
             throw new BusinessException(ErrorCode.REVIEW_ALREADY_EXISTS);
         }
 
+        // 태그를 콤마 구분 문자열로 변환
+        String tagsString = request.tags() != null && !request.tags().isEmpty()
+                ? String.join(",", request.tags())
+                : null;
+
         StudyMemberReview review = StudyMemberReview.builder()
             .reviewer(reviewer)
             .reviewee(reviewee)
             .study(study)
             .rating(request.rating())
             .content(request.content())
+            .tags(tagsString)
             .build();
 
         StudyMemberReview saved = memberReviewRepository.save(review);
 
-        // 리뷰 대상자 온도 업데이트
-        BigDecimal temperatureDelta = calculateTemperatureDelta(request.rating());
+        // 리뷰 대상자 온도 업데이트 (리뷰 평점 + 태그 보너스)
+        int tagCount = request.tags() != null ? request.tags().size() : 0;
+        BigDecimal temperatureDelta = calculateTemperatureDelta(request.rating(), tagCount);
         reviewee.updateTemperature(temperatureDelta);
         userRepository.save(reviewee);
 
-        log.info("멤버 리뷰 생성: studyId={}, reviewer={}, reviewee={}, rating={}, tempDelta={}",
-            studyId, reviewerId, request.revieweeId(), request.rating(), temperatureDelta);
+        log.info("멤버 리뷰 생성: studyId={}, reviewer={}, reviewee={}, rating={}, tags={}, tempDelta={}",
+            studyId, reviewerId, request.revieweeId(), request.rating(), tagCount, temperatureDelta);
 
         return StudyMemberReviewResponse.from(saved);
     }
@@ -140,10 +149,12 @@ public class MemberReviewService {
     }
 
     /**
-     * 리뷰 평점에 따른 온도 변화량 계산
+     * 리뷰 평점 및 태그에 따른 온도 변화량 계산
+     * 기본: 5점(+0.3), 4점(+0.2), 3점(+0.1), 2점(-0.1), 1점(-0.2)
+     * 태그 보너스: 긍정 태그 1개당 +0.02 (최대 6개 = +0.12)
      */
-    private BigDecimal calculateTemperatureDelta(int rating) {
-        return switch (rating) {
+    private BigDecimal calculateTemperatureDelta(int rating, int tagCount) {
+        BigDecimal baseDelta = switch (rating) {
             case 5 -> BigDecimal.valueOf(0.3);
             case 4 -> BigDecimal.valueOf(0.2);
             case 3 -> BigDecimal.valueOf(0.1);
@@ -151,6 +162,14 @@ public class MemberReviewService {
             case 1 -> BigDecimal.valueOf(-0.2);
             default -> BigDecimal.ZERO;
         };
+
+        // 태그 보너스 (긍정적 리뷰일 때만, 3점 이상)
+        if (rating >= 3 && tagCount > 0) {
+            BigDecimal tagBonus = BigDecimal.valueOf(0.02).multiply(BigDecimal.valueOf(tagCount));
+            return baseDelta.add(tagBonus);
+        }
+
+        return baseDelta;
     }
 
 }

@@ -55,12 +55,17 @@ public class StudyLeaderReview {
     @Comment("리뷰 내용")
     private String content;
 
+    @Column(length = 500)
+    @Comment("리뷰 태그 (콤마 구분)")
+    private String tags;
+
     @Builder
-    public StudyLeaderReview(User reviewer, User leader, Study study, Integer rating, String content) {
+    public StudyLeaderReview(User reviewer, User leader, Study study, Integer rating, String content, String tags) {
         this.reviewer = reviewer;
         this.leader = leader;
         this.study = study;
         this.rating = rating;
         this.content = content;
+        this.tags = tags;
     }
 }

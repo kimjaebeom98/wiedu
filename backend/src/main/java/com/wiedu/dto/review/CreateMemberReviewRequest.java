@@ -3,6 +3,9 @@ package com.wiedu.dto.review;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import java.util.List;
 
 public record CreateMemberReviewRequest(
     @NotNull(message = "리뷰 대상자 ID는 필수입니다.")
@@ -13,5 +16,8 @@ public record CreateMemberReviewRequest(
     @Max(value = 5, message = "평점은 5점 이하여야 합니다.")
     Integer rating,
 
-    String content
+    String content,
+
+    @Size(max = 6, message = "태그는 최대 6개까지 선택 가능합니다.")
+    List<String> tags
 ) {}

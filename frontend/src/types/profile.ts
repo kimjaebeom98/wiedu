@@ -19,8 +19,6 @@ export interface MyProfile {
   interests: string[];
   onboardingCompleted: boolean;
   stats: ActivityStats;
-  isStudyLeaderUnlocked: boolean;
-  temperatureToUnlock: number;
 }
 
 export interface MyStudy {
@@ -32,4 +30,6 @@ export interface MyStudy {
   myRole: 'LEADER' | 'MEMBER';
   currentMembers: number;
   maxMembers: number;
+  updatedAt?: string;
+  reviewCompleted?: boolean;
 }

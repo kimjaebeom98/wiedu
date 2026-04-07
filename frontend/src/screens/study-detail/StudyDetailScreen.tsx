@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -23,13 +23,14 @@ import {
   getStudyDetail,
   closeStudy,
   completeStudy,
+  reopenRecruitment,
   getMyStudyRequests,
   getStudyRequests,
   approveStudyRequest,
   rejectStudyRequest,
   StudyRequestResponse,
 } from '../../api/study';
-import { getLeaderReviews } from '../../api/review';
+import { getLeaderReviews, checkLeaderReviewExists, getMembersToReview } from '../../api/review';
 import { getCurriculums, getCurriculumDetail } from '../../api/curriculum';
 import { toggleBookmark as toggleBookmarkApi } from '../../api/bookmark';
 import {
@@ -95,6 +96,45 @@ const TAG_COLORS = ['#8B5CF620', '#3B82F620', '#22C55E20', '#F59E0B20'];
 const TAG_TEXT_COLORS = ['#8B5CF6', '#3B82F6', '#22C55E', '#F59E0B'];
 const MEMBER_AVATAR_COLORS = ['#6366F1', '#8B5CF6', '#A78BFA', '#C4B5FD'];
 
+// 현재 주차 계산 함수: 다음 예정 회차가 있는 주차를 현재 주차로 판단
+const calculateCurrentWeek = (curriculums: CurriculumResponse[]): number => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // 모든 세션을 날짜순으로 수집
+  const allSessions: { weekNumber: number; date: Date }[] = [];
+
+  curriculums.forEach(curriculum => {
+    if (curriculum.sessions) {
+      curriculum.sessions.forEach(session => {
+        if (session.sessionDate && !session.cancelled) {
+          allSessions.push({
+            weekNumber: curriculum.weekNumber,
+            date: new Date(session.sessionDate),
+          });
+        }
+      });
+    }
+  });
+
+  // 날짜순 정렬
+  allSessions.sort((a, b) => a.date.getTime() - b.date.getTime());
+
+  // 다음 예정 회차 찾기 (오늘 이후)
+  const nextSession = allSessions.find(s => s.date >= today);
+  if (nextSession) {
+    return nextSession.weekNumber;
+  }
+
+  // 모든 회차가 끝났으면 마지막 주차
+  if (allSessions.length > 0) {
+    return allSessions[allSessions.length - 1].weekNumber;
+  }
+
+  // 회차가 없으면 1주차
+  return curriculums.length > 0 ? curriculums[0].weekNumber : 1;
+};
+
 export default function StudyDetailScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<StudyDetailRouteProp>();
@@ -128,6 +168,13 @@ export default function StudyDetailScreen() {
   const [withdrawalRequests, setWithdrawalRequests] = useState<WithdrawalRequestResponse[]>([]);
   const [showWithdrawalListModal, setShowWithdrawalListModal] = useState(false);
   const [approvalProcessing, setApprovalProcessing] = useState<number | null>(null);
+
+  // Review state
+  const [hasReviewedLeader, setHasReviewedLeader] = useState(false);
+  const [allMembersReviewed, setAllMembersReviewed] = useState(false);
+
+  // 현재 주차 계산 (세션 날짜 기반)
+  const currentWeekNumber = useMemo(() => calculateCurrentWeek(curriculumData), [curriculumData]);
 
   // Toggle curriculum expansion and load sessions (uses curriculumId, not index)
   const toggleCurriculum = async (curriculumId: number) => {
@@ -179,13 +226,23 @@ export default function StudyDetailScreen() {
     }
   };
 
-  // Load curriculums data (sessions are loaded separately on expand)
+  // Load curriculums data with sessions for current week calculation
   const loadCurriculumData = useCallback(async () => {
     try {
       const data = await getCurriculums(studyId);
-      // Don't preserve sessions - they will be re-fetched when curriculum is expanded
-      // This ensures fresh data after adding/editing sessions
-      setCurriculumData(data);
+      // Load session details for each curriculum (needed for current week indicator)
+      const curriculumsWithSessions = await Promise.all(
+        data.map(async (curriculum) => {
+          try {
+            const detail = await getCurriculumDetail(curriculum.id);
+            return { ...curriculum, sessions: detail.sessions || [] };
+          } catch {
+            // If failed to load sessions (access denied etc), keep curriculum without sessions
+            return curriculum;
+          }
+        })
+      );
+      setCurriculumData(curriculumsWithSessions);
     } catch (error) {
       console.error('Failed to load curriculums:', error);
     }
@@ -360,6 +417,22 @@ export default function StudyDetailScreen() {
         if (data.leader?.id === user.id && data.status === 'RECRUITING') {
           loadApplicants();
         }
+        // Check if user has already reviewed the leader (for COMPLETED studies where user is member but not leader)
+        if (data.status === 'COMPLETED' && data.memberRole && data.memberRole !== 'LEADER') {
+          checkLeaderReviewExists(studyId)
+            .then(hasReviewed => setHasReviewedLeader(hasReviewed))
+            .catch(() => setHasReviewedLeader(false));
+        }
+        // Check if all members have been reviewed (for COMPLETED studies)
+        if (data.status === 'COMPLETED' && data.memberRole) {
+          getMembersToReview(studyId)
+            .then(members => {
+              // If no members to review OR all are already reviewed
+              const allReviewed = members.length === 0 || members.every(m => m.alreadyReviewed);
+              setAllMembersReviewed(allReviewed);
+            })
+            .catch(() => setAllMembersReviewed(false));
+        }
       }
     } catch (error) {
       console.error('Failed to load study detail:', error);
@@ -526,6 +599,44 @@ export default function StudyDetailScreen() {
               alert.show({
                 title: '오류',
                 message: error.response?.data?.message || '스터디 종료에 실패했습니다.',
+                icon: 'alert-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
+            } finally {
+              setProcessing(false);
+            }
+          },
+        },
+      ],
+    });
+  };
+
+  const handleReopenRecruitment = () => {
+    alert.show({
+      title: '재모집',
+      message: '스터디 멤버를 다시 모집하시겠습니까?\n스터디가 검색 결과에 다시 노출됩니다.',
+      icon: 'user-plus',
+      buttons: [
+        { text: '취소', style: 'cancel' },
+        {
+          text: '재모집하기',
+          style: 'default',
+          onPress: async () => {
+            setProcessing(true);
+            try {
+              await reopenRecruitment(studyId);
+              alert.show({
+                title: '재모집 시작',
+                message: '스터디가 다시 모집 중 상태가 되었습니다.',
+                icon: 'check-circle',
+                buttons: [{ text: '확인', style: 'default' }],
+              });
+              loadStudyDetail();
+            } catch (error: any) {
+              console.error('Failed to reopen recruitment:', error);
+              alert.show({
+                title: '오류',
+                message: error.response?.data?.message || '재모집에 실패했습니다.',
                 icon: 'alert-circle',
                 buttons: [{ text: '확인', style: 'default' }],
               });
@@ -1108,7 +1219,7 @@ export default function StudyDetailScreen() {
                           activeOpacity={0.7}
                         >
                           <View style={styles.curriculumHeader}>
-                            <View style={[styles.weekBadge, idx === 0 ? styles.weekBadgeActive : styles.weekBadgeInactive]}>
+                            <View style={[styles.weekBadge, curriculum.weekNumber === currentWeekNumber ? styles.weekBadgeActive : styles.weekBadgeInactive]}>
                               <Text style={styles.weekBadgeText}>{curriculum.weekNumber}</Text>
                             </View>
                             <View style={styles.flexOne}>
@@ -1321,17 +1432,31 @@ export default function StudyDetailScreen() {
             {study.status === 'COMPLETED' && (
               <View style={styles.section}>
                 <View style={styles.reviewButtonsContainer}>
-                  {/* 스터디장은 자기 자신에게 리뷰를 작성할 수 없음 */}
+                  {/* 스터디장은 자기 자신에게 리뷰를 작성할 수 없음, 이미 작성한 경우 비활성화 */}
                   {study.memberRole !== 'LEADER' && (
-                    <TouchableOpacity style={styles.writeReviewBtn} onPress={handleWriteReview}>
-                      <Feather name="edit-2" size={16} color="#8B5CF6" />
-                      <Text style={styles.writeReviewBtnText}>스터디장 리뷰</Text>
+                    hasReviewedLeader ? (
+                      <View style={[styles.writeReviewBtn, styles.writeReviewBtnDisabled]}>
+                        <Feather name="check" size={16} color="#71717A" />
+                        <Text style={styles.writeReviewBtnTextDisabled}>리뷰 완료</Text>
+                      </View>
+                    ) : (
+                      <TouchableOpacity style={styles.writeReviewBtn} onPress={handleWriteReview}>
+                        <Feather name="edit-2" size={16} color="#8B5CF6" />
+                        <Text style={styles.writeReviewBtnText}>스터디장 리뷰</Text>
+                      </TouchableOpacity>
+                    )
+                  )}
+                  {allMembersReviewed ? (
+                    <View style={[styles.writeReviewBtn, styles.writeReviewBtnDisabled]}>
+                      <Feather name="check" size={16} color="#71717A" />
+                      <Text style={styles.writeReviewBtnTextDisabled}>평가 완료</Text>
+                    </View>
+                  ) : (
+                    <TouchableOpacity style={styles.writeReviewBtn} onPress={handleMemberReview}>
+                      <Feather name="users" size={16} color="#8B5CF6" />
+                      <Text style={styles.writeReviewBtnText}>멤버 평가</Text>
                     </TouchableOpacity>
                   )}
-                  <TouchableOpacity style={styles.writeReviewBtn} onPress={handleMemberReview}>
-                    <Feather name="users" size={16} color="#8B5CF6" />
-                    <Text style={styles.writeReviewBtnText}>멤버 평가</Text>
-                  </TouchableOpacity>
                 </View>
               </View>
             )}
@@ -1397,20 +1522,38 @@ export default function StudyDetailScreen() {
                 </>
               )}
               {study.status === 'IN_PROGRESS' && (
-                <TouchableOpacity
-                  style={[styles.joinBtn]}
-                  onPress={handleCompleteStudy}
-                  disabled={processing}
-                >
-                  {processing ? (
-                    <ActivityIndicator size="small" color="#FFFFFF" />
-                  ) : (
-                    <>
-                      <Feather name="check-circle" size={18} color="#FFFFFF" style={styles.btnIconRight} />
-                      <Text style={styles.joinBtnText}>스터디 종료하기</Text>
-                    </>
+                <View style={styles.leaderActionsContainer}>
+                  {study.currentMembers < study.maxMembers && (
+                    <TouchableOpacity
+                      style={[styles.leaderBtn, styles.closeBtn]}
+                      onPress={handleReopenRecruitment}
+                      disabled={processing}
+                    >
+                      {processing ? (
+                        <ActivityIndicator size="small" color="#8B5CF6" />
+                      ) : (
+                        <>
+                          <Feather name="user-plus" size={18} color="#8B5CF6" />
+                          <Text style={[styles.closeBtnText, { color: '#8B5CF6' }]}>재모집</Text>
+                        </>
+                      )}
+                    </TouchableOpacity>
                   )}
-                </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.leaderBtn, styles.completeBtn, study.currentMembers >= study.maxMembers && { flex: 1 }]}
+                    onPress={handleCompleteStudy}
+                    disabled={processing}
+                  >
+                    {processing ? (
+                      <ActivityIndicator size="small" color="#FFFFFF" />
+                    ) : (
+                      <>
+                        <Feather name="check-circle" size={18} color="#FFFFFF" />
+                        <Text style={styles.completeBtnText}>스터디 종료</Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                </View>
               )}
               {study.status === 'CLOSED' && (
                 <View style={styles.statusMessage}>

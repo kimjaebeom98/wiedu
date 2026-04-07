@@ -82,18 +82,25 @@ public class ReviewService {
             throw new BusinessException(ErrorCode.REVIEW_SELF_NOT_ALLOWED);
         }
 
+        // 태그를 콤마 구분 문자열로 변환
+        String tagsString = request.tags() != null && !request.tags().isEmpty()
+                ? String.join(",", request.tags())
+                : null;
+
         StudyLeaderReview review = StudyLeaderReview.builder()
                 .reviewer(reviewer)
                 .leader(leader)
                 .study(study)
                 .rating(request.rating())
                 .content(request.content())
+                .tags(tagsString)
                 .build();
 
         StudyLeaderReview saved = reviewRepository.save(review);
 
-        // 스터디장 온도 업데이트 (리뷰 평점 기반)
-        BigDecimal temperatureDelta = calculateTemperatureDelta(request.rating());
+        // 스터디장 온도 업데이트 (리뷰 평점 + 태그 보너스)
+        int tagCount = request.tags() != null ? request.tags().size() : 0;
+        BigDecimal temperatureDelta = calculateTemperatureDelta(request.rating(), tagCount);
         leader.updateTemperature(temperatureDelta);
         userRepository.save(leader);
 
@@ -101,11 +108,21 @@ public class ReviewService {
     }
 
     /**
-     * 리뷰 평점에 따른 온도 변화량 계산
-     * 5점: +0.3, 4점: +0.2, 3점: +0.1, 2점: -0.1, 1점: -0.2
+     * 사용자가 해당 스터디에 리뷰를 작성했는지 확인
      */
-    private BigDecimal calculateTemperatureDelta(int rating) {
-        return switch (rating) {
+    public boolean hasUserReviewedStudy(Long studyId, Long userId) {
+        Study study = studyService.findStudyEntityById(studyId);
+        User user = userService.findUserEntityById(userId);
+        return reviewRepository.existsByReviewerAndStudy(user, study);
+    }
+
+    /**
+     * 리뷰 평점 및 태그에 따른 온도 변화량 계산
+     * 기본: 5점(+0.3), 4점(+0.2), 3점(+0.1), 2점(-0.1), 1점(-0.2)
+     * 태그 보너스: 긍정 태그 1개당 +0.02 (최대 6개 = +0.12)
+     */
+    private BigDecimal calculateTemperatureDelta(int rating, int tagCount) {
+        BigDecimal baseDelta = switch (rating) {
             case 5 -> BigDecimal.valueOf(0.3);
             case 4 -> BigDecimal.valueOf(0.2);
             case 3 -> BigDecimal.valueOf(0.1);
@@ -113,6 +130,14 @@ public class ReviewService {
             case 1 -> BigDecimal.valueOf(-0.2);
             default -> BigDecimal.ZERO;
         };
+
+        // 태그 보너스 (긍정적 리뷰일 때만, 3점 이상)
+        if (rating >= 3 && tagCount > 0) {
+            BigDecimal tagBonus = BigDecimal.valueOf(0.02).multiply(BigDecimal.valueOf(tagCount));
+            return baseDelta.add(tagBonus);
+        }
+
+        return baseDelta;
     }
 
 }

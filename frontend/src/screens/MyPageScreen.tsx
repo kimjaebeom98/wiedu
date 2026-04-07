@@ -21,6 +21,8 @@ import { getMyProfile, getMyStudies } from '../api/profile';
 import { getMyStudyRequests, StudyRequestResponse } from '../api/study';
 import { getMyBookmarks } from '../api/bookmark';
 import { requestWithdrawal } from '../api/withdrawal';
+import { getMemberReviews } from '../api/review';
+import { StudyMemberReview } from '../types/review';
 import { MyProfile, MyStudy } from '../types/profile';
 import { StudyListResponse } from '../types/study';
 import { logout } from '../api/auth';
@@ -55,11 +57,28 @@ const CATEGORY_LABELS: Record<string, string> = {
   CIVIL_SERVICE: '공무원',
 };
 
-const UNLOCK_THRESHOLD = 40;
+// 멤버 리뷰 태그
+const MEMBER_TAG_EMOJI: Record<string, string> = {
+  active: '🔥',
+  responsible: '💪',
+  kind: '💕',
+  prepared: '📝',
+  helpful: '🤝',
+  positive: '✨',
+};
+
+const MEMBER_TAG_LABEL: Record<string, string> = {
+  active: '적극적인 참여',
+  responsible: '책임감 있음',
+  kind: '친절하고 배려심',
+  prepared: '준비를 잘 해옴',
+  helpful: '도움을 많이 줌',
+  positive: '긍정적인 에너지',
+};
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-type ExpandedSection = 'participating' | 'leading' | 'bookmarked' | null;
+type ExpandedSection = 'participating' | 'leading' | 'bookmarked' | 'reviews' | null;
 
 export default function MyPageScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -79,6 +98,13 @@ export default function MyPageScreen() {
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const swipeableRefs = useRef<Map<number, Swipeable | null>>(new Map());
 
+  // 멤버 리뷰 관련 상태
+  const [memberReviews, setMemberReviews] = useState<StudyMemberReview[]>([]);
+  const [reviewStats, setReviewStats] = useState<{ totalCount: number; averageRating: number | null }>({
+    totalCount: 0,
+    averageRating: null,
+  });
+
   const loadProfile = useCallback(async () => {
     try {
       setError(null);
@@ -90,6 +116,19 @@ export default function MyPageScreen() {
       ]);
       setProfile(profileData);
       setMyStudies(studiesData);
+
+      // 멤버 리뷰 데이터 로드 (마이 프로필용)
+      try {
+        const reviews = await getMemberReviews(profileData.id);
+        setMemberReviews(reviews);
+        const totalCount = reviews.length;
+        const averageRating = totalCount > 0
+          ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalCount
+          : null;
+        setReviewStats({ totalCount, averageRating });
+      } catch {
+        // 리뷰 로드 실패해도 무시
+      }
       setMyBookmarks(bookmarksData.content);
 
       // 3일 이내의 신청만 표시 (PENDING은 항상, APPROVED/REJECTED는 processedAt 기준 3일)
@@ -176,9 +215,6 @@ export default function MyPageScreen() {
   );
 
   const temperature = profile?.temperature ?? 0;
-  const progressPercent = Math.min((temperature / UNLOCK_THRESHOLD) * 100, 100);
-  const temperatureToUnlock = profile?.temperatureToUnlock ?? Math.max(UNLOCK_THRESHOLD - temperature, 0);
-  const isUnlocked = profile?.isStudyLeaderUnlocked ?? temperature >= UNLOCK_THRESHOLD;
 
   const getExperienceBadge = (level: string | null): string => {
     if (!level) return '신입';
@@ -225,7 +261,17 @@ export default function MyPageScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
-          <Text style={styles.headerTitle}>프로필</Text>
+          <View style={styles.profileTabs}>
+            <View style={styles.profileTabActive}>
+              <Text style={styles.profileTabTextActive}>마이 프로필</Text>
+            </View>
+            <TouchableOpacity
+              style={styles.profileTab}
+              onPress={() => navigation.navigate('StudyLeader')}
+            >
+              <Text style={styles.profileTabText}>스터디장 프로필</Text>
+            </TouchableOpacity>
+          </View>
           <TouchableOpacity
             style={styles.headerMoreBtn}
             onPress={() => navigation.navigate('Settings')}
@@ -283,13 +329,6 @@ export default function MyPageScreen() {
               </Text>
             </View>
 
-            <View style={styles.progressBarTrack}>
-              <View style={[styles.progressBarFill, { width: `${progressPercent}%` }]} />
-            </View>
-
-            {!isUnlocked ? (
-              <Text style={styles.tempHint}>40°C 달성 시 스터디장 페이지 해금!</Text>
-            ) : null}
           </View>
         </TouchableOpacity>
 
@@ -504,41 +543,83 @@ export default function MyPageScreen() {
           </View>
         )}
 
-        {/* Lock Section */}
-        {!isUnlocked ? (
-          <View style={styles.lockCard}>
-            <View style={styles.lockIconContainer}>
-              <Feather name="lock" size={28} color="#71717A" />
-            </View>
-            <Text style={styles.lockTitle}>스터디장 페이지 잠김</Text>
-            <Text style={styles.lockDescription}>
-              온도를 40°C까지 올리면{'\n'}스터디장 전용 기능이 해금돼요
-            </Text>
-            <View style={styles.lockProgressRow}>
-              <View style={styles.lockProgressBarTrack}>
-                <View style={[styles.lockProgressBarFill, { width: `${progressPercent}%` }]} />
+        {/* My Member Reviews Card - Expandable */}
+        {reviewStats.totalCount > 0 && (
+          <>
+            <TouchableOpacity
+              style={styles.reviewCard}
+              onPress={() => setExpandedSection(expandedSection === 'reviews' ? null : 'reviews')}
+            >
+              <View style={styles.reviewCardLeft}>
+                <View style={styles.reviewIconContainer}>
+                  <Feather name="message-square" size={20} color="#FBBF24" />
+                </View>
+                <View style={styles.reviewCardText}>
+                  <Text style={styles.reviewCardTitle}>내가 받은 멤버 리뷰</Text>
+                  <Text style={styles.reviewCardSubtitle}>
+                    {reviewStats.totalCount}개의 리뷰 · 평균 {reviewStats.averageRating?.toFixed(1) || '-'}점
+                  </Text>
+                </View>
               </View>
-              <Text style={styles.lockProgressText}>
-                {temperatureToUnlock.toFixed(1)}°C 더 필요
-              </Text>
-            </View>
-          </View>
-        ) : (
-          <TouchableOpacity
-            style={styles.leaderCard}
-            onPress={() => navigation.navigate('StudyLeader')}
-          >
-            <View style={styles.leaderCardLeft}>
-              <Feather name="unlock" size={22} color="#8B5CF6" />
-              <View style={styles.leaderCardText}>
-                <Text style={styles.leaderCardTitle}>스터디장 페이지</Text>
-                <Text style={styles.leaderCardSubtitle}>스터디장 전용 기능을 이용하세요</Text>
-              </View>
-            </View>
-            <Feather name="chevron-right" size={20} color="#A1A1AA" />
-          </TouchableOpacity>
-        )}
+              <Feather
+                name={expandedSection === 'reviews' ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#A1A1AA"
+              />
+            </TouchableOpacity>
 
+            {expandedSection === 'reviews' && (
+              <View style={styles.memberReviewsExpanded}>
+                {memberReviews.map((review) => (
+                  <View key={review.id} style={styles.memberReviewItem}>
+                    <View style={styles.memberReviewHeader}>
+                      <View style={styles.memberReviewerInfo}>
+                        {review.reviewerProfileImage ? (
+                          <Image
+                            source={{ uri: review.reviewerProfileImage }}
+                            style={styles.memberReviewerAvatar}
+                          />
+                        ) : (
+                          <View style={styles.memberReviewerAvatarPlaceholder}>
+                            <Feather name="user" size={14} color="#8B5CF6" />
+                          </View>
+                        )}
+                        <Text style={styles.memberReviewerName}>{review.reviewerNickname}</Text>
+                      </View>
+                      <View style={styles.memberReviewStars}>
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <Feather
+                            key={i}
+                            name="star"
+                            size={12}
+                            color={i < review.rating ? '#FBBF24' : '#3F3F46'}
+                          />
+                        ))}
+                      </View>
+                    </View>
+                    {review.tags && review.tags.length > 0 && (
+                      <View style={styles.memberReviewTags}>
+                        {review.tags.map((tagId) => (
+                          <View key={tagId} style={styles.memberReviewTag}>
+                            <Text style={styles.memberReviewTagText}>
+                              {MEMBER_TAG_EMOJI[tagId] || ''} {MEMBER_TAG_LABEL[tagId] || tagId}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                    {review.content && (
+                      <Text style={styles.memberReviewContent}>{review.content}</Text>
+                    )}
+                    <Text style={styles.memberReviewMeta}>
+                      {review.studyTitle} · {new Date(review.createdAt).toLocaleDateString('ko-KR')}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </>
+        )}
 
         {/* My Applications Section */}
         {myApplications.length > 0 && (
@@ -578,6 +659,80 @@ export default function MyPageScreen() {
           </View>
         )}
 
+        {/* Completed Studies Section - Review Prompt */}
+        {/* 1달 이내의 종료된 스터디만 표시 */}
+        {(() => {
+          const oneMonthAgo = new Date();
+          oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+          const recentCompletedStudies = myStudies.filter(s => {
+            if (s.status !== 'COMPLETED') return false;
+            if (!s.updatedAt) return true; // updatedAt 없으면 일단 표시
+            return new Date(s.updatedAt) >= oneMonthAgo;
+          });
+          const needsReviewStudies = recentCompletedStudies.filter(s => !s.reviewCompleted);
+
+          if (recentCompletedStudies.length === 0) return null;
+
+          return (
+            <View style={styles.myStudySection}>
+              <View style={styles.myStudyHeader}>
+                <View style={styles.completedHeaderLeft}>
+                  <Feather name="check-circle" size={18} color="#22C55E" />
+                  <Text style={styles.myStudyTitle}>종료된 스터디</Text>
+                </View>
+                {needsReviewStudies.length > 0 && (
+                  <View style={styles.reviewNeededBadge}>
+                    <Text style={styles.reviewNeededText}>리뷰 {needsReviewStudies.length}건</Text>
+                  </View>
+                )}
+              </View>
+              {recentCompletedStudies.map((study) => (
+                <TouchableOpacity
+                  key={study.studyId}
+                  style={[
+                    styles.completedStudyCard,
+                    study.reviewCompleted && styles.completedStudyCardDone,
+                  ]}
+                  onPress={() => navigation.navigate('StudyDetail', { studyId: study.studyId })}
+                >
+                  {study.thumbnailImage ? (
+                    <Image source={{ uri: study.thumbnailImage }} style={styles.studyThumb} />
+                  ) : (
+                    <View style={styles.studyThumbPlaceholder}>
+                      <Feather name="award" size={24} color="#22C55E" />
+                    </View>
+                  )}
+                  <View style={styles.studyInfo}>
+                    <View style={styles.studyNameRow}>
+                      <Text style={styles.studyName} numberOfLines={1}>{study.title}</Text>
+                      {study.myRole === 'LEADER' && (
+                        <View style={styles.leaderBadge}>
+                          <Text style={styles.leaderBadgeText}>스터디장</Text>
+                        </View>
+                      )}
+                    </View>
+                    <Text style={[
+                      styles.completedHint,
+                      study.reviewCompleted && styles.completedHintDone,
+                    ]}>
+                      {study.reviewCompleted ? '리뷰 작성 완료' : '탭하여 리뷰 작성하기'}
+                    </Text>
+                  </View>
+                  <View style={[
+                    styles.reviewArrow,
+                    study.reviewCompleted && styles.reviewArrowDone,
+                  ]}>
+                    <Feather
+                      name={study.reviewCompleted ? 'check' : 'edit-2'}
+                      size={16}
+                      color={study.reviewCompleted ? '#22C55E' : '#8B5CF6'}
+                    />
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </View>
+          );
+        })()}
 
         <View style={styles.bottomSpacer} />
       </ScrollView>
@@ -699,10 +854,33 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 16,
   },
-  headerTitle: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: '#FFFFFF',
+  profileTabs: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  profileTab: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#3F3F46',
+  },
+  profileTabActive: {
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#8B5CF6',
+  },
+  profileTabText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#71717A',
+  },
+  profileTabTextActive: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#8B5CF6',
   },
   headerMoreBtn: {
     width: 40,
@@ -794,22 +972,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: '#F97316',
   },
-  progressBarTrack: {
-    height: 8,
-    backgroundColor: '#3F3F46',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#F97316',
-    borderRadius: 4,
-  },
-  tempHint: {
-    fontSize: 12,
-    color: '#71717A',
-    textAlign: 'center',
-  },
   statsCard: {
     backgroundColor: '#27272A',
     borderRadius: 20,
@@ -844,80 +1006,111 @@ const styles = StyleSheet.create({
     height: 36,
     backgroundColor: '#3F3F46',
   },
-  lockCard: {
-    backgroundColor: '#27272A',
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    gap: 10,
-    marginTop: 16,
-  },
-  lockIconContainer: {
-    width: 60,
-    height: 60,
-    backgroundColor: '#3F3F46',
-    borderRadius: 30,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  lockTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#FFFFFF',
-  },
-  lockDescription: {
-    fontSize: 13,
-    color: '#71717A',
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  lockProgressRow: {
-    width: '100%',
-    gap: 8,
-    marginTop: 4,
-  },
-  lockProgressBarTrack: {
-    height: 8,
-    backgroundColor: '#3F3F46',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  lockProgressBarFill: {
-    height: '100%',
-    backgroundColor: '#F97316',
-    borderRadius: 4,
-  },
-  lockProgressText: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: '#F97316',
-    textAlign: 'center',
-  },
-  leaderCard: {
-    backgroundColor: '#27272A',
-    borderRadius: 20,
-    padding: 20,
+  reviewCard: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#27272A',
+    borderRadius: 16,
+    padding: 16,
     marginTop: 16,
+    borderWidth: 1,
+    borderColor: '#FBBF2430',
   },
-  leaderCardLeft: {
+  reviewCardLeft: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 14,
   },
-  leaderCardText: {
+  reviewIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#FBBF2420',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reviewCardText: {
     gap: 4,
   },
-  leaderCardTitle: {
+  reviewCardTitle: {
     fontSize: 15,
     fontWeight: '700',
     color: '#FFFFFF',
   },
-  leaderCardSubtitle: {
+  reviewCardSubtitle: {
     fontSize: 12,
+    color: '#A1A1AA',
+  },
+  memberReviewsExpanded: {
+    backgroundColor: '#27272A',
+    borderRadius: 16,
+    padding: 16,
+    marginTop: 8,
+    gap: 16,
+  },
+  memberReviewItem: {
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#3F3F46',
+  },
+  memberReviewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  memberReviewerInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  memberReviewerAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+  },
+  memberReviewerAvatarPlaceholder: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#3F3F46',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  memberReviewerName: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#FFFFFF',
+  },
+  memberReviewStars: {
+    flexDirection: 'row',
+    gap: 2,
+  },
+  memberReviewTags: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginBottom: 8,
+  },
+  memberReviewTag: {
+    backgroundColor: '#3F3F46',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  memberReviewTagText: {
+    fontSize: 11,
+    color: '#E4E4E7',
+  },
+  memberReviewContent: {
+    fontSize: 13,
+    color: '#E4E4E7',
+    lineHeight: 20,
+    marginBottom: 8,
+  },
+  memberReviewMeta: {
+    fontSize: 11,
     color: '#71717A',
   },
   bottomSpacer: {
@@ -1014,6 +1207,55 @@ const styles = StyleSheet.create({
   applicationStatusText: {
     fontSize: 12,
     fontWeight: '600',
+  },
+  completedHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  reviewNeededBadge: {
+    backgroundColor: '#8B5CF620',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  reviewNeededText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#8B5CF6',
+  },
+  completedStudyCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#27272A',
+    borderRadius: 12,
+    padding: 12,
+    gap: 12,
+    borderWidth: 1,
+    borderColor: '#22C55E30',
+  },
+  completedStudyCardDone: {
+    borderColor: '#3F3F46',
+    opacity: 0.7,
+  },
+  completedHint: {
+    fontSize: 12,
+    color: '#8B5CF6',
+    marginTop: 2,
+  },
+  completedHintDone: {
+    color: '#22C55E',
+  },
+  reviewArrow: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#8B5CF620',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  reviewArrowDone: {
+    backgroundColor: '#22C55E20',
   },
   expandedSection: {
     backgroundColor: '#27272A',

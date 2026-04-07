@@ -42,4 +42,16 @@ public class ReviewController {
         StudyLeaderReviewResponse response = reviewService.createReview(studyId, userId, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    /**
+     * 스터디장 리뷰 작성 여부 확인
+     * GET /api/studies/{studyId}/reviews/check
+     */
+    @GetMapping("/api/studies/{studyId}/reviews/check")
+    public ResponseEntity<java.util.Map<String, Boolean>> checkReviewExists(
+            @PathVariable Long studyId) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        boolean hasReviewed = reviewService.hasUserReviewedStudy(studyId, userId);
+        return ResponseEntity.ok(java.util.Map.of("hasReviewed", hasReviewed));
+    }
 }

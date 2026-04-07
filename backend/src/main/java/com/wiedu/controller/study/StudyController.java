@@ -175,13 +175,24 @@ public class StudyController {
     }
 
     /**
-     * 스터디 마감
+     * 스터디 시작 (모집 마감) - RECRUITING → IN_PROGRESS
      * POST /api/studies/{studyId}/close
      */
     @PostMapping("/{studyId}/close")
-    public ResponseEntity<Void> closeStudy(@PathVariable Long studyId) {
+    public ResponseEntity<Void> startStudy(@PathVariable Long studyId) {
         Long userId = SecurityUtils.getCurrentUserId();
-        studyService.closeStudy(studyId, userId);
+        studyService.startStudy(studyId, userId);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * 재모집 - IN_PROGRESS → RECRUITING (빈자리 있을 때만)
+     * POST /api/studies/{studyId}/reopen
+     */
+    @PostMapping("/{studyId}/reopen")
+    public ResponseEntity<Void> reopenRecruitment(@PathVariable Long studyId) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        studyService.reopenRecruitment(studyId, userId);
         return ResponseEntity.ok().build();
     }
 

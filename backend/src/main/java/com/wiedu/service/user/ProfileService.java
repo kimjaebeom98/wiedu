@@ -30,8 +30,6 @@ import java.util.List;
 @Transactional(readOnly = true)
 public class ProfileService {
 
-    private static final BigDecimal UNLOCK_TEMPERATURE = BigDecimal.valueOf(40.0);
-
     private final UserService userService;
     private final UserRepository userRepository;
     private final UserInterestRepository userInterestRepository;
@@ -76,12 +74,7 @@ public class ProfileService {
                 attendanceRate
         );
 
-        // 스터디장 해금 여부 (온도 >= 40)
         BigDecimal temperature = user.getTemperature() != null ? user.getTemperature() : BigDecimal.valueOf(36.5);
-        boolean isStudyLeaderUnlocked = temperature.compareTo(UNLOCK_TEMPERATURE) >= 0;
-        BigDecimal temperatureToUnlock = isStudyLeaderUnlocked
-                ? BigDecimal.ZERO
-                : UNLOCK_TEMPERATURE.subtract(temperature);
 
         String experienceLevel = user.getExperienceLevel() != null
                 ? user.getExperienceLevel().name()
@@ -106,9 +99,7 @@ public class ProfileService {
                 user.getLongitude(),
                 interests,
                 user.isOnboardingCompleted(),
-                stats,
-                isStudyLeaderUnlocked,
-                temperatureToUnlock
+                stats
         );
     }
 

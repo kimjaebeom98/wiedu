@@ -244,6 +244,33 @@ public class Study extends BaseEntity {
     // incrementMemberCount(): 멤버 증가 + 정원 도달 시 자동 상태 전이
     // decrementMemberCount(): 멤버 감소 (최소 1명 유지)
 
+    /**
+     * 모집 마감 & 스터디 시작 (RECRUITING → IN_PROGRESS)
+     */
+    public void start() {
+        if (this.status != StudyStatus.RECRUITING) {
+            throw new IllegalStateException("모집 중인 스터디만 시작할 수 있습니다.");
+        }
+        this.status = StudyStatus.IN_PROGRESS;
+    }
+
+    /**
+     * 재모집 (IN_PROGRESS → RECRUITING)
+     * 빈자리가 있을 때만 가능
+     */
+    public void reopenRecruitment() {
+        if (this.status != StudyStatus.IN_PROGRESS) {
+            throw new IllegalStateException("진행 중인 스터디만 재모집할 수 있습니다.");
+        }
+        if (this.currentMembers >= this.maxMembers) {
+            throw new IllegalStateException("정원이 가득 찬 스터디는 재모집할 수 없습니다.");
+        }
+        this.status = StudyStatus.RECRUITING;
+    }
+
+    /**
+     * 스터디 취소/폐쇄 (any → CLOSED)
+     */
     public void close() {
         if (this.status == StudyStatus.COMPLETED || this.status == StudyStatus.CLOSED) {
             throw new IllegalStateException("이미 완료되었거나 마감된 스터디입니다.");
