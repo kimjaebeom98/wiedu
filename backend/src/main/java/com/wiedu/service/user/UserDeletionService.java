@@ -13,7 +13,6 @@ import com.wiedu.repository.notification.NotificationRepository;
 import com.wiedu.repository.review.StudyLeaderReviewRepository;
 import com.wiedu.repository.review.StudyMemberReviewRepository;
 import com.wiedu.repository.study.*;
-import com.wiedu.repository.user.UserCategoryTemperatureRepository;
 import com.wiedu.repository.user.UserInterestRepository;
 import com.wiedu.repository.user.UserRepository;
 import com.wiedu.repository.user.UserStudyPreferenceRepository;
@@ -52,7 +51,6 @@ public class UserDeletionService {
     private final NotificationRepository notificationRepository;
     private final UserInterestRepository userInterestRepository;
     private final UserStudyPreferenceRepository userStudyPreferenceRepository;
-    private final UserCategoryTemperatureRepository userCategoryTemperatureRepository;
     private final StudyLeaderReviewRepository studyLeaderReviewRepository;
     private final StudyMemberReviewRepository studyMemberReviewRepository;
     private final RefreshTokenRepository refreshTokenRepository;
@@ -90,7 +88,6 @@ public class UserDeletionService {
         notificationRepository.deleteByRecipientId(userId);
         userInterestRepository.deleteByUserId(userId);
         userStudyPreferenceRepository.deleteByUserId(userId);
-        userCategoryTemperatureRepository.deleteByUserId(userId);
         refreshTokenRepository.deleteByUserId(userId);
 
         // 3. 스터디 멤버십 삭제

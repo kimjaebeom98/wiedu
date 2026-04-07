@@ -21,8 +21,8 @@ import { getMyProfile, getMyStudies } from '../api/profile';
 import { getMyStudyRequests, StudyRequestResponse } from '../api/study';
 import { getMyBookmarks } from '../api/bookmark';
 import { requestWithdrawal } from '../api/withdrawal';
-import { getMemberReviews } from '../api/review';
-import { StudyMemberReview } from '../types/review';
+import { getMemberReviews, getLeaderReviews } from '../api/review';
+import { StudyMemberReview, StudyLeaderReview } from '../types/review';
 import { MyProfile, MyStudy } from '../types/profile';
 import { StudyListResponse } from '../types/study';
 import { logout } from '../api/auth';
@@ -57,6 +57,25 @@ const CATEGORY_LABELS: Record<string, string> = {
   CIVIL_SERVICE: '공무원',
 };
 
+// 스터디장 리뷰 태그
+const LEADER_TAG_EMOJI: Record<string, string> = {
+  systematic: '📚',
+  friendly: '😊',
+  communication: '💬',
+  ontime: '⏰',
+  helpful: '💡',
+  atmosphere: '✨',
+};
+
+const LEADER_TAG_LABEL: Record<string, string> = {
+  systematic: '체계적인 커리큘럼',
+  friendly: '친절한 스터디장',
+  communication: '원활한 소통',
+  ontime: '시간 약속 준수',
+  helpful: '많이 배움',
+  atmosphere: '좋은 분위기',
+};
+
 // 멤버 리뷰 태그
 const MEMBER_TAG_EMOJI: Record<string, string> = {
   active: '🔥',
@@ -78,7 +97,7 @@ const MEMBER_TAG_LABEL: Record<string, string> = {
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-type ExpandedSection = 'participating' | 'leading' | 'bookmarked' | 'reviews' | null;
+type ExpandedSection = 'participating' | 'leading' | 'bookmarked' | 'reviews' | 'leaderReviews' | null;
 
 export default function MyPageScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -100,7 +119,14 @@ export default function MyPageScreen() {
 
   // 멤버 리뷰 관련 상태
   const [memberReviews, setMemberReviews] = useState<StudyMemberReview[]>([]);
-  const [reviewStats, setReviewStats] = useState<{ totalCount: number; averageRating: number | null }>({
+  const [memberReviewStats, setMemberReviewStats] = useState<{ totalCount: number; averageRating: number | null }>({
+    totalCount: 0,
+    averageRating: null,
+  });
+
+  // 스터디장 리뷰 관련 상태
+  const [leaderReviews, setLeaderReviews] = useState<StudyLeaderReview[]>([]);
+  const [leaderReviewStats, setLeaderReviewStats] = useState<{ totalCount: number; averageRating: number | null }>({
     totalCount: 0,
     averageRating: null,
   });
@@ -117,15 +143,25 @@ export default function MyPageScreen() {
       setProfile(profileData);
       setMyStudies(studiesData);
 
-      // 멤버 리뷰 데이터 로드 (마이 프로필용)
+      // 멤버 리뷰 / 스터디장 리뷰 데이터 병렬 로드
       try {
-        const reviews = await getMemberReviews(profileData.id);
-        setMemberReviews(reviews);
-        const totalCount = reviews.length;
-        const averageRating = totalCount > 0
-          ? reviews.reduce((sum, r) => sum + r.rating, 0) / totalCount
+        const [memberRevs, leaderRevsResp] = await Promise.all([
+          getMemberReviews(profileData.id),
+          getLeaderReviews(profileData.id),
+        ]);
+
+        setMemberReviews(memberRevs);
+        const memberCount = memberRevs.length;
+        const memberAvg = memberCount > 0
+          ? memberRevs.reduce((sum, r) => sum + r.rating, 0) / memberCount
           : null;
-        setReviewStats({ totalCount, averageRating });
+        setMemberReviewStats({ totalCount: memberCount, averageRating: memberAvg });
+
+        setLeaderReviews(leaderRevsResp.reviews ?? []);
+        setLeaderReviewStats({
+          totalCount: leaderRevsResp.totalCount ?? 0,
+          averageRating: leaderRevsResp.averageRating ?? null,
+        });
       } catch {
         // 리뷰 로드 실패해도 무시
       }
@@ -261,17 +297,7 @@ export default function MyPageScreen() {
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={[styles.header, { paddingTop: insets.top + 20 }]}>
-          <View style={styles.profileTabs}>
-            <View style={styles.profileTabActive}>
-              <Text style={styles.profileTabTextActive}>마이 프로필</Text>
-            </View>
-            <TouchableOpacity
-              style={styles.profileTab}
-              onPress={() => navigation.navigate('StudyLeader')}
-            >
-              <Text style={styles.profileTabText}>스터디장 프로필</Text>
-            </TouchableOpacity>
-          </View>
+          <Text style={styles.headerTitle}>마이페이지</Text>
           <TouchableOpacity
             style={styles.headerMoreBtn}
             onPress={() => navigation.navigate('Settings')}
@@ -316,6 +342,11 @@ export default function MyPageScreen() {
               <Feather name="map-pin" size={13} color="#71717A" />
               <Text style={styles.regionText}>{formatLocationFromAddress(profile.region)}</Text>
             </View>
+          ) : null}
+
+          {/* Bio */}
+          {profile.bio ? (
+            <Text style={styles.bioText}>{profile.bio}</Text>
           ) : null}
 
           {/* Temperature */}
@@ -543,8 +574,86 @@ export default function MyPageScreen() {
           </View>
         )}
 
+        {/* 스터디장으로서 받은 리뷰 Card - Expandable */}
+        {leaderReviewStats.totalCount > 0 && (
+          <>
+            <TouchableOpacity
+              style={styles.reviewCard}
+              onPress={() => setExpandedSection(expandedSection === 'leaderReviews' ? null : 'leaderReviews')}
+            >
+              <View style={styles.reviewCardLeft}>
+                <View style={styles.reviewIconContainer}>
+                  <Feather name="award" size={20} color="#FBBF24" />
+                </View>
+                <View style={styles.reviewCardText}>
+                  <Text style={styles.reviewCardTitle}>스터디장으로서 받은 리뷰</Text>
+                  <Text style={styles.reviewCardSubtitle}>
+                    {leaderReviewStats.totalCount}개의 리뷰 · 평균 {leaderReviewStats.averageRating?.toFixed(1) || '-'}점
+                  </Text>
+                </View>
+              </View>
+              <Feather
+                name={expandedSection === 'leaderReviews' ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#A1A1AA"
+              />
+            </TouchableOpacity>
+
+            {expandedSection === 'leaderReviews' && (
+              <View style={styles.memberReviewsExpanded}>
+                {leaderReviews.map((review) => (
+                  <View key={review.id} style={styles.memberReviewItem}>
+                    <View style={styles.memberReviewHeader}>
+                      <View style={styles.memberReviewerInfo}>
+                        {review.reviewerProfileImage ? (
+                          <Image
+                            source={{ uri: review.reviewerProfileImage }}
+                            style={styles.memberReviewerAvatar}
+                          />
+                        ) : (
+                          <View style={styles.memberReviewerAvatarPlaceholder}>
+                            <Feather name="user" size={14} color="#8B5CF6" />
+                          </View>
+                        )}
+                        <Text style={styles.memberReviewerName}>{review.reviewerNickname}</Text>
+                      </View>
+                      <View style={styles.memberReviewStars}>
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <Feather
+                            key={i}
+                            name="star"
+                            size={12}
+                            color={i < review.rating ? '#FBBF24' : '#3F3F46'}
+                          />
+                        ))}
+                      </View>
+                    </View>
+                    {review.tags && review.tags.length > 0 && (
+                      <View style={styles.memberReviewTags}>
+                        {review.tags.map((tagId) => (
+                          <View key={tagId} style={styles.memberReviewTag}>
+                            <Text style={styles.memberReviewTagText}>
+                              {LEADER_TAG_EMOJI[tagId] || ''} {LEADER_TAG_LABEL[tagId] || tagId}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                    {review.content && (
+                      <Text style={styles.memberReviewContent}>{review.content}</Text>
+                    )}
+                    <Text style={styles.memberReviewMeta}>
+                      {review.studyTitle} · {new Date(review.createdAt).toLocaleDateString('ko-KR')}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </>
+        )}
+
         {/* My Member Reviews Card - Expandable */}
-        {reviewStats.totalCount > 0 && (
+        {memberReviewStats.totalCount > 0 && (
           <>
             <TouchableOpacity
               style={styles.reviewCard}
@@ -557,7 +666,7 @@ export default function MyPageScreen() {
                 <View style={styles.reviewCardText}>
                   <Text style={styles.reviewCardTitle}>내가 받은 멤버 리뷰</Text>
                   <Text style={styles.reviewCardSubtitle}>
-                    {reviewStats.totalCount}개의 리뷰 · 평균 {reviewStats.averageRating?.toFixed(1) || '-'}점
+                    {memberReviewStats.totalCount}개의 리뷰 · 평균 {memberReviewStats.averageRating?.toFixed(1) || '-'}점
                   </Text>
                 </View>
               </View>
@@ -854,33 +963,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingBottom: 16,
   },
-  profileTabs: {
-    flexDirection: 'row',
-    gap: 12,
-  },
-  profileTab: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#3F3F46',
-  },
-  profileTabActive: {
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#8B5CF6',
-  },
-  profileTabText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#71717A',
-  },
-  profileTabTextActive: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#8B5CF6',
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   headerMoreBtn: {
     width: 40,
@@ -952,6 +1038,14 @@ const styles = StyleSheet.create({
   regionText: {
     fontSize: 13,
     color: '#71717A',
+  },
+  bioText: {
+    fontSize: 13,
+    color: '#D4D4D8',
+    lineHeight: 19,
+    textAlign: 'center',
+    marginTop: 8,
+    paddingHorizontal: 8,
   },
   tempSection: {
     width: '100%',

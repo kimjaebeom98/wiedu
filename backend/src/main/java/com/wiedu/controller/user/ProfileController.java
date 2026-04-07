@@ -1,10 +1,8 @@
 package com.wiedu.controller.user;
 
-import com.wiedu.dto.user.CategoryTemperatureResponse;
 import com.wiedu.dto.user.MyProfileResponse;
 import com.wiedu.dto.user.ProfileUpdateRequest;
 import com.wiedu.security.SecurityUtils;
-import com.wiedu.service.user.CategoryTemperatureService;
 import com.wiedu.service.user.ProfileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -13,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,7 +21,6 @@ import java.util.Map;
 public class ProfileController {
 
     private final ProfileService profileService;
-    private final CategoryTemperatureService categoryTemperatureService;
 
     /**
      * 내 프로필 조회
@@ -58,22 +54,4 @@ public class ProfileController {
         return ResponseEntity.ok(Map.of("imageUrl", imageUrl));
     }
 
-    /**
-     * 내 분야별 온도 조회
-     * GET /api/users/me/category-temperatures
-     */
-    @GetMapping("/api/users/me/category-temperatures")
-    public ResponseEntity<List<CategoryTemperatureResponse>> getMyCategoryTemperatures() {
-        Long userId = SecurityUtils.getCurrentUserId();
-        return ResponseEntity.ok(categoryTemperatureService.getCategoryTemperatures(userId));
-    }
-
-    /**
-     * 특정 유저의 분야별 온도 조회 (스터디장 프로필용)
-     * GET /api/users/{userId}/category-temperatures
-     */
-    @GetMapping("/api/users/{userId}/category-temperatures")
-    public ResponseEntity<List<CategoryTemperatureResponse>> getUserCategoryTemperatures(@PathVariable Long userId) {
-        return ResponseEntity.ok(categoryTemperatureService.getCategoryTemperatures(userId));
-    }
 }

@@ -26,7 +26,6 @@ export type RootStackParamList = {
   BoardPostCreate: { studyId: number; isLeader?: boolean };
   BoardPostDetail: { studyId: number; postId: number };
   MyPage: undefined;
-  StudyLeader: undefined;
   ProfileEdit: undefined;
   Settings: undefined;
   LocationSearch: {
