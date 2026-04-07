@@ -20,6 +20,7 @@ interface ApiErrorOptions {
     forbidden?: string;
     notFound?: string;
     conflict?: string;
+    badRequest?: string;
     serverError?: string;
   };
 }
@@ -54,6 +55,8 @@ export const handleApiError = (error: unknown, options: ApiErrorOptions): never 
       // HTTP 상태 코드별 처리
       // 커스텀 에러 메시지가 정의되어 있으면 우선 사용
       switch (status) {
+        case 400:
+          throw new Error(errorMessages?.badRequest || serverMessage || defaultMessage);
         case 401:
           throw new Error(messages.unauthorized);
         case 403:

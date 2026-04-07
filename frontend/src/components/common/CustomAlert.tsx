@@ -20,7 +20,7 @@ export interface CustomAlertProps {
   message?: string;
   buttons?: AlertButton[];
   onClose: () => void;
-  icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'help-circle' | 'trash-2' | 'user-check' | 'user-x' | 'lock' | 'calendar' | 'log-out' | 'edit-2' | 'send';
+  icon?: 'alert-circle' | 'check-circle' | 'x-circle' | 'info' | 'help-circle' | 'trash-2' | 'user-check' | 'user-x' | 'user-plus' | 'lock' | 'calendar' | 'log-out' | 'edit-2' | 'send';
   iconColor?: string;
 }
 

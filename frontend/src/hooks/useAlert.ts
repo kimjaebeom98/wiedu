@@ -10,6 +10,7 @@ export type AlertIcon =
   | 'trash-2'
   | 'user-check'
   | 'user-x'
+  | 'user-plus'
   | 'lock'
   | 'calendar'
   | 'log-out'
