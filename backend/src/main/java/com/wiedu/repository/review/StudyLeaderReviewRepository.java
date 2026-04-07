@@ -24,6 +24,10 @@ public interface StudyLeaderReviewRepository extends JpaRepository<StudyLeaderRe
     @Query("SELECT r FROM StudyLeaderReview r JOIN FETCH r.reviewer JOIN FETCH r.study WHERE r.leader = :leader ORDER BY r.createdAt DESC")
     List<StudyLeaderReview> findByLeaderWithDetails(@Param("leader") User leader);
 
+    // 내가 작성한 스터디장 리뷰 목록 (N+1 방지)
+    @Query("SELECT r FROM StudyLeaderReview r JOIN FETCH r.leader JOIN FETCH r.study WHERE r.reviewer = :reviewer ORDER BY r.createdAt DESC")
+    List<StudyLeaderReview> findByReviewerWithDetails(@Param("reviewer") User reviewer);
+
     // 스터디장이 받은 리뷰 목록 (페이징, 최신순)
     Page<StudyLeaderReview> findByLeaderOrderByCreatedAtDesc(User leader, Pageable pageable);
 

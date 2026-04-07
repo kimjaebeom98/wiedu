@@ -85,3 +85,27 @@ export const getMemberReviews = async (userId: number): Promise<StudyMemberRevie
     { defaultMessage: '멤버 리뷰를 불러오는데 실패했습니다.' }
   );
 };
+
+// 내가 작성한 스터디장 리뷰 목록
+export const getLeaderReviewsWrittenByMe = async (): Promise<StudyLeaderReview[]> => {
+  return withErrorHandling(
+    async () => {
+      const client = getAuthClient();
+      const response = await client.get('/api/users/me/reviews/written');
+      return response.data;
+    },
+    { defaultMessage: '작성한 리뷰를 불러오는데 실패했습니다.' }
+  );
+};
+
+// 내가 작성한 멤버 리뷰 목록
+export const getMemberReviewsWrittenByMe = async (): Promise<StudyMemberReview[]> => {
+  return withErrorHandling(
+    async () => {
+      const client = getAuthClient();
+      const response = await client.get('/api/users/me/member-reviews/written');
+      return response.data;
+    },
+    { defaultMessage: '작성한 멤버 리뷰를 불러오는데 실패했습니다.' }
+  );
+};

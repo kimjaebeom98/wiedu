@@ -21,7 +21,7 @@ import { getMyProfile, getMyStudies } from '../api/profile';
 import { getMyStudyRequests, StudyRequestResponse } from '../api/study';
 import { getMyBookmarks } from '../api/bookmark';
 import { requestWithdrawal } from '../api/withdrawal';
-import { getMemberReviews, getLeaderReviews } from '../api/review';
+import { getMemberReviews, getLeaderReviews, getLeaderReviewsWrittenByMe, getMemberReviewsWrittenByMe } from '../api/review';
 import { StudyMemberReview, StudyLeaderReview } from '../types/review';
 import { MyProfile, MyStudy } from '../types/profile';
 import { StudyListResponse } from '../types/study';
@@ -97,7 +97,7 @@ const MEMBER_TAG_LABEL: Record<string, string> = {
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-type ExpandedSection = 'participating' | 'leading' | 'bookmarked' | 'reviews' | 'leaderReviews' | null;
+type ExpandedSection = 'participating' | 'leading' | 'bookmarked' | 'reviews' | 'leaderReviews' | 'writtenReviews' | null;
 
 export default function MyPageScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -131,6 +131,10 @@ export default function MyPageScreen() {
     averageRating: null,
   });
 
+  // 내가 작성한 리뷰 (스터디장 리뷰 + 멤버 리뷰)
+  const [writtenLeaderReviews, setWrittenLeaderReviews] = useState<StudyLeaderReview[]>([]);
+  const [writtenMemberReviews, setWrittenMemberReviews] = useState<StudyMemberReview[]>([]);
+
   const loadProfile = useCallback(async () => {
     try {
       setError(null);
@@ -143,11 +147,13 @@ export default function MyPageScreen() {
       setProfile(profileData);
       setMyStudies(studiesData);
 
-      // 멤버 리뷰 / 스터디장 리뷰 데이터 병렬 로드
+      // 받은 리뷰 / 작성한 리뷰 병렬 로드
       try {
-        const [memberRevs, leaderRevsResp] = await Promise.all([
+        const [memberRevs, leaderRevsResp, writtenLeader, writtenMember] = await Promise.all([
           getMemberReviews(profileData.id),
           getLeaderReviews(profileData.id),
+          getLeaderReviewsWrittenByMe().catch(() => []),
+          getMemberReviewsWrittenByMe().catch(() => []),
         ]);
 
         setMemberReviews(memberRevs);
@@ -162,6 +168,9 @@ export default function MyPageScreen() {
           totalCount: leaderRevsResp.totalCount ?? 0,
           averageRating: leaderRevsResp.averageRating ?? null,
         });
+
+        setWrittenLeaderReviews(writtenLeader);
+        setWrittenMemberReviews(writtenMember);
       } catch {
         // 리뷰 로드 실패해도 무시
       }
@@ -694,6 +703,124 @@ export default function MyPageScreen() {
                           </View>
                         )}
                         <Text style={styles.memberReviewerName}>{review.reviewerNickname}</Text>
+                      </View>
+                      <View style={styles.memberReviewStars}>
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <Feather
+                            key={i}
+                            name="star"
+                            size={12}
+                            color={i < review.rating ? '#FBBF24' : '#3F3F46'}
+                          />
+                        ))}
+                      </View>
+                    </View>
+                    {review.tags && review.tags.length > 0 && (
+                      <View style={styles.memberReviewTags}>
+                        {review.tags.map((tagId) => (
+                          <View key={tagId} style={styles.memberReviewTag}>
+                            <Text style={styles.memberReviewTagText}>
+                              {MEMBER_TAG_EMOJI[tagId] || ''} {MEMBER_TAG_LABEL[tagId] || tagId}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                    {review.content && (
+                      <Text style={styles.memberReviewContent}>{review.content}</Text>
+                    )}
+                    <Text style={styles.memberReviewMeta}>
+                      {review.studyTitle} · {new Date(review.createdAt).toLocaleDateString('ko-KR')}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            )}
+          </>
+        )}
+
+        {/* 내가 작성한 리뷰 Card - Expandable */}
+        {(writtenLeaderReviews.length + writtenMemberReviews.length) > 0 && (
+          <>
+            <TouchableOpacity
+              style={styles.reviewCard}
+              onPress={() => setExpandedSection(expandedSection === 'writtenReviews' ? null : 'writtenReviews')}
+            >
+              <View style={styles.reviewCardLeft}>
+                <View style={styles.reviewIconContainer}>
+                  <Feather name="edit-3" size={20} color="#8B5CF6" />
+                </View>
+                <View style={styles.reviewCardText}>
+                  <Text style={styles.reviewCardTitle}>내가 작성한 리뷰</Text>
+                  <Text style={styles.reviewCardSubtitle}>
+                    스터디장 {writtenLeaderReviews.length}건 · 멤버 {writtenMemberReviews.length}건
+                  </Text>
+                </View>
+              </View>
+              <Feather
+                name={expandedSection === 'writtenReviews' ? 'chevron-up' : 'chevron-down'}
+                size={20}
+                color="#A1A1AA"
+              />
+            </TouchableOpacity>
+
+            {expandedSection === 'writtenReviews' && (
+              <View style={styles.memberReviewsExpanded}>
+                {writtenLeaderReviews.map((review) => (
+                  <View key={`wL-${review.id}`} style={styles.memberReviewItem}>
+                    <View style={styles.memberReviewHeader}>
+                      <View style={styles.memberReviewerInfo}>
+                        {review.leaderProfileImage ? (
+                          <Image source={{ uri: review.leaderProfileImage }} style={styles.memberReviewerAvatar} />
+                        ) : (
+                          <View style={styles.memberReviewerAvatarPlaceholder}>
+                            <Feather name="user" size={14} color="#8B5CF6" />
+                          </View>
+                        )}
+                        <Text style={styles.memberReviewerName}>To. {review.leaderNickname} (스터디장)</Text>
+                      </View>
+                      <View style={styles.memberReviewStars}>
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <Feather
+                            key={i}
+                            name="star"
+                            size={12}
+                            color={i < review.rating ? '#FBBF24' : '#3F3F46'}
+                          />
+                        ))}
+                      </View>
+                    </View>
+                    {review.tags && review.tags.length > 0 && (
+                      <View style={styles.memberReviewTags}>
+                        {review.tags.map((tagId) => (
+                          <View key={tagId} style={styles.memberReviewTag}>
+                            <Text style={styles.memberReviewTagText}>
+                              {LEADER_TAG_EMOJI[tagId] || ''} {LEADER_TAG_LABEL[tagId] || tagId}
+                            </Text>
+                          </View>
+                        ))}
+                      </View>
+                    )}
+                    {review.content && (
+                      <Text style={styles.memberReviewContent}>{review.content}</Text>
+                    )}
+                    <Text style={styles.memberReviewMeta}>
+                      {review.studyTitle} · {new Date(review.createdAt).toLocaleDateString('ko-KR')}
+                    </Text>
+                  </View>
+                ))}
+                {writtenMemberReviews.map((review) => (
+                  <View key={`wM-${review.id}`} style={styles.memberReviewItem}>
+                    <View style={styles.memberReviewHeader}>
+                      <View style={styles.memberReviewerInfo}>
+                        {review.revieweeProfileImage ? (
+                          <Image source={{ uri: review.revieweeProfileImage }} style={styles.memberReviewerAvatar} />
+                        ) : (
+                          <View style={styles.memberReviewerAvatarPlaceholder}>
+                            <Feather name="user" size={14} color="#8B5CF6" />
+                          </View>
+                        )}
+                        <Text style={styles.memberReviewerName}>To. {review.revieweeNickname}</Text>
                       </View>
                       <View style={styles.memberReviewStars}>
                         {Array.from({ length: 5 }, (_, i) => (

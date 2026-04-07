@@ -149,6 +149,16 @@ public class MemberReviewService {
     }
 
     /**
+     * 내가 작성한 멤버 리뷰 목록 조회
+     */
+    public List<StudyMemberReviewResponse> getReviewsWrittenByMe(Long reviewerId) {
+        User reviewer = userService.findUserEntityById(reviewerId);
+        return memberReviewRepository.findByReviewerWithDetails(reviewer).stream()
+            .map(StudyMemberReviewResponse::from)
+            .toList();
+    }
+
+    /**
      * 리뷰 평점 및 태그에 따른 온도 변화량 계산
      * 기본: 5점(+0.3), 4점(+0.2), 3점(+0.1), 2점(-0.1), 1점(-0.2)
      * 태그 보너스: 긍정 태그 1개당 +0.02 (최대 6개 = +0.12)

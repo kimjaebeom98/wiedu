@@ -44,6 +44,16 @@ public class ReviewController {
     }
 
     /**
+     * 내가 작성한 스터디장 리뷰 목록 조회
+     * GET /api/users/me/reviews/written
+     */
+    @GetMapping("/api/users/me/reviews/written")
+    public ResponseEntity<java.util.List<StudyLeaderReviewResponse>> getLeaderReviewsWrittenByMe() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(reviewService.getReviewsWrittenByMe(userId));
+    }
+
+    /**
      * 스터디장 리뷰 작성 여부 확인
      * GET /api/studies/{studyId}/reviews/check
      */

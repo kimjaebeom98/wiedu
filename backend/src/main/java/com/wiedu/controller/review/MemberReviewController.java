@@ -54,4 +54,14 @@ public class MemberReviewController {
         List<StudyMemberReviewResponse> reviews = memberReviewService.getMemberReviews(userId);
         return ResponseEntity.ok(reviews);
     }
+
+    /**
+     * 내가 작성한 멤버 리뷰 목록 조회
+     * GET /api/users/me/member-reviews/written
+     */
+    @GetMapping("/api/users/me/member-reviews/written")
+    public ResponseEntity<List<StudyMemberReviewResponse>> getMemberReviewsWrittenByMe() {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return ResponseEntity.ok(memberReviewService.getReviewsWrittenByMe(userId));
+    }
 }

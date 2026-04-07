@@ -108,6 +108,16 @@ public class ReviewService {
     }
 
     /**
+     * 내가 작성한 스터디장 리뷰 목록 조회
+     */
+    public List<StudyLeaderReviewResponse> getReviewsWrittenByMe(Long reviewerId) {
+        User reviewer = userService.findUserEntityById(reviewerId);
+        return reviewRepository.findByReviewerWithDetails(reviewer).stream()
+                .map(StudyLeaderReviewResponse::from)
+                .toList();
+    }
+
+    /**
      * 사용자가 해당 스터디에 리뷰를 작성했는지 확인
      */
     public boolean hasUserReviewedStudy(Long studyId, Long userId) {

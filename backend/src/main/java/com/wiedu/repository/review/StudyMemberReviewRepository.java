@@ -19,6 +19,10 @@ public interface StudyMemberReviewRepository extends JpaRepository<StudyMemberRe
     @Query("SELECT r FROM StudyMemberReview r JOIN FETCH r.reviewer JOIN FETCH r.study WHERE r.reviewee = :reviewee ORDER BY r.createdAt DESC")
     List<StudyMemberReview> findByRevieweeWithDetails(@Param("reviewee") User reviewee);
 
+    // 내가 작성한 멤버 리뷰 목록 (N+1 방지)
+    @Query("SELECT r FROM StudyMemberReview r JOIN FETCH r.reviewee JOIN FETCH r.study WHERE r.reviewer = :reviewer ORDER BY r.createdAt DESC")
+    List<StudyMemberReview> findByReviewerWithDetails(@Param("reviewer") User reviewer);
+
     // 특정 사용자가 받은 리뷰 개수
     long countByReviewee(User reviewee);
 

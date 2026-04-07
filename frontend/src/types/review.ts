@@ -2,6 +2,8 @@ export interface StudyLeaderReview {
   id: number;
   reviewerNickname: string;
   reviewerProfileImage?: string;
+  leaderNickname?: string;
+  leaderProfileImage?: string;
   rating: number;
   content: string;
   tags?: string[];
